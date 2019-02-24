@@ -57,8 +57,9 @@ class Tensor {
       for(int i = 0; i < this->shape[0]; i++) {
         this->value[i] = (float*)malloc(this->shape[1]*sizeof(float));
         for(int j = 0; j < this->shape[1]; j++) {
-          //this->value[i][j] = (float) rand()/(RAND_MAX + 1.0);
-          this->value[i][j] = 0.0;
+          this->value[i][j] = 0.1*((float) rand()/(RAND_MAX + 1.0) -0.5);
+          //cout << this->value[i][j] << ", ";
+          //this->value[i][j] = 1.0;
         }
       }
     }

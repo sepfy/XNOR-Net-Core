@@ -1,11 +1,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdint.h>
-//#include <byteswap.h>
-#include <libkern/OSByteOrder.h>
-#define bswap_16(x) OSSwapInt16(x)
-#define bswap_32(x) OSSwapInt32(x)
-#define bswap_64(x) OSSwapInt64(x)
+#include <byteswap.h>
+//#include <libkern/OSByteOrder.h>
+//#define bswap_16(x) OSSwapInt16(x)
+//#define bswap_32(x) OSSwapInt32(x)
+//#define bswap_64(x) OSSwapInt64(x)
 
 
 #include "tensor.h"
@@ -15,7 +15,7 @@ Tensor read_images(void) {
   FILE *fp;
   //FILE *label_fp;
 
-  char image_name[] = "train-images.idx3-ubyte";
+  char image_name[] = "train-images-idx3-ubyte";
   //char label_name[] = "train-labels-idx3-ubyte";
 
   fp = fopen(image_name, "rb");
@@ -30,8 +30,8 @@ Tensor read_images(void) {
   // Number
   fread(&buff, sizeof(uint32_t), 1, fp);
   N = bswap_32(buff);
+//  N = 10000;
   printf("Number of images = %d\n", N);
-  N = 100;
   // Rows
   fread(&buff, sizeof(uint32_t), 1, fp);
   rows = bswap_32(buff);
@@ -72,7 +72,7 @@ Tensor read_labels(void) {
   FILE *fp;
   //FILE *label_fp;
 
-  char label_name[] = "train-labels.idx1-ubyte";
+  char label_name[] = "train-labels-idx1-ubyte";
 
   fp = fopen(label_name, "rb");
   uint32_t buff;
@@ -86,7 +86,7 @@ Tensor read_labels(void) {
   // Number
   fread(&buff, sizeof(uint32_t), 1, fp);
   N = bswap_32(buff);
-  N = 100;
+//  N = 10000;
   printf("Number of images = %d\n", N);
  
   uint8_t value;
