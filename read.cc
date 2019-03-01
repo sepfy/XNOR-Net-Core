@@ -1,14 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdint.h>
-#include <byteswap.h>
-//#include <libkern/OSByteOrder.h>
-//#define bswap_16(x) OSSwapInt16(x)
-//#define bswap_32(x) OSSwapInt32(x)
-//#define bswap_64(x) OSSwapInt64(x)
-
-
-#include "tensor.h"
+#include "read.h"
 
 Tensor read_images(void) {
 
@@ -30,7 +23,7 @@ Tensor read_images(void) {
   // Number
   fread(&buff, sizeof(uint32_t), 1, fp);
   N = bswap_32(buff);
-//  N = 10000;
+  N = 100;
   printf("Number of images = %d\n", N);
   // Rows
   fread(&buff, sizeof(uint32_t), 1, fp);
@@ -86,7 +79,7 @@ Tensor read_labels(void) {
   // Number
   fread(&buff, sizeof(uint32_t), 1, fp);
   N = bswap_32(buff);
-//  N = 10000;
+  N = 100;
   printf("Number of images = %d\n", N);
  
   uint8_t value;

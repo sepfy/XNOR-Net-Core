@@ -1,11 +1,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdint.h>
-#include <byteswap.h>
-//#include <libkern/OSByteOrder.h>
-//#define bswap_16(x) OSSwapInt16(x)
-//#define bswap_32(x) OSSwapInt32(x)
-//#define bswap_64(x) OSSwapInt64(x)
+//#include <byteswap.h>
+#include <libkern/OSByteOrder.h>
+#define bswap_16(x) OSSwapInt16(x)
+#define bswap_32(x) OSSwapInt32(x)
+#define bswap_64(x) OSSwapInt64(x)
 #include "tensor.h"
 
 Tensor read_images(void);

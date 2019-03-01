@@ -5,9 +5,11 @@
 #include "read.h"
 #include <string.h>
 #include <iostream>
+#include "layers.h"
+
 
 using namespace std;
-float N = 60000.0;
+float N = 100.0;
 typedef struct _Operator {
 
 	char *name;
@@ -171,24 +173,29 @@ int main(void) {
   float eta = 0.0;
 	float rate = 1.0;
 
+  Affine affine1(W1, b1);
+  Affine affine2(W2, b2);
+  Softmax softmax1;
+  //affine.forward(X);
+
+  //return 0;
 
 	for(int iter = 0; iter < max_epoch; iter++) {
-		Tensor Y1 = sigmoid(X*W1 + b1);
-		Tensor Y2 = softmax(Y1*W2 + b2);
+		Tensor Y1 = sigmoid(affine1.forward(X));
+		Tensor Y2 = softmax1.forward(Y1*W2 + b2);
     if(iter%10 == 0)
 		  printf("error = %f\n", acc(Y, Y2));
 
 		Tensor D(X.shape[0], 10);
 		Tensor DD(X.shape[0], 30);
-
     // Output layer 10x10 
 		for(int k = 0; k < X.shape[0]; k++) {
 			for(int j = 0; j < W2.shape[1]; j++) {
 		    D.value[k][j] = (1.0/N)*(Y2.value[k][j] - Y.value[k][j]);
-        b2.value[0][j] -= rate*D.value[k][j];
+        affine2.b.value[0][j] -= rate*D.value[k][j];
 				for(int i = 0; i < W2.shape[0]; i++) {
-				  W2.value[i][j] -= rate*(D.value[k][j]*Y1.value[k][i]
-                         + (eta/N)*W2.value[i][j]);
+				  affine2.W.value[i][j] -= rate*D.value[k][j]*Y1.value[k][i];
+                         //+ (eta/N)*W2.value[i][j]);
 				}
 			}
     }
@@ -200,10 +207,10 @@ int main(void) {
 			  for(int l = 0; l < Y2.shape[1]; l++) {
           DD.value[k][j] += D.value[k][l]*W2.value[j][l]*Y1.value[k][j]*(1.0-Y1.value[k][j]);
 			  } 
-        b1.value[0][j] -= rate*DD.value[k][j];
+        affine1.b.value[0][j] -= rate*DD.value[k][j];
 			  for(int i = 0; i < W1.shape[0]; i++) {
-						W1.value[i][j] -= rate*(DD.value[k][j]*X.value[k][i] 
-                           + (eta/N)*W1.value[i][j]);
+						affine1.W.value[i][j] -= rate*DD.value[k][j]*X.value[k][i];
+                           //+ (eta/N)*affine.W.value[i][j]);
 				}
 			}
 		}
