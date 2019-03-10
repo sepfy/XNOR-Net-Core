@@ -27,6 +27,15 @@ class Tensor {
       return tensor;
     }
 
+    Tensor operator*(const float x) {
+
+      Tensor tensor(this->shape[0], this->shape[1]);    
+      for(int i = 0; i < tensor.shape[0]; i++)
+        for(int j = 0; j < tensor.shape[1]; j++) 
+          tensor.value[i][j] = this->value[i][j]*x;
+      return tensor;
+    }
+
     Tensor operator+(const Tensor& t) {
       Tensor tensor(this->shape[0], this->shape[1]);    // 10x1
       for(int i = 0; i < tensor.shape[0]; i++)
@@ -43,15 +52,23 @@ class Tensor {
       return tensor;
     }
 
+    Tensor() {}
 
-    Tensor(int rows, int cols) {
-        //this->name = name;
-        this->shape[0] = rows;
-        this->shape[1] = cols;
-        init();
+    // (batch, width, height, channel)
+    Tensor(int arr[]) {
     }
 
-    void init() {
+    Tensor(int rows, int cols, float val) {
+        init(rows, cols, val);
+    }
+
+    Tensor(int rows, int cols) {
+        init(rows, cols);
+    }
+
+    void init(int rows, int cols) {
+      this->shape[0] = rows;
+      this->shape[1] = cols;
       this->value = (float**)malloc(this->shape[0]*sizeof(float*));
       srand(time(NULL));
       for(int i = 0; i < this->shape[0]; i++) {
@@ -64,4 +81,28 @@ class Tensor {
       }
     }
 
+    void init(int rows, int cols, float val) {
+      this->shape[0] = rows;
+      this->shape[1] = cols;
+      this->value = (float**)malloc(this->shape[0]*sizeof(float*));
+      for(int i = 0; i < this->shape[0]; i++) {
+        this->value[i] = (float*)malloc(this->shape[1]*sizeof(float));
+        for(int j = 0; j < this->shape[1]; j++) {
+          this->value[i][j] = val;
+        }
+      }
+    }
+
+    Tensor T() {
+    
+      Tensor _t(this->shape[1], this->shape[0]);
+      for(int i = 0; i < _t.shape[0]; i++)
+        for(int j = 0; j < _t.shape[1]; j++)
+          _t.value[i][j] = this->value[j][i];
+      return _t;
+    }
+
 };
+
+
+

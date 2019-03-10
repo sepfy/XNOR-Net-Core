@@ -9,7 +9,7 @@
 
 
 using namespace std;
-float N = 100.0;
+float N = 600.0;
 typedef struct _Operator {
 
 	char *name;
@@ -157,10 +157,12 @@ float acc(Tensor t1, Tensor t2) {
 int main(void) {
 
 
-	Tensor b1(1, 10);
-	Tensor W1(784, 10);
+	Tensor b1(1, 30);
+	Tensor W1(784, 30);
 	Tensor b2(1, 10);
-	Tensor W2(10, 10);
+	Tensor W2(30, 10);
+//	Tensor b3(1, 10);
+//	Tensor W3(30, 10);
 	// X = 60000x784
 	Tensor X = read_images();
 	//show_image(X1, 2);
@@ -175,46 +177,38 @@ int main(void) {
 
   Affine affine1(W1, b1);
   Affine affine2(W2, b2);
-  Softmax softmax1;
-  //affine.forward(X);
+//  Affine affine3(W3, b3);
+  Sigmoid sigmoid1;
+//  Sigmoid sigmoid2;
+  Softmax softmax1(Y);
+    Tensor dout;
 
-  //return 0;
+  Tensor Y1, Y2, Y3;
 
 	for(int iter = 0; iter < max_epoch; iter++) {
-		Tensor Y1 = sigmoid(affine1.forward(X));
-		Tensor Y2 = softmax1.forward(Y1*W2 + b2);
+
+		Tensor Y1 = sigmoid1.forward(affine1.forward(X));
+		Tensor Y2 = softmax1.forward(affine2.forward(Y1));
+//		Tensor Y3 = softmax1.forward(affine3.forward(Y2));
+
     if(iter%10 == 0)
 		  printf("error = %f\n", acc(Y, Y2));
 
-		Tensor D(X.shape[0], 10);
-		Tensor DD(X.shape[0], 30);
-    // Output layer 10x10 
-		for(int k = 0; k < X.shape[0]; k++) {
-			for(int j = 0; j < W2.shape[1]; j++) {
-		    D.value[k][j] = (1.0/N)*(Y2.value[k][j] - Y.value[k][j]);
-        affine2.b.value[0][j] -= rate*D.value[k][j];
-				for(int i = 0; i < W2.shape[0]; i++) {
-				  affine2.W.value[i][j] -= rate*D.value[k][j]*Y1.value[k][i];
-                         //+ (eta/N)*W2.value[i][j]);
-				}
-			}
-    }
+//    dout = softmax1.backward(Y3);
+//    dout = affine3.backward(dout);
 
-    // Hidden layer 784x10
-		for(int k = 0; k < X.shape[0]; k++) {
-		  for(int j = 0; j < W1.shape[1]; j++) {
-        DD.value[k][j] = 0;
-			  for(int l = 0; l < Y2.shape[1]; l++) {
-          DD.value[k][j] += D.value[k][l]*W2.value[j][l]*Y1.value[k][j]*(1.0-Y1.value[k][j]);
-			  } 
-        affine1.b.value[0][j] -= rate*DD.value[k][j];
-			  for(int i = 0; i < W1.shape[0]; i++) {
-						affine1.W.value[i][j] -= rate*DD.value[k][j]*X.value[k][i];
-                           //+ (eta/N)*affine.W.value[i][j]);
-				}
-			}
-		}
+    dout = softmax1.backward(Y2);
+    dout = affine2.backward(dout);
 
+    dout = sigmoid1.backward(dout);
+    dout = affine1.backward(dout);
+
+//    affine3.b = affine3.b - affine3.db*rate;
+//    affine3.W = affine3.W - affine3.dW*rate;
+    affine2.b = affine2.b - affine2.db*rate;
+    affine2.W = affine2.W - affine2.dW*rate;
+    affine1.b = affine1.b - affine1.db*rate;
+    affine1.W = affine1.W - affine1.dW*rate;
 
 	}
 

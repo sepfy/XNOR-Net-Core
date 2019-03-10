@@ -23,7 +23,7 @@ Tensor read_images(void) {
   // Number
   fread(&buff, sizeof(uint32_t), 1, fp);
   N = bswap_32(buff);
-  N = 100;
+  N = 600;
   printf("Number of images = %d\n", N);
   // Rows
   fread(&buff, sizeof(uint32_t), 1, fp);
@@ -79,7 +79,7 @@ Tensor read_labels(void) {
   // Number
   fread(&buff, sizeof(uint32_t), 1, fp);
   N = bswap_32(buff);
-  N = 100;
+  N = 600;
   printf("Number of images = %d\n", N);
  
   uint8_t value;

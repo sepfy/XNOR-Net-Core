@@ -12,31 +12,70 @@ class Affine : public LayerAbs {
   public:
     Tensor W;
     Tensor b;
-
     Tensor dW;
     Tensor db;
-
-    Tensor *x;
+    Tensor x;
 
     Affine(Tensor _W, Tensor _b): W(_W), b(_b), dW(_W), db(_b) {}
 
     Tensor forward(Tensor _x) {
-      x = &_x;
-      return *x*W + b;
+      x = _x;
+      return x*W + b;
     }
 
     Tensor backward(Tensor dout) {
-      Tensor dx = W;
-      return dx;
+
+      for(int i = 0; i < db.shape[1]; i++) {
+        db.value[0][i] = 0;
+        for(int j = 0; j < dout.shape[0]; j++)
+          db.value[0][i] += dout.value[j][i];
+      }
+      dW = x.T()*dout;
+
+      dout = dout*W.T();
+      return dout;
     }
 
 
 };
 
+
+
+
+//6000x10 *10*10 -> 6000*10
+
+class Sigmoid: public LayerAbs {
+
+  public:
+    Tensor Y;
+ 
+    Tensor forward(Tensor t) {
+      Y.init(t.shape[0], t.shape[1]);
+      for(int i = 0; i < t.shape[0]; i++) {
+        for(int j = 0; j < t.shape[1]; j++) {
+          Y.value[i][j] = 1.0/(1.0 + exp(-1.0*(t.value[i][j])));
+        }
+      }
+      return Y;
+    } 
+//6000x10
+// Y: 6000x10
+// dout: 
+    Tensor backward(Tensor dout) {
+      Tensor _dout(dout.shape[0], dout.shape[1], 0.0);  
+      
+      for(int i = 0; i < dout.shape[0]; i++) 
+        for(int j = 0; j < dout.shape[1]; j++) 
+          _dout.value[i][j] = dout.value[i][j]*(1.0 - Y.value[i][j])*Y.value[i][j];            
+      return _dout;
+    }
+};
+
 class Softmax: public LayerAbs {
   
   public:
-    Softmax() {}
+    Tensor Y;
+    Softmax(Tensor _Y): Y(_Y) {}
     Tensor forward(Tensor t) {
       Tensor t1(t.shape[0], t.shape[1]);
       for(int i = 0; i < t.shape[0]; i++) {
@@ -56,9 +95,10 @@ class Softmax: public LayerAbs {
       return t1;
     }
 
+//6000x10
     Tensor backward(Tensor dout) {
-
-      return dout;
+      float batch_size = (float)this->Y.shape[0];
+      return (dout - this->Y)*(1.0/batch_size);
     }
   
 };
