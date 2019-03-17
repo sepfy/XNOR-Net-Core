@@ -1,7 +1,15 @@
 #include <iostream>
 #include "gemm.h"
 #include "blas.h"
-#include "utils.h"
+class LayerAbs {
+
+  public:
+    float *input;
+    float *output;
+    virtual Tensor forward(Tensor x) = 0;
+    virtual Tensor backward(Tensor dx) = 0;
+};
+
 class Layer {
   public:
     int batch;
@@ -12,6 +20,8 @@ class Layer {
     virtual void backward(float* delta) = 0;
     virtual void init_var() = 0;
 };
+
+
 
 class Connected : public Layer {
 
@@ -84,17 +94,17 @@ class Connected : public Layer {
 
 };
 
-class Sigmoid: public Layer {
+class SigmoidA: public Layer {
 
   public:
     int N;
-    Sigmoid(int _batch, int _N, float *_input) {
+    SigmoidA(int _batch, int _N, float *_input) {
       batch = _batch;
       N = _N;
       input = _input;
       init_var();  
     }
-    ~Sigmoid() {}
+    ~SigmoidA() {}
     void init_var() {
       output = new float[batch*N];
       m_delta = new float[batch*N];
@@ -156,39 +166,6 @@ class SoftmaxWithCrossEntropy : public Layer {
     }
 };
 
-class Convolution : public Layer {
-
-  public:
-
-    float *col;
-    int batch;
-    int FW, FH, FC;
-    int stride, pad;
-    int W, H, C;
-    Convolution(int _W, int _H, int _C, int _FW, int _FH, int _FC,
-                int _stride, int _pad, float* _input) {
-      W = _W;
-      H = _H;
-      C = _C;
-      FW = _FW;
-      FH = _FH;
-      FC = _FC;
-    }
-    ~Convolution() {
-
-    }
-    void init_var() {
-    }
-    void forward() {
-      im2col(W, H, C, FW, FH, FC, stride, pad, input, col);
-    }
-    void backward(float *delta) {
-
-    }
-
-
-};
-
 class Relu : public Layer {
   public:
     Relu() {
@@ -198,13 +175,105 @@ class Relu : public Layer {
     ~Relu() {
 
     }
+};
 
-    void forward() {
+class Affine : public LayerAbs {
 
+  public:
+    Tensor W;
+    Tensor b;
+    Tensor dW;
+    Tensor db;
+    Tensor x;
+
+    Affine(Tensor _W, Tensor _b): W(_W), b(_b), dW(_W), db(_b) {}
+
+    Tensor forward(Tensor _x) {
+      x = _x;
+      return x*W + b;
     }
 
-    void backward(float *delta) {
+    Tensor backward(Tensor dout) {
 
+      for(int i = 0; i < db.shape[1]; i++) {
+        db.value[0][i] = 0;
+        for(int j = 0; j < dout.shape[0]; j++)
+          db.value[0][i] += dout.value[j][i];
+      }
+      dW = x.T()*dout;
+      
+      dout = dout*W.T();
+      return dout;
+    }
+
+
+};
+
+
+
+
+//6000x10 *10*10 -> 6000*10
+
+class Sigmoid: public LayerAbs {
+
+  public:
+    Tensor Y;
+ 
+    Tensor forward(Tensor t) {
+      Y.init(t.shape[0], t.shape[1]);
+      for(int i = 0; i < t.shape[0]; i++) {
+        for(int j = 0; j < t.shape[1]; j++) {
+          Y.value[i][j] = 1.0/(1.0 + exp(-1.0*(t.value[i][j])));
+        }
+      }
+      return Y;
+    } 
+//6000x10
+// Y: 6000x10
+// dout: 
+    Tensor backward(Tensor dout) {
+      Tensor _dout(dout.shape[0], dout.shape[1], 0.0);  
+      
+      for(int i = 0; i < dout.shape[0]; i++) 
+        for(int j = 0; j < dout.shape[1]; j++) 
+          _dout.value[i][j] = dout.value[i][j]*(1.0 - Y.value[i][j])*Y.value[i][j];            
+      return _dout;
     }
 };
+
+class Softmax: public LayerAbs {
+  
+  public:
+    Tensor Y;
+    Softmax(Tensor _Y): Y(_Y) {}
+    Tensor forward(Tensor t) {
+      Tensor t1(t.shape[0], t.shape[1]);
+      for(int i = 0; i < t.shape[0]; i++) {
+        float tmp = 0;
+        float max = 0;
+        for(int j = 0; j < t.shape[1]; j++) 
+          if(t.value[i][j] > max)
+            max = t.value[i][j];
+        
+        for(int j = 0; j < t.shape[1]; j++) {
+          t1.value[i][j] = exp(t.value[i][j] - max);
+          tmp += t1.value[i][j];
+        }
+        for(int j = 0; j < t.shape[1]; j++) { 
+          t1.value[i][j] /= tmp;
+        }
+      }
+      return t1;
+    }
+
+//6000x10
+    Tensor backward(Tensor dout) {
+      float batch_size = (float)this->Y.shape[0];
+      return (dout - this->Y)*(1.0/batch_size);
+    }
+  
+};
+
+
+
 

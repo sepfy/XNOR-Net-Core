@@ -36,18 +36,6 @@ class Network {
 
 typedef Tensor *funcPtr(Tensor t1, Tensor t2);
 
-class Layer {
-
-	Tensor op_mul(Tensor t1, Tensor t2) {
-		return t1*t2;
-	}
-
-	Tensor op_add(Tensor t1, Tensor t2) {
-		return t1+t2;
-	}
-
-
-};
 
 Tensor sigmoid(Tensor t) {
 
@@ -157,10 +145,10 @@ float acc(Tensor t1, Tensor t2) {
 int main(void) {
 
 
-	Tensor b1(1, 30);
-	Tensor W1(784, 30);
+	Tensor b1(1, 10);
+	Tensor W1(784, 10);
 	Tensor b2(1, 10);
-	Tensor W2(30, 10);
+	Tensor W2(10, 10);
 //	Tensor b3(1, 10);
 //	Tensor W3(30, 10);
 	// X = 60000x784
@@ -171,35 +159,31 @@ int main(void) {
 	//show_label(Y, 0);
 	//show_label(Y, 1);
 
-	int max_epoch = 10000;
+	int max_epoch = 1000;
   float eta = 0.0;
 	float rate = 1.0;
 
   Affine affine1(W1, b1);
   Affine affine2(W2, b2);
-//  Affine affine3(W3, b3);
   Sigmoid sigmoid1;
-//  Sigmoid sigmoid2;
   Softmax softmax1(Y);
-    Tensor dout;
+  Tensor dout;
 
-  Tensor Y1, Y2, Y3;
+  
 
 	for(int iter = 0; iter < max_epoch; iter++) {
 
 		Tensor Y1 = sigmoid1.forward(affine1.forward(X));
 		Tensor Y2 = softmax1.forward(affine2.forward(Y1));
-//		Tensor Y3 = softmax1.forward(affine3.forward(Y2));
 
-    if(iter%10 == 0)
-		  printf("error = %f\n", acc(Y, Y2));
+    if(iter%1 == 0)
+		  printf("iter = %d, error = %f\n", iter, acc(Y, Y2));
 
 //    dout = softmax1.backward(Y3);
 //    dout = affine3.backward(dout);
 
     dout = softmax1.backward(Y2);
     dout = affine2.backward(dout);
-
     dout = sigmoid1.backward(dout);
     dout = affine1.backward(dout);
 
@@ -211,7 +195,6 @@ int main(void) {
     affine1.W = affine1.W - affine1.dW*rate;
 
 	}
-
 	return 0;
 
 }

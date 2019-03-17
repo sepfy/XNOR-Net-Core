@@ -1,7 +1,6 @@
-#include "tensor.h"
+#include "utils.h"
 
-Tensor im2col(Tensor im, int FW, int FH, int stride, int pad) {
-  Tensor col;
-  return col;
+void im2col(int W, int H, int C, int FW, int FH, int FC,
+             int stride, int pad, float *im, float *col) {
 }
 
