@@ -165,22 +165,47 @@ class Convolution : public Layer {
     int FW, FH, FC;
     int stride, pad;
     int W, H, C;
-    Convolution(int _W, int _H, int _C, int _FW, int _FH, int _FC,
+    int channel_out;
+    int out_w, out_h;
+    float *weight, *bias, *out_col, *im;
+    Convolution(int _batch, int _W, int _H, int _C, int _FW, int _FH, int _FC,
                 int _stride, int _pad, float* _input) {
+      batch = _batch;
       W = _W;
       H = _H;
       C = _C;
       FW = _FW;
       FH = _FH;
       FC = _FC;
+      stride = _stride;
+      pad = _pad;
+      out_w = (W + 2*pad - FW)/stride + 1;
+      out_h = (H + 2*pad - FH)/stride + 1;
+      channel_out = FW*FH*C;
+      input = _input;
+      init_var();
     }
     ~Convolution() {
 
     }
     void init_var() {
+      col = new float[out_w*out_h*channel_out];
+      output = new float[batch*out_w*out_h*FC];
+      out_col = new float[out_w*out_h*FC];
+      weight = new float[channel_out*FC];
+      im = new float[H*W*C];
+     // im_out = new float[out_w*out_h*FC];
     }
     void forward() {
-      im2col(W, H, C, FW, FH, FC, stride, pad, input, col);
+      int size = out_w*out_h*FC;
+      int im_size = H*W*C;
+      for(int i = 0; i < batch-3; i++) {
+        memcpy(im, input + i*im_size, im_size*sizeof(float));
+        im2col(W, H, C, FW, FH, FC, stride, pad, im, col);
+        gemm(out_w*out_h, FC, channel_out, 1, col, weight, out_col);
+        //col2im(W, H, C, FW, FH, FC, stride, pad, im, col);
+        memcpy(output + i*size, out_col, size*sizeof(float));
+      }
     }
     void backward(float *delta) {
 

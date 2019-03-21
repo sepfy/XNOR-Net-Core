@@ -1,8 +1,8 @@
 #include <iostream>
-#include "tensor.h"
 #include "layers.h"
 #include "gemm.h"
 #include "blas.h"
+#include "utils.h"
 using namespace std;
 
 bool gemm_test() {
@@ -103,6 +103,64 @@ bool gemm_tb_test() {
   cout << compare(M, N, C, D) << endl;
 }  
 
+void im2col_test() {
+
+  /* 
+   0 0 0 0 0 0 0
+   0 1 2 1 2 3 0   
+   0 3 2 1 2 1 0   2 0 1 2 2   2 0 0
+   0 3 2 2 2 1 0   1 2 1 1 3   0 3 1
+   0 2 2 2 2 1 0   1 2 1 1 3   0 3 1
+   0 1 2 2 2 1 0   1 2 1 1 3   0 3 1
+   0 0 0 0 0 0 0
+
+   0 0 0 0 1 2 0 3 2
+   0 0 0 1 2 1 3 2 1
+   0 0 0 2 1 2 2 1 2
+   
+  */
+  // N H W C
+  // 1 2 1 2
+  cout << "Test im2col" << endl;
+  float im[] = {1, 2, 1, 
+                2, 3, 3,
+                2, 1, 2, 
+                1, 3, 2,
+                2, 2, 1,
+                2, 2, 2,
+                2, 1, 1,
+                2, 2, 2,
+                1, 1, 2, 1, 2, 3,
+                3, 2, 1, 2, 1, 3,
+                2, 2, 2, 1, 2, 2, 2, 2, 1,
+                1, 2, 2, 2, 1, 1, 2, 1, 2, 
+                3, 3, 2, 1, 2, 1, 3, 2, 2, 
+                2, 1, 2, 2, 2, 2, 1, 1, 2, 2, 2, 1}; 
+  int W = 5, H = 5, C = 3;
+  int FW = 3, FH = 3, FC = 2;
+  int stride = 1, pad = 0;
+  
+  int out_w = (W + 2*pad - FW)/stride + 1;  //5
+  int out_h = (H + 2*pad - FH)/stride + 1;  //5
+  // (5x5)x(3*3*3)
+  int channel_out = FW*FH*C;
+  float *col = new float[out_w*out_h*channel_out];
+
+  im2col(W, H, C, FW, FH, FC,
+             stride, pad, im, col);
+
+  for(int i = 0; i < 1; i++)
+    for(int j = 0; j < out_h; j++) {
+      for(int k = 0; k < channel_out; k++) {
+        cout << col[(i*out_h+j)*channel_out+k] << " ";
+      }  
+      cout << endl;
+
+    }
+
+}
+
+
 int main() {
 
   /*
@@ -122,6 +180,7 @@ int main() {
   gemm_test();
   gemm_ta_test();
   gemm_tb_test();
+  im2col_test();
 /*
   float b[] = { 1, 3, 2};
 //  sgemm(N, M, P, alpha, A, B, C);

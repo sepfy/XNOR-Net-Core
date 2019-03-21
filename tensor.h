@@ -52,11 +52,8 @@ class Tensor {
       return tensor;
     }
 
-    Tensor() {}
+    Tensor() { this->value = NULL; cout << this->value<<endl;}
 
-    // (batch, width, height, channel)
-    Tensor(int arr[]) {
-    }
 
     Tensor(int rows, int cols, float val) {
         init(rows, cols, val);
@@ -101,7 +98,14 @@ class Tensor {
           _t.value[i][j] = this->value[j][i];
       return _t;
     }
-
+    ~Tensor() {
+      if(this->value == NULL) {
+cout << "FREE" << this->value << endl;
+        for(int i = 0; i < this->shape[0]; i++)
+          free(this->value[i]);
+        free(this->value);
+      }
+    }
 };
 
 

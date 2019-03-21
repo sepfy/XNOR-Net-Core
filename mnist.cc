@@ -4,11 +4,11 @@
 #include "tensor.h"
 #include "layers.h"
 #include "loss.h"
-#include <byteswap.h>
-//#include <libkern/OSByteOrder.h>
-//#define bswap_16(x) OSSwapInt16(x)
-//#define bswap_32(x) OSSwapInt32(x)
-//#define bswap_64(x) OSSwapInt64(x)
+//#include <byteswap.h>
+#include <libkern/OSByteOrder.h>
+#define bswap_16(x) OSSwapInt16(x)
+#define bswap_32(x) OSSwapInt32(x)
+#define bswap_64(x) OSSwapInt64(x)
 
 
 float* read_images() {
@@ -28,7 +28,7 @@ float* read_images() {
   // Number
   fread(&buff, sizeof(uint32_t), 1, fp);
   N = bswap_32(buff);
-  //N = 600;
+  N = 600;
   printf("Number of images = %d\n", N);
   // Rows
   fread(&buff, sizeof(uint32_t), 1, fp);
@@ -88,7 +88,7 @@ float* read_labels() {
   // Number
   fread(&buff, sizeof(uint32_t), 1, fp);
   N = bswap_32(buff);
-//  N = 600;
+  N = 600;
   printf("Number of images = %d\n", N);
   
   float *Y = new float[N*10]; 
@@ -122,12 +122,15 @@ int main(void) {
   Y = read_labels();
   //show_image(X, 2);
   //show_label(Y, 2);
-  int batch = 60000;
+  int batch = 600;
 
   Connected conn1(batch, 784, 10, X);
   Sigmoid sigmoid1(batch, 10, conn1.output);
   Connected conn2(batch, 10, 10, sigmoid1.output);
   SoftmaxWithCrossEntropy softmax(batch, 10, Y, conn2.output);
+
+//  Convolution conv1(batch, 28, 28, 1, 3, 3, 3, 1, 0, X);
+
 
   int max_iter = 1000;
   for(int iter = 0; iter < max_iter; iter++) {
