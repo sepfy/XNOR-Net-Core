@@ -1,7 +1,11 @@
 #include <iostream>
 #include "gemm.h"
 #include "blas.h"
+#include <stdlib.h>
+#include <stdio.h>
 #include "utils.h"
+#include <string.h>
+
 class Layer {
   public:
     int batch;
@@ -168,6 +172,7 @@ class Convolution : public Layer {
     int channel_out;
     int out_w, out_h;
     float *weight, *bias, *out_col, *im;
+    float *grad_weight;
     Convolution(int _batch, int _W, int _H, int _C, int _FW, int _FH, int _FC,
                 int _stride, int _pad, float* _input) {
       batch = _batch;
@@ -191,26 +196,53 @@ class Convolution : public Layer {
     void init_var() {
       col = new float[out_w*out_h*channel_out];
       output = new float[batch*out_w*out_h*FC];
-      out_col = new float[out_w*out_h*FC];
+      out_col = new float[out_w*out_h*channel_out*batch];
+      //out_col = new float[out_w*out_h*FC];
       weight = new float[channel_out*FC];
+      grad_weight = new float[channel_out*FC];
       im = new float[H*W*C];
      // im_out = new float[out_w*out_h*FC];
+      srand(time(NULL));
+      for(int i = 0; i < channel_out; i++) {
+        for(int j = 0; j < FC; j++) {
+          weight[i*FC+j] = 0.1*((float) rand()/(RAND_MAX + 1.0) -0.5);
+        }
+      }
+
     }
     void forward() {
-      int size = out_w*out_h*FC;
+      //int size = out_w*out_h*FC;
+      int size = out_w*out_h*channel_out;
       int im_size = H*W*C;
-      for(int i = 0; i < batch-3; i++) {
+      for(int i = 0; i < batch; i++) {
         memcpy(im, input + i*im_size, im_size*sizeof(float));
         im2col(W, H, C, FW, FH, FC, stride, pad, im, col);
-        gemm(out_w*out_h, FC, channel_out, 1, col, weight, out_col);
-        //col2im(W, H, C, FW, FH, FC, stride, pad, im, col);
-        memcpy(output + i*size, out_col, size*sizeof(float));
+        memcpy(out_col + i*size, col, size*sizeof(float));
       }
+      gemm(out_w*out_h*batch, FC, channel_out, 1, out_col, weight, output);
+      //gemm(out_w*out_h, FC, channel_out, 1, col, weight, out_col);
+      //col2im(W, H, C, FW, FH, FC, stride, pad, im, col);
+      //memcpy(output + i*size, out_col, size*sizeof(float));
     }
     void backward(float *delta) {
-
+      
+      memset(grad_weight, 0, FW*FH*C*FC*sizeof(float));
+      //memset(m_delta, 0, batch*N*sizeof(float));
+      //grad_weight = channel_out*FC
+      // out_col    = batch*out_w*out_h*channel_out
+      // delta      = batch*out_w*out_h*FC
+      gemm_ta(channel_out, FC, out_w*out_h*batch, 1.0, out_col, delta, grad_weight);
+      //gemm_tb(batch, N, M, 1.0, delta, weight, m_delta);
+      //row_sum(batch, M, delta, grad_bias);
     }
 
+    void update() {
+      mat_scalar(channel_out, FC, grad_weight, 1.0, grad_weight);
+      mat_minus(channel_out, FC, weight, grad_weight, weight);
+
+      //mat_scalar(1, M, grad_bias, 1.0, grad_bias);
+      //mat_minus(1, M, bias, grad_bias, bias);
+    }
 
 };
 
@@ -229,7 +261,7 @@ class Relu : public Layer {
     }
 
     void backward(float *delta) {
-
+      
     }
 };
 
