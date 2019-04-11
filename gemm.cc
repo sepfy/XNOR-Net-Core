@@ -1,4 +1,5 @@
 #include <iostream>
+#include <omp.h>
 #include "gemm.h"
 
 using namespace std;
@@ -8,8 +9,10 @@ using namespace std;
 void gemm(int M, int N, int P,
   float alpha, float *A, float *B, float *C) {
 
+  #pragma omp parallel for
   for(int i = 0; i < M; i++)
     for(int j = 0; j < N; j++) {
+      C[i*N+j] = 0.0;
       for(int k = 0; k < P; k++)
         C[i*N+j] += A[i*P+k]*B[k*N+j];
       C[i*N+j] *= alpha;
@@ -21,7 +24,8 @@ void gemm(int M, int N, int P,
 */
 void gemm_ta(int M, int N, int P,
   float alpha, float *A, float *B, float *C) {
-
+  
+  #pragma omp parallel for
   for(int i = 0; i < M; i++)
     for(int j = 0; j < N; j++) {
       C[i*N+j] = 0;
@@ -37,6 +41,7 @@ void gemm_ta(int M, int N, int P,
 void gemm_tb(int M, int N, int P,
   float alpha, float *A, float *B, float *C) {
 
+  #pragma omp parallel for
   for(int i = 0; i < M; i++)
     for(int j = 0; j < N; j++) {
       for(int k = 0; k < P; k++)

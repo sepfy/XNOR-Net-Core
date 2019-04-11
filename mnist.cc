@@ -13,12 +13,15 @@
 #define bswap_64(x) OSSwapInt64(x)
 #endif
 
-float* read_images() {
+float* read_images(char *filename) {
 
   FILE *fp;
-  char image_name[] = "train-images-idx3-ubyte";
 
-  fp = fopen(image_name, "rb");
+  fp = fopen(filename, "rb");
+  if(!fp) {
+    cout << "Cannot open file " << filename << endl;
+    exit(1);
+  }
 
   int N, M, cols, rows;
   uint32_t buff;
@@ -30,7 +33,7 @@ float* read_images() {
   // Number
   fread(&buff, sizeof(uint32_t), 1, fp);
   N = bswap_32(buff);
-  N = 600;
+  //N = 600;
   printf("Number of images = %d\n", N);
   // Rows
   fread(&buff, sizeof(uint32_t), 1, fp);
@@ -71,16 +74,18 @@ void show_image(float *X, int num) {
 }
 
 
-float* read_labels() {
+float* read_labels(char *filename) {
 
   FILE *fp;
   //FILE *label_fp;
 
-  char label_name[] = "train-labels-idx1-ubyte";
+  fp = fopen(filename, "rb");
+  if(!fp) {
+    cout << "Cannot open file " << filename << endl;
+    exit(1);
+  }
 
-  fp = fopen(label_name, "rb");
   uint32_t buff;
-
   int N, cols, rows;
 
   // Magic number
@@ -90,7 +95,7 @@ float* read_labels() {
   // Number
   fread(&buff, sizeof(uint32_t), 1, fp);
   N = bswap_32(buff);
-  N = 600;
+  //N = 600;
   printf("Number of images = %d\n", N);
   
   float *Y = new float[N*10]; 
@@ -117,14 +122,39 @@ void show_label(float *Y, int num) {
 }
 
 
+
+float* read_train_data() {
+  char filename[] = "train-images-idx3-ubyte";
+  return read_images(filename);
+}
+
+float* read_train_label() {
+  char filename[] = "train-labels-idx1-ubyte";
+  return read_labels(filename);
+}
+
+
+float* read_validate_data() {
+  char filename[] = "t10k-images-idx3-ubyte";
+  return read_images(filename);
+}
+
+float* read_validate_label() {
+  char filename[] = "t10k-labels-idx1-ubyte";
+  return read_labels(filename);
+}
+
+
 int main(void) {
   float *X, *Y;
   
-  X = read_images();
-  Y = read_labels();
+  X = read_train_data();
+  Y = read_train_label();
+  //X = read_validate_data();
+  //Y = read_validate_data();
   //show_image(X, 2);
   //show_label(Y, 2);
-  int batch = 600;
+  int batch = 60000;
 
   //Connected conn1(batch, 784, 10, X);
   //Sigmoid sigmoid1(batch, 10, conn1.output);
@@ -134,6 +164,7 @@ int main(void) {
   Convolution conv1(batch, 28, 28, 1, 3, 3, 3, 1, 0, X);
   // 28 + 2*0 - 3)/1 + 1 = 26
   Connected conn1(batch, 26*26*3, 10, conv1.output);
+  //Connected conn1(batch, 784, 10, X);
   SoftmaxWithCrossEntropy softmax(batch, 10, Y, conn1.output);
 
   int max_iter = 1000;
@@ -165,9 +196,6 @@ int main(void) {
     //conn2.backward(softmax.m_delta);
     //sigmoid1.backward(conn2.m_delta);
     //conn1.backward(sigmoid1.m_delta);
-
-
-
     //conn2.update();
     //conn1.update();
   }
