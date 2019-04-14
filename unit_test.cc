@@ -160,6 +160,25 @@ void im2col_test() {
 
 }
 
+void norm_test() {
+
+  float A[] = {1, 3, 2, 2, 2, 2};
+  float l1 = 12;
+  float l2 = 26;
+  float l1_func = L1_norm(3, 2, A);
+  float l2_func = L2_norm(3, 2, A);
+  if(l1 != l1_func) 
+    cout << "L1 norm = " << l1_func << " not equal " << l1 << endl;
+  else
+    cout << "L1 norm pass" << endl;
+
+  if(l2 != l2_func)
+    cout << "L2 norm = " << l2_func << " not equal " << l2 << endl;
+  else
+    cout << "L2 norm pass" << endl;
+
+
+}
 
 int main() {
 
@@ -181,6 +200,9 @@ int main() {
   gemm_ta_test();
   gemm_tb_test();
   im2col_test();
+  norm_test();
+
+ 
 /*
   float b[] = { 1, 3, 2};
 //  sgemm(N, M, P, alpha, A, B, C);

@@ -65,3 +65,22 @@ float cross_entropy(int batch, int N, float *output, float *target) {
   return tmp;
 }
 
+float L1_norm(int N, int M, float *A) {
+
+  float norm = 0;
+  for(int i = 0; i < N; i++) 
+    for(int j = 0; j < M; j++) 
+      norm += fabs(A[i*M+j]);
+
+  return norm;
+}
+
+float L2_norm(int N, int M, float *A) {
+
+  float norm = 0;
+  for(int i = 0; i < N; i++) 
+    for(int j = 0; j < M; j++) 
+      norm += pow(A[i*M+j], 2.0);
+
+  return norm;
+}
