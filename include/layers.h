@@ -14,6 +14,7 @@ class Layer {
     float *m_delta;
     virtual void forward() = 0;
     virtual void backward(float* delta) = 0;
+    virtual void update() = 0;
     virtual void init() = 0;
 };
 
@@ -47,6 +48,7 @@ class Sigmoid: public Layer {
     void init();
     void forward();
     void backward(float *delta);
+    void update();
 };
 
 class SoftmaxWithCrossEntropy : public Layer {
@@ -60,6 +62,7 @@ class SoftmaxWithCrossEntropy : public Layer {
     void init();
     void forward();
     void backward(float *delta);
+    void update();
 
 };
 
@@ -86,6 +89,29 @@ class Convolution : public Layer {
     void update();
 };
 
+class Pooling : public Layer {
+
+  public:
+
+    float *col;
+    int batch;
+    int FW, FH, FC;
+    int stride, pad;
+    int W, H, C;
+    int out_channel;
+    int out_w, out_h;
+    float *weight, *bias, *out_col, *im;
+    float *grad_weight;
+
+    Pooling(int _batch, int _W, int _H, int _C,
+	int _FW, int _FH, int _FC, int _stride, int _pad, float* _input);
+    ~Pooling();
+    void init();
+    void forward();
+    void backward(float *delta);
+    void update();
+};
+
 class Relu : public Layer {
   public:
     int N;
@@ -94,4 +120,5 @@ class Relu : public Layer {
     void init();
     void forward();
     void backward(float *delta);
+    void update();
 };

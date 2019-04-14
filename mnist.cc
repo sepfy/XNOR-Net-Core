@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include "tensor.h"
-#include "layers.h"
+#include "network.h"
 #include "loss.h"
 #include <byteswap.h>
 
@@ -13,6 +13,7 @@
 #define bswap_64(x) OSSwapInt64(x)
 #endif
 
+int batch = 600;
 float* read_images(char *filename) {
 
   FILE *fp;
@@ -33,7 +34,7 @@ float* read_images(char *filename) {
   // Number
   fread(&buff, sizeof(uint32_t), 1, fp);
   N = bswap_32(buff);
-  //N = 600;
+  N = batch;
   printf("Number of images = %d\n", N);
   // Rows
   fread(&buff, sizeof(uint32_t), 1, fp);
@@ -95,7 +96,7 @@ float* read_labels(char *filename) {
   // Number
   fread(&buff, sizeof(uint32_t), 1, fp);
   N = bswap_32(buff);
-  //N = 600;
+  N = batch;
   printf("Number of images = %d\n", N);
   
   float *Y = new float[N*10]; 
@@ -144,22 +145,22 @@ float* read_validate_label() {
   return read_labels(filename);
 }
 
+/*
+float validate() {
+
+
+}
+*/
+
 
 int main(void) {
   float *X, *Y;
   
   X = read_train_data();
   Y = read_train_label();
-  //X = read_validate_data();
-  //Y = read_validate_data();
   //show_image(X, 2);
   //show_label(Y, 2);
-  int batch = 60000;
 
-  //Connected conn1(batch, 784, 10, X);
-  //Sigmoid sigmoid1(batch, 10, conn1.output);
-  //Connected conn2(batch, 10, 10, sigmoid1.output);
-  //SoftmaxWithCrossEntropy softmax(batch, 10, Y, conn2.output);
 
   Convolution conv1(batch, 28, 28, 1, 3, 3, 3, 1, 0, X);
   // 28 + 2*0 - 3)/1 + 1 = 26
@@ -167,38 +168,29 @@ int main(void) {
   //Connected conn1(batch, 784, 10, X);
   SoftmaxWithCrossEntropy softmax(batch, 10, Y, conn1.output);
 
-  int max_iter = 1000;
+  Network network;
+  network.add(&conv1);
+  network.add(&conn1);
+  network.add(&softmax);
+
+  int max_iter = 100;
   for(int iter = 0; iter < max_iter; iter++) {
-
-
-
-    //conn1.forward();
-    //sigmoid1.forward();
-    //conn2.forward();
-    //softmax.forward();
-
-    conv1.forward();
-    conn1.forward();
-    softmax.forward();
-
+    network.inference();
     cout << "iter = " << iter << ", accuracy = "
          << accuracy(batch, 10, softmax.output, Y) << endl;
-
-    softmax.backward(Y);
-    conn1.backward(softmax.m_delta);
-    // 26*26*3*batch*10
-    conv1.backward(conn1.m_delta);
-
-    conn1.update();
-    conv1.update();
-
-    //softmax.backward(Y);
-    //conn2.backward(softmax.m_delta);
-    //sigmoid1.backward(conn2.m_delta);
-    //conn1.backward(sigmoid1.m_delta);
-    //conn2.update();
-    //conn1.update();
+    network.train(Y);
   }
+
+  
+  X = read_validate_data();
+  Y = read_validate_label();
+  conv1.input = X;
+  network.inference();
+  cout << "Validate set accuracy = "
+       << accuracy(batch, 10, softmax.output, Y) << endl;
+  
+
+
   return 0;
 }
 
