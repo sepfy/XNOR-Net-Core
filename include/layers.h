@@ -1,10 +1,13 @@
 #include <iostream>
+#include <vector>
 #include "gemm.h"
 #include "blas.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include "utils.h"
 #include <string.h>
+
+using namespace std;
 
 class Layer {
   public:
@@ -115,6 +118,7 @@ class Pooling : public Layer {
 class Relu : public Layer {
   public:
     int N;
+    vector<int> mask;
     Relu(int _batch, int _N, float *_input);
     ~Relu();
     void init();

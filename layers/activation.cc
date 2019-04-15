@@ -80,6 +80,7 @@ Relu::Relu(int _batch, int _N, float *_input) {
   batch = _batch;
   N = _N;
   input = _input;
+  init();
 }
 
 Relu::~Relu() {
@@ -88,18 +89,41 @@ Relu::~Relu() {
 
 void Relu::init() {
   output = new float[batch*N];
+  m_delta = new float[batch*N];
 }
 
 void Relu::forward() {
 
+  int idx;
+  mask.clear();
   for(int i = 0; i < batch; i++) {
     for(int j = 0; j < N; j++) {
-      output[i*N+j] = (input[i*N+j] >= 0 ? input[i*N+j] : 0);
+      //output[i*N+j] = (input[i*N+j] >= 0 ? input[i*N+j] : 0);
+      idx = i*N + j;
+      if(input[idx] > 0) 
+        output[idx] = input[idx];
+      else {
+        output[idx] = 0.0;
+        mask.push_back(idx);
+      }
     }
   }
 }
 
 void Relu::backward(float *delta) {
+
+
+  for(int i = 0; i < batch; i++) {
+    for(int j = 0; j < N; j++) {
+      m_delta[i*N+j] = delta[i*N+j];
+    }
+  }
+
+  //copy(m_delta, m_delta + N*batch, delta);
+  for(int i = 0; i < mask.size(); i++) {
+    //delta[mask[i]] = 0.0;
+    m_delta[mask[i]] = 0.0;
+  }
 
 }
 
