@@ -165,13 +165,16 @@ int main(void) {
   Convolution conv1(batch, 28, 28, 1, 3, 3, 3, 1, 0, X);
   // 28 + 2*0 - 3)/1 + 1 = 26
   Relu relu1(batch, 26*26*3, conv1.output);
-  Connected conn1(batch, 26*26*3, 10, relu1.output);
+  Pooling pool1(batch, 26, 23, 3, 2, 2, 3, 2, 0, relu1.output); 
+  // (26 + 2*0 - 2)/2 + 1 = 13
+  Connected conn1(batch, 13*13*3, 10, pool1.output);
   //Connected conn1(batch, 784, 10, X);
   SoftmaxWithCrossEntropy softmax(batch, 10, Y, conn1.output);
 
   Network network;
   network.add(&conv1);
   network.add(&relu1);
+  network.add(&pool1);
   network.add(&conn1);
   network.add(&softmax);
 

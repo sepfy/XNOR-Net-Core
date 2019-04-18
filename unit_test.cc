@@ -105,54 +105,38 @@ bool gemm_tb_test() {
 
 void im2col_test() {
 
-  /* 
-   0 0 0 0 0 0 0
-   0 1 2 1 2 3 0   
-   0 3 2 1 2 1 0   2 0 1 2 2   2 0 0
-   0 3 2 2 2 1 0   1 2 1 1 3   0 3 1
-   0 2 2 2 2 1 0   1 2 1 1 3   0 3 1
-   0 1 2 2 2 1 0   1 2 1 1 3   0 3 1
-   0 0 0 0 0 0 0
-
-   0 0 0 0 1 2 0 3 2
-   0 0 0 1 2 1 3 2 1
-   0 0 0 2 1 2 2 1 2
-   
+  /*
+  Input: 
+    1 2 1   3 4 2 
+    3 4 2   1 2 2
+    1 6 2   9 8 7
+  Output:
+    1 3 2 4 3 1 4 2
+    2 4 1 2 4 2 2 2
+    ...
   */
   // N H W C
-  // 1 2 1 2
+  // N C H W
   cout << "Test im2col" << endl;
-  float im[] = {1, 2, 1, 
-                2, 3, 3,
-                2, 1, 2, 
-                1, 3, 2,
-                2, 2, 1,
-                2, 2, 2,
-                2, 1, 1,
-                2, 2, 2,
-                1, 1, 2, 1, 2, 3,
-                3, 2, 1, 2, 1, 3,
-                2, 2, 2, 1, 2, 2, 2, 2, 1,
-                1, 2, 2, 2, 1, 1, 2, 1, 2, 
-                3, 3, 2, 1, 2, 1, 3, 2, 2, 
-                2, 1, 2, 2, 2, 2, 1, 1, 2, 2, 2, 1}; 
-  int W = 5, H = 5, C = 3;
-  int FW = 3, FH = 3, FC = 2;
+  float im[] = {1, 3, 2, 4, 1, 2, 3, 1, 4, 2, 2, 2, 1, 9, 6, 8, 2, 7}; 
+
+  int W = 3, H = 3, C = 2;
+  int FW = 2, FH = 2, FC = 2;
   int stride = 1, pad = 0;
   
-  int out_w = (W + 2*pad - FW)/stride + 1;  //5
-  int out_h = (H + 2*pad - FH)/stride + 1;  //5
-  // (5x5)x(3*3*3)
+  int out_w = (W + 2*pad - FW)/stride + 1;  //3-2+1 = 2
+  int out_h = (H + 2*pad - FH)/stride + 1;  //3-2+1 = 2
   int channel_out = FW*FH*C;
+
   float *col = new float[out_w*out_h*channel_out];
 
   im2col(W, H, C, FW, FH, FC,
              stride, pad, im, col);
 
-  for(int i = 0; i < 1; i++)
-    for(int j = 0; j < out_h; j++) {
+  for(int i = 0; i < out_h; i++)
+    for(int j = 0; j < out_w; j++) {
       for(int k = 0; k < channel_out; k++) {
-        cout << col[(i*out_h+j)*channel_out+k] << " ";
+        cout << col[(i*out_w+j)*channel_out+k] << " ";
       }  
       cout << endl;
 
@@ -180,6 +164,28 @@ void norm_test() {
 
 }
 
+void pooling_test() {
+
+  float im[] = {2, 3, 4, 2, 
+                1, 3, 2, 2, 
+                2, 9, 4, 3,
+                1, 6, 1, 2};
+  // 4 -2 / 2 + 1
+
+  
+  for(int i = 0; i < 4; i++) {
+    for(int j = 0; j < 4; j++) 
+      cout << im[i*4+j] << " ";
+    
+    cout << endl;
+  }
+  Pooling pool1(1, 4, 4, 1, 2, 2, 1, 2, 0, im);
+  pool1.forward();
+  for(int i = 0; i < 4; i++)
+    cout << pool1.output[i] << "";
+  cout << endl;
+}
+
 int main() {
 
   /*
@@ -196,12 +202,13 @@ int main() {
         18 20
   */
 
-  gemm_test();
-  gemm_ta_test();
-  gemm_tb_test();
+  //gemm_test();
+  //gemm_ta_test();
+  //gemm_tb_test();
   im2col_test();
-  norm_test();
-
+  //norm_test();
+  cout << endl;
+  pooling_test();
  
 /*
   float b[] = { 1, 3, 2};
