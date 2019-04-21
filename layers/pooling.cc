@@ -43,7 +43,6 @@ void Pooling::forward() {
     //cout << endl;
     memcpy(out_col + i*col_size, col, col_size*sizeof(float));
   }
-    cout << endl;
   int out_size = out_h*out_w*C;
   int filter_size = FH*FW;
   int idx;

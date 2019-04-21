@@ -1,10 +1,39 @@
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
 #include "gemm.h"
+#include "blas.h"
+#include "utils.h"
 
 using ::testing::ElementsAreArray;
+
+TEST(BLAS, LINF_NORM) {
+  int N = 3;
+  int M = 2;
+  float A[] = {-1, 3, 9, 1, -3, 2};
+  float norm;
+  norm = Linf_norm(N, M, A);
+  EXPECT_EQ(9, norm);
+}
+
+TEST(BLAS, L1_NORM) {
+  int N = 3;
+  int M = 2;
+  float A[] = {-1, 3, 9, 1, -3, 2};
+  float norm;
+  norm = L1_norm(N, M, A);
+  EXPECT_EQ(19, norm);
+}
+
+TEST(BLAS, L2_NORM) {
+  int N = 3;
+  int M = 2;
+  float A[] = {-1, 3, 9, 1, -3, 2};
+  float norm;
+  norm = L2_norm(N, M, A);
+  EXPECT_EQ(105, norm);
+}
  
-TEST(BlasTest, GEMM) { 
+TEST(BLAS, GEMM) { 
 
   int M = 3;
   int N = 2;
@@ -17,8 +46,44 @@ TEST(BlasTest, GEMM) {
   gemm(M, N, P, alpha, A, B, C);
 
   ASSERT_THAT(C, ElementsAreArray(D));
-
 }
+
+TEST(UTILITY, IM2COL) {
+
+  /*
+   *  (N, H, W, C) = (1, 3, 3, 2)  
+   *  filter = (2, 2, 2), stride = 1 padding = 1
+   *
+   *  Input:                   Output:
+   *    1 2 1   3 4 2            1 3 2 4 3 1 4 2
+   *    3 4 2   1 2 2            2 4 1 2 4 2 2 2
+   *    1 6 2   9 8 7            3 1 4 2 1 9 6 8
+   *                             4 2 2 2 6 8 2 7
+   *
+   */
+
+  float im[] = {1, 3, 2, 4, 1, 2, 3, 1, 4, 2, 2, 2, 1, 9, 6, 8, 2, 7};
+  float col[] = {1, 3, 2, 4, 3, 1, 4, 2,
+                 2, 4, 1, 2, 4, 2, 2, 2,
+                 3, 1, 4, 2, 1, 9, 6, 8,
+                 4, 2, 2, 2, 6, 8, 2, 7};
+
+  int W = 3, H = 3, C = 2;
+  int FW = 2, FH = 2, FC = 2;
+  int stride = 1, pad = 0;
+
+  int out_w = (W + 2*pad - FW)/stride + 1;  //3-2+1 = 2
+  int out_h = (H + 2*pad - FH)/stride + 1;  //3-2+1 = 2
+  int channel_out = FW*FH*C;
+
+  //float *col_out = new float[out_w*out_h*channel_out];
+  float col_out[32] = {0};;
+  im2col(W, H, C, FW, FH, FC,
+             stride, pad, im, col_out);
+
+  ASSERT_THAT(col_out, ElementsAreArray(col));
+}
+
 
 int main(int argc, char **argv) {
     testing::InitGoogleTest(&argc, argv);

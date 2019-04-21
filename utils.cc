@@ -53,3 +53,9 @@ void col2im(int W, int H, int C, int FW, int FH, int FC,
       }
 }
 */
+
+
+float argmax(int N, float *data) {
+
+
+}

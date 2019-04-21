@@ -84,3 +84,13 @@ float L2_norm(int N, int M, float *A) {
 
   return norm;
 }
+
+float Linf_norm(int N, int M, float *A) {
+
+  float max = -1.0e5;
+  for(int i = 0; i < N; i++)
+    for(int j = 0; j < M; j++)
+      if(A[i*M+j] > max)
+        max = A[i*M+j];
+  return max;
+}
