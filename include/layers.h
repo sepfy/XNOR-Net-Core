@@ -105,6 +105,7 @@ class Pooling : public Layer {
     int out_w, out_h;
     float *weight, *bias, *out_col, *im;
     float *grad_weight;
+    float *delta_col;
     vector<int> max_seq;
     Pooling(int _batch, int _W, int _H, int _C,
 	int _FW, int _FH, int _FC, int _stride, int _pad, float* _input);
