@@ -56,10 +56,11 @@ void Pooling::forward() {
   for(int i = 0; i < batch; i++) {
     for(int p = 0; p < out_h; p++)
       for(int q = 0; q < out_w; q++)
-        for(int o = 0; o < FC; o++) {
+        for(int o = 0; o < C; o++) {
           max = -1.0e+6;
           for(int j = 0; j < filter_size; j++) {
-            idx = i*col_size + p*(out_w*out_channel) + q*out_channel + o*filter_size + j;
+            //idx = i*col_size + p*(out_w*out_channel) + q*out_channel + o*filter_size + j;
+            idx = i*col_size + p*(out_w*out_channel) + q*out_channel + j*C + o;
             //cout << out_col[idx] << " ";
             if(out_col[idx] > max) {
               //out_w*out_h*out_channel*batch
@@ -83,11 +84,21 @@ void Pooling::backward(float *delta) {
   // (batch*out_w*out_h)*out_channel = FW*FH*FC 
   //m_delta should be (batch*out_h*out_w)*FC
 
-  memset(delta_col, 0, batch*out_channel*out_w*out_h); 
-  for(int i = 0; i < max_seq.size(); i++)
+  int im_size = W*H*C;
+  int col_size = out_w*out_h*out_channel;
+  float *im = new float[W*H*C];
+  float *col = new float[out_channel*out_w*out_h];
+  memset(delta_col, 0.0, batch*out_channel*out_w*out_h); 
+  for(int i = 0; i < out_w*out_h*C*batch; i++)
     delta_col[max_seq[i]] = delta[i];
-  col2im(W, H, C, FW, FH, C, stride, pad, m_delta, delta_col);
-
+    //m_delta[max_seq[i]] = delta[i];
+  //float
+  for(int i = 0; i < batch; i++) {
+    memcpy(col, delta_col + i*col_size, col_size*sizeof(float)); 
+    col2im(W, H, C, FW, FH, C, stride, pad, im, col);
+    memcpy(m_delta + i*im_size, im, im_size*sizeof(float));
+  }
+  free(im);
   
 /*
   int filter_size = FH*FW;
