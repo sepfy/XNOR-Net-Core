@@ -24,8 +24,16 @@ void im2col(int W, int H, int C, int FW, int FH, int FC,
         im_row = offset_h + i*stride;
         im_col = offset_w + j*stride;
         //int im_idx = C*(im_row*W + im_col) + c_im;
-        int im_idx = C*(im_row*W + im_col) + c_im;
-        col[(i*out_w + j)*out_col + k] = im[im_idx];
+        
+        int im_pad_row = im_row - pad;
+        int im_pad_col = im_col - pad;
+        if(im_pad_row < 0 || im_pad_col < 0 ||
+           im_pad_row >= H || im_pad_col >= W)
+          col[(i*out_w + j)*out_col + k] = 0.0;
+        else { 
+          int im_idx = C*(im_row*W + im_col) + c_im;
+          col[(i*out_w + j)*out_col + k] = im[im_idx];
+        }
         //cout << col[(i*out_w + j)*out_col + k] << ", ";
       }
     }

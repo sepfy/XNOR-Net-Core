@@ -5,13 +5,31 @@
 
 using namespace std;
 
+
+void add(int N, int M, float *A, float *B, float *C) {
+  int idx;
+  for(int i = 0; i < N; i++)
+    for(int j = 0; j < M; j++) {
+      idx = i*M + j;
+      C[idx] = A[idx] + B[idx];
+    }
+}
+
+void bias_add(int batch, int M, float *A, float *bias) {
+  
+  for(int i = 0; i < batch; i++)
+    add(1, M, A+i*M, bias, A+i*M);
+}
+
+
+/*
 void bias_add(int N, int M, float *A, float *bias) {
 
     size_t length = M*sizeof(float);
     for(int i = 0; i < N; i++)
       memcpy(A+i*M, bias, length);
 }
-
+*/
 
 void col_sum(int N, int M, float *A, float *B) {
   memset(B, 0, N*sizeof(float));

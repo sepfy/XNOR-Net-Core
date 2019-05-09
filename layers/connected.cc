@@ -32,10 +32,8 @@ void Connected::init() {
 }
 
 void Connected::forward() {  
-
-  memset(output, 0, batch*M*sizeof(float));
-  bias_add(batch, M, output, bias);
   gemm(batch, M, N, 1, input, weight, output);
+  bias_add(batch, M, output, bias);
 }
 
 void Connected::backward(float *delta) {

@@ -1,7 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdint.h>
-#include "tensor.h"
 #include "network.h"
 #include "loss.h"
 #include <byteswap.h>
@@ -162,22 +161,32 @@ int main(void) {
   //show_label(Y, 2);
 
 
-  Convolution conv1(batch, 28, 28, 1, 3, 3, 3, 1, 0, X);
-  // 28 + 2*0 - 3)/1 + 1 = 26
-  Relu relu1(batch, 26*26*3, conv1.output);
-  //Pooling pool1(batch, 26, 26, 3, 2, 2, 3, 2, 0, relu1.output); 
-  // (26 + 2*0 - 2)/2 + 1 = 13
-  Connected conn1(batch, 26*26*3, 10, relu1.output);
+  Convolution conv1(batch, 28, 28, 1, 5, 5, 3, 1, 2, X);
+  // 28 + 2*2 - 5)/1 + 1 = 28
+  Relu relu1(batch, 28*28*3, conv1.output);
+  Pooling pool1(batch, 28, 28, 3, 2, 2, 3, 2, 0, relu1.output); 
+
+  Convolution conv2(batch, 14, 14, 3, 3, 3, 3, 1, 1, pool1.output);
+  // (14 + 2*1 - 3)/1 + 1 = 12
+  Relu relu2(batch, 14*14*3, conv2.output);
+  Pooling pool2(batch, 14, 14, 3, 2, 2, 3, 2, 0, relu2.output); 
+
+
+
+
+  Connected conn1(batch, 7*7*3, 10, pool2.output);
   //Connected conn1(batch, 784, 10, X);
   SoftmaxWithCrossEntropy softmax(batch, 10, Y, conn1.output);
 
   Network network;
   network.add(&conv1);
   network.add(&relu1);
-  //network.add(&pool1);
+  network.add(&pool1);
+  network.add(&conv2);
+  network.add(&relu2);
+  network.add(&pool2);
   network.add(&conn1);
   network.add(&softmax);
-
   int max_iter = 500;
   for(int iter = 0; iter < max_iter; iter++) {
     network.inference();
