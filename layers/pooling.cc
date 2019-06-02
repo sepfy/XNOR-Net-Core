@@ -1,9 +1,8 @@
 #include "layers.h"
 
-Pooling::Pooling(int _batch, int _W, int _H, int _C,
-  int _FW, int _FH, int _FC, int _stride, int _pad, float* _input) {
+Pooling::Pooling(int _W, int _H, int _C,
+  int _FW, int _FH, int _FC, int _stride, int _pad) {
 
-  batch = _batch;
   W = _W;
   H = _H;
   C = _C;
@@ -15,8 +14,6 @@ Pooling::Pooling(int _batch, int _W, int _H, int _C,
   out_w = (W + 2*pad - FW)/stride + 1;
   out_h = (H + 2*pad - FH)/stride + 1;
   out_channel = FW*FH*C;
-  input = _input;
-  init();
 }
 
 Pooling::~Pooling() {
@@ -24,6 +21,7 @@ Pooling::~Pooling() {
 }
 
 void Pooling::init() {
+
   col = new float[out_w*out_h*out_channel];
   output = new float[batch*out_w*out_h*FC];
   out_col = new float[out_w*out_h*out_channel*batch];

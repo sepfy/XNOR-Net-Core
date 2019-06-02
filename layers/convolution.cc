@@ -1,9 +1,8 @@
 #include "layers.h"
 
-Convolution::Convolution(int _batch, int _W, int _H, int _C,
-  int _FW, int _FH, int _FC, int _stride, int _pad, float* _input) {
+Convolution::Convolution(int _W, int _H, int _C,
+  int _FW, int _FH, int _FC, int _stride, int _pad) {
 
-  batch = _batch;
   W = _W;
   H = _H;
   C = _C;
@@ -15,8 +14,6 @@ Convolution::Convolution(int _batch, int _W, int _H, int _C,
   out_w = (W + 2*pad - FW)/stride + 1;
   out_h = (H + 2*pad - FH)/stride + 1;
   out_channel = FW*FH*C;
-  input = _input;
-  init();
 
 }
 
@@ -25,6 +22,7 @@ Convolution::~Convolution() {
 }
 
 void Convolution::init() {
+
   col = new float[out_w*out_h*out_channel];
   output = new float[batch*out_w*out_h*FC];
   out_col = new float[out_w*out_h*out_channel*batch];
@@ -68,6 +66,7 @@ void Convolution::forward() {
 }
 
 void Convolution::backward(float *delta) {
+
   //weight
   memset(grad_weight, 0, out_channel*FC*sizeof(float));
   gemm_ta(out_channel, FC, out_h*out_w*batch, 1.0, out_col, delta, grad_weight);
@@ -77,6 +76,7 @@ void Convolution::backward(float *delta) {
   row_sum(batch, out_w*out_h*FC, delta, grad_bias);
 
 
+  
   int im_size = W*H*C;
   int col_size = out_w*out_h*out_channel;
  
@@ -90,6 +90,7 @@ void Convolution::backward(float *delta) {
   memset(m_delta, 0, batch*W*H*C*sizeof(float));
 
   for(int i = 0; i < batch; i++) {
+    memset(col, 0, col_size*sizeof(float));
     memcpy(col, delta_col + i*col_size, col_size*sizeof(float));
     col2im(W, H, C, FW, FH, FC, stride, pad, im, col);
     memcpy(m_delta + i*im_size, im, im_size*sizeof(float));

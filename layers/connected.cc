@@ -1,11 +1,8 @@
 #include "layers.h"
 
-Connected::Connected(int _batch, int _n, int _m, float *_input) {
-  batch = _batch;
+Connected::Connected(int _n, int _m) {
   N = _n;
   M = _m;
-  input = _input;
-  init();
 }
 
 Connected::~Connected() {

@@ -12,7 +12,6 @@
 #define bswap_64(x) OSSwapInt64(x)
 #endif
 
-int batch = 600;
 float* read_images(char *filename) {
 
   FILE *fp;
@@ -33,7 +32,6 @@ float* read_images(char *filename) {
   // Number
   fread(&buff, sizeof(uint32_t), 1, fp);
   N = bswap_32(buff);
-  N = batch;
   printf("Number of images = %d\n", N);
   // Rows
   fread(&buff, sizeof(uint32_t), 1, fp);
@@ -95,7 +93,6 @@ float* read_labels(char *filename) {
   // Number
   fread(&buff, sizeof(uint32_t), 1, fp);
   N = bswap_32(buff);
-  N = batch;
   printf("Number of images = %d\n", N);
   
   float *Y = new float[N*10]; 
@@ -160,23 +157,14 @@ int main(void) {
   //show_image(X, 2);
   //show_label(Y, 2);
 
-
-  Convolution conv1(batch, 28, 28, 1, 5, 5, 3, 1, 2, X);
-  // 28 + 2*2 - 5)/1 + 1 = 28
-  Relu relu1(batch, 28*28*3, conv1.output);
-  Pooling pool1(batch, 28, 28, 3, 2, 2, 3, 2, 0, relu1.output); 
-
-  Convolution conv2(batch, 14, 14, 3, 3, 3, 3, 1, 1, pool1.output);
-  // (14 + 2*1 - 3)/1 + 1 = 12
-  Relu relu2(batch, 14*14*3, conv2.output);
-  Pooling pool2(batch, 14, 14, 3, 2, 2, 3, 2, 0, relu2.output); 
-
-
-
-
-  Connected conn1(batch, 7*7*3, 10, pool2.output);
-  //Connected conn1(batch, 784, 10, X);
-  SoftmaxWithCrossEntropy softmax(batch, 10, Y, conn1.output);
+  Convolution conv1(28, 28, 1, 5, 5, 3, 1, 2);
+  Relu relu1(28*28*3);
+  Pooling pool1(28, 28, 3, 2, 2, 3, 2, 0); 
+  Convolution conv2(14, 14, 3, 3, 3, 3, 1, 1);
+  Relu relu2(14*14*3);
+  Pooling pool2(14, 14, 3, 2, 2, 3, 2, 0); 
+  Connected conn1(7*7*3, 10);
+  SoftmaxWithCrossEntropy softmax(10, Y);
 
   Network network;
   network.add(&conv1);
@@ -188,17 +176,23 @@ int main(void) {
   network.add(&conn1);
   network.add(&softmax);
   int max_iter = 500;
+  float *x = X;
+  int batch = 600;
+  network.initial(batch, x);
   for(int iter = 0; iter < max_iter; iter++) {
-    network.inference();
+
+    //for(int subset = 0; subset < 5; subset++)  {
+      network.inference();
+      network.train(Y);
+    //}
     cout << "iter = " << iter << ", accuracy = "
          << accuracy(batch, 10, softmax.output, Y) << endl;
-    network.train(Y);
   }
 
   
   X = read_validate_data();
   Y = read_validate_label();
-  conv1.input = X;
+  x = X;  
   network.inference();
   cout << "Validate set accuracy = "
        << accuracy(batch, 10, softmax.output, Y) << endl;

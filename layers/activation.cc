@@ -1,10 +1,7 @@
 #include "layers.h"
 
-Sigmoid::Sigmoid(int _batch, int _N, float *_input) {
-  batch = _batch;
+Sigmoid::Sigmoid(int _N) {
   N = _N;
-  input = _input;
-  init();  
 }
 
 Sigmoid::~Sigmoid() {
@@ -32,13 +29,10 @@ void Sigmoid::update() {
 
 }
 
-SoftmaxWithCrossEntropy::SoftmaxWithCrossEntropy(int _batch,
-    int _n, float *_target, float *_input) {
-  batch = _batch;
+SoftmaxWithCrossEntropy::SoftmaxWithCrossEntropy(
+    int _n, float *_target) {
   N = _n;
   target = _target;
-  input = _input;
-  init();
 }
 
 void SoftmaxWithCrossEntropy::init() {
@@ -76,11 +70,8 @@ void SoftmaxWithCrossEntropy::backward(float *delta) {
 void SoftmaxWithCrossEntropy::update() {
 }
 
-Relu::Relu(int _batch, int _N, float *_input) {
-  batch = _batch;
+Relu::Relu(int _N) {
   N = _N;
-  input = _input;
-  init();
 }
 
 Relu::~Relu() {

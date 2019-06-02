@@ -31,9 +31,8 @@ class Connected : public Layer {
     // W is NxM matrix
     int N;   
     int M;
-    int batch;
    
-    Connected(int _batch, int _n, int _m, float *_input);
+    Connected(int _n, int _m);
     ~Connected();
     void init(); 
     void forward();
@@ -46,7 +45,7 @@ class Sigmoid: public Layer {
 
   public:
     int N;
-    Sigmoid(int _batch, int _N, float *_input);
+    Sigmoid(int _N);
     ~Sigmoid();
     void init();
     void forward();
@@ -60,7 +59,7 @@ class SoftmaxWithCrossEntropy : public Layer {
     int N;
     float *target;
 
-    SoftmaxWithCrossEntropy(int _batch, int _n, float *_target, float *_input);
+    SoftmaxWithCrossEntropy(int _n, float *_target);
     ~SoftmaxWithCrossEntropy();
     void init();
     void forward();
@@ -74,7 +73,6 @@ class Convolution : public Layer {
   public:
 
     float *col;
-    int batch;
     int FW, FH, FC;
     int stride, pad;
     int W, H, C;
@@ -83,8 +81,8 @@ class Convolution : public Layer {
     float *weight, *bias, *out_col, *im;
     float *grad_weight, *grad_bias;
 
-    Convolution(int _batch, int _W, int _H, int _C,
-	int _FW, int _FH, int _FC, int _stride, int _pad, float* _input);
+    Convolution(int _W, int _H, int _C,
+	int _FW, int _FH, int _FC, int _stride, int _pad);
     ~Convolution();
     void init();
     void forward();
@@ -97,7 +95,6 @@ class Pooling : public Layer {
   public:
 
     float *col;
-    int batch;
     int FW, FH, FC;
     int stride, pad;
     int W, H, C;
@@ -107,8 +104,8 @@ class Pooling : public Layer {
     float *grad_weight;
     float *delta_col;
     vector<int> max_seq;
-    Pooling(int _batch, int _W, int _H, int _C,
-	int _FW, int _FH, int _FC, int _stride, int _pad, float* _input);
+    Pooling(int _W, int _H, int _C,
+	int _FW, int _FH, int _FC, int _stride, int _pad);
     ~Pooling();
     void init();
     void forward();
@@ -120,7 +117,7 @@ class Relu : public Layer {
   public:
     int N;
     vector<int> mask;
-    Relu(int _batch, int _N, float *_input);
+    Relu(int _N);
     ~Relu();
     void init();
     void forward();
