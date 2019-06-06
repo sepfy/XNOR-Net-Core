@@ -157,45 +157,61 @@ int main(void) {
   //show_image(X, 2);
   //show_label(Y, 2);
 
-  Convolution conv1(28, 28, 1, 5, 5, 3, 1, 2);
+  Convolution conv1(28, 28, 1, 5, 5, 3, 1, true);
+  //Connected conn1(28*28*1, 10);
   Relu relu1(28*28*3);
-  Pooling pool1(28, 28, 3, 2, 2, 3, 2, 0); 
-  Convolution conv2(14, 14, 3, 3, 3, 3, 1, 1);
-  Relu relu2(14*14*3);
-  Pooling pool2(14, 14, 3, 2, 2, 3, 2, 0); 
-  Connected conn1(7*7*3, 10);
+  Pooling pool1(28, 28, 3, 2, 2, 3, 2, false); 
+  //Convolution conv2(14, 14, 3, 3, 3, 3, 1, true);
+  //Relu relu2(14*14*3);
+  //Pooling pool2(14, 14, 3, 2, 2, 3, 2, false); 
+  //Connected conn1(7*7*3, 10);
+  Connected conn1(14*14*3, 10);
   SoftmaxWithCrossEntropy softmax(10, Y);
 
   Network network;
   network.add(&conv1);
   network.add(&relu1);
   network.add(&pool1);
-  network.add(&conv2);
-  network.add(&relu2);
-  network.add(&pool2);
+  //network.add(&conv2);
+  //network.add(&relu2);
+  //network.add(&pool2);
   network.add(&conn1);
   network.add(&softmax);
-  int max_iter = 500;
-  float *x = X;
-  int batch = 600;
-  network.initial(batch, x);
+  int max_iter = 20000;
+  float total_err = 0;
+
+
+  int data_num = 100;
+  int batch = 100;
+  int epoch = data_num/batch;
+  int step = -100;
+
+  network.initial(batch, .1);
   for(int iter = 0; iter < max_iter; iter++) {
 
-    //for(int subset = 0; subset < 5; subset++)  {
-      network.inference();
-      network.train(Y);
-    //}
-    cout << "iter = " << iter << ", accuracy = "
-         << accuracy(batch, 10, softmax.output, Y) << endl;
+    //step = (step + batch)%data_num;
+    ms_t start = getms();
+    network.inference(X);// + step);
+    network.train(Y);// + step);
+   
+
+    total_err = accuracy(batch, 10, softmax.output, Y);// + step);
+
+    if(iter%epoch == 0) {
+      cout << "iter = " << iter << ", time = " << (getms() - start) << "ms, error = "
+         << total_err << endl;
+    }
+
+    if(total_err < 0.01)
+      break;
   }
 
   
   X = read_validate_data();
   Y = read_validate_label();
-  x = X;  
-  network.inference();
-  cout << "Validate set accuracy = "
-       << accuracy(batch, 10, softmax.output, Y) << endl;
+  network.inference(X);
+  total_err = accuracy(batch, 10, softmax.output, Y);
+  cout << "Validate set error = " << total_err << endl;
   
 
 

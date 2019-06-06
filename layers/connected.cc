@@ -43,10 +43,10 @@ void Connected::backward(float *delta) {
   row_sum(batch, M, delta, grad_bias);
 }
 
-void Connected::update() {
-  mat_scalar(N, M, grad_weight, 0.1, grad_weight);
+void Connected::update(float lr) {
+  mat_scalar(N, M, grad_weight, lr, grad_weight);
   mat_minus(N, M, weight, grad_weight, weight);
-  mat_scalar(1, M, grad_bias, 0.1, grad_bias);
+  mat_scalar(1, M, grad_bias, lr, grad_bias);
   mat_minus(1, M, bias, grad_bias, bias);
 }
 

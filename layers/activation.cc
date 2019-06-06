@@ -25,7 +25,7 @@ void Sigmoid::backward(float *delta) {
       m_delta[i*N+j] = delta[i*N+j]*(1.0 - output[i*N+j])*output[i*N+j];
 }
 
-void Sigmoid::update() {
+void Sigmoid::update(float lr) {
 
 }
 
@@ -67,7 +67,7 @@ void SoftmaxWithCrossEntropy::backward(float *delta) {
   mat_scalar(batch, N, m_delta, 1.0/(float)batch, m_delta);
 }
 
-void SoftmaxWithCrossEntropy::update() {
+void SoftmaxWithCrossEntropy::update(float lr) {
 }
 
 Relu::Relu(int _N) {
@@ -118,5 +118,5 @@ void Relu::backward(float *delta) {
 
 }
 
-void Relu::update() {
+void Relu::update(float lr) {
 }

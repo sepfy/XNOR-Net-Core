@@ -1,7 +1,7 @@
 #include "layers.h"
 
 Convolution::Convolution(int _W, int _H, int _C,
-  int _FW, int _FH, int _FC, int _stride, int _pad) {
+  int _FW, int _FH, int _FC, int _stride, bool _pad) {
 
   W = _W;
   H = _H;
@@ -10,9 +10,20 @@ Convolution::Convolution(int _W, int _H, int _C,
   FH = _FH;
   FC = _FC;
   stride = _stride;
-  pad = _pad;
-  out_w = (W + 2*pad - FW)/stride + 1;
-  out_h = (H + 2*pad - FH)/stride + 1;
+
+
+  if(_pad == true) {
+    pad = 0.5*((stride - 1)*W - stride + FW);
+    out_w = W;
+    out_h = H;
+  }
+  else {
+    pad = 0;
+    out_w = (W - FW)/stride + 1;
+    out_h = (H - FH)/stride + 1;
+  }
+
+
   out_channel = FW*FH*C;
 
 }
@@ -53,11 +64,13 @@ void Convolution::forward() {
 
   //  im = H*W*C
   // col = (out_h*out_w)*(out_channel)
+  //cout << "LINE: " << __LINE__ << " = " << getms() << endl;
   for(int i = 0; i < batch; i++) {
     memcpy(im, input + i*im_size, im_size*sizeof(float));
     im2col(W, H, C, FW, FH, FC, stride, pad, im, col);
     memcpy(out_col + i*col_size, col, col_size*sizeof(float));
   }
+  //cout << "LINE: " << __LINE__ << " = " << getms() << endl;
 
   // out_col = (batch*out_h*out_w)*out_channel
   // weight  = out_channel*FC
@@ -102,14 +115,14 @@ void Convolution::backward(float *delta) {
 
 }
 
-void Convolution::update() {
+void Convolution::update(float lr) {
 
   //weight
-  mat_scalar(out_channel, FC, grad_weight, 0.1, grad_weight);
+  mat_scalar(out_channel, FC, grad_weight, lr, grad_weight);
   mat_minus(out_channel, FC, weight, grad_weight, weight);
 
   // bias
-  mat_scalar(1, out_w*out_h*FC, grad_bias, 0.1, grad_bias);
+  mat_scalar(1, out_w*out_h*FC, grad_bias, lr, grad_bias);
   mat_minus(1, out_w*out_h*FC, bias, grad_bias, bias);
 
 }

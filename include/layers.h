@@ -17,7 +17,7 @@ class Layer {
     float *m_delta;
     virtual void forward() = 0;
     virtual void backward(float* delta) = 0;
-    virtual void update() = 0;
+    virtual void update(float lr) = 0;
     virtual void init() = 0;
 };
 
@@ -37,7 +37,7 @@ class Connected : public Layer {
     void init(); 
     void forward();
     void backward(float *delta);
-    void update();
+    void update(float lr);
 
 };
 
@@ -50,7 +50,7 @@ class Sigmoid: public Layer {
     void init();
     void forward();
     void backward(float *delta);
-    void update();
+    void update(float lr);
 };
 
 class SoftmaxWithCrossEntropy : public Layer {
@@ -64,7 +64,7 @@ class SoftmaxWithCrossEntropy : public Layer {
     void init();
     void forward();
     void backward(float *delta);
-    void update();
+    void update(float lr);
 
 };
 
@@ -82,12 +82,12 @@ class Convolution : public Layer {
     float *grad_weight, *grad_bias;
 
     Convolution(int _W, int _H, int _C,
-	int _FW, int _FH, int _FC, int _stride, int _pad);
+	int _FW, int _FH, int _FC, int _stride, bool _pad);
     ~Convolution();
     void init();
     void forward();
     void backward(float *delta);
-    void update();
+    void update(float lr);
 };
 
 class Pooling : public Layer {
@@ -105,12 +105,12 @@ class Pooling : public Layer {
     float *delta_col;
     vector<int> max_seq;
     Pooling(int _W, int _H, int _C,
-	int _FW, int _FH, int _FC, int _stride, int _pad);
+	int _FW, int _FH, int _FC, int _stride, bool _pad);
     ~Pooling();
     void init();
     void forward();
     void backward(float *delta);
-    void update();
+    void update(float lr);
 };
 
 class Relu : public Layer {
@@ -122,5 +122,5 @@ class Relu : public Layer {
     void init();
     void forward();
     void backward(float *delta);
-    void update();
+    void update(float lr);
 };

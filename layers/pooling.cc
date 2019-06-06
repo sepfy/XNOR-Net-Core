@@ -1,7 +1,7 @@
 #include "layers.h"
 
 Pooling::Pooling(int _W, int _H, int _C,
-  int _FW, int _FH, int _FC, int _stride, int _pad) {
+  int _FW, int _FH, int _FC, int _stride, bool _pad) {
 
   W = _W;
   H = _H;
@@ -10,9 +10,20 @@ Pooling::Pooling(int _W, int _H, int _C,
   FH = _FH;
   FC = _FC;
   stride = _stride;
-  pad = _pad;
-  out_w = (W + 2*pad - FW)/stride + 1;
-  out_h = (H + 2*pad - FH)/stride + 1;
+
+  if(_pad == true) {
+    pad = 0.5*((stride - 1)*W - stride + FW);
+    out_w = W;
+    out_h = H;
+  }
+  else {
+    pad = 0;
+    out_w = (W - FW)/stride + 1;
+    out_h = (H - FH)/stride + 1;
+  }
+
+
+
   out_channel = FW*FH*C;
 }
 
@@ -124,7 +135,6 @@ cout << max_seq[idx] << endl;
   //gemm_ta(out_channel, FC, out_h*out_w*batch, 1.0, out_col, delta, grad_weight);
 }
 
-void Pooling::update() {
-
+void Pooling::update(float lr) {
 }
 
