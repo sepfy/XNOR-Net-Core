@@ -7,6 +7,7 @@
 #include "utils.h"
 #include <string.h>
 
+#define XNOR_NET 1
 using namespace std;
 
 class Layer {
@@ -75,11 +76,19 @@ class Convolution : public Layer {
     float *col;
     int FW, FH, FC;
     int stride, pad;
+
     int W, H, C;
     int out_channel;
     int out_w, out_h;
+    int col_size;
+    int im_size;
+
+
     float *weight, *bias, *out_col, *im;
     float *grad_weight, *grad_bias;
+
+
+
 
     Convolution(int _W, int _H, int _C,
 	int _FW, int _FH, int _FC, int _stride, bool _pad);
@@ -88,6 +97,10 @@ class Convolution : public Layer {
     void forward();
     void backward(float *delta);
     void update(float lr);
+
+#if XNOR_NET
+    void binarize(float *input, int N);
+#endif
 };
 
 class Pooling : public Layer {

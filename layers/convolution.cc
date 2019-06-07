@@ -1,4 +1,7 @@
 #include "layers.h"
+#include <bitset>
+
+using namespace std;
 
 Convolution::Convolution(int _W, int _H, int _C,
   int _FW, int _FH, int _FC, int _stride, bool _pad) {
@@ -25,6 +28,8 @@ Convolution::Convolution(int _W, int _H, int _C,
 
 
   out_channel = FW*FH*C;
+  col_size = out_w*out_h*out_channel;
+  im_size = H*W*C;
 
 }
 
@@ -38,6 +43,7 @@ void Convolution::init() {
   output = new float[batch*out_w*out_h*FC];
   out_col = new float[out_w*out_h*out_channel*batch];
 
+  bitset<H> binary_input;
   weight = new float[out_channel*FC];
   grad_weight = new float[out_channel*FC];
   bias = new float[out_w*out_h*FC];
@@ -57,23 +63,22 @@ void Convolution::init() {
 
 }
 
+#if XNOR_NET
+void Convolution::binarize(float *input, int N) {
+
+}
+#endif
+
 
 void Convolution::forward() {
-  int col_size = out_w*out_h*out_channel;
-  int im_size = H*W*C;
 
-  //  im = H*W*C
-  // col = (out_h*out_w)*(out_channel)
-  //cout << "LINE: " << __LINE__ << " = " << getms() << endl;
+  binarize(input, im_size);
   for(int i = 0; i < batch; i++) {
     memcpy(im, input + i*im_size, im_size*sizeof(float));
     im2col(W, H, C, FW, FH, FC, stride, pad, im, col);
     memcpy(out_col + i*col_size, col, col_size*sizeof(float));
   }
-  //cout << "LINE: " << __LINE__ << " = " << getms() << endl;
 
-  // out_col = (batch*out_h*out_w)*out_channel
-  // weight  = out_channel*FC
   gemm(batch*out_h*out_w, FC, out_channel, 1, out_col, weight, output);
   bias_add(batch, out_h*out_w*FC, output, bias);
 }
@@ -88,30 +93,16 @@ void Convolution::backward(float *delta) {
   memset(grad_bias, 0, out_w*out_h*FC*sizeof(float));
   row_sum(batch, out_w*out_h*FC, delta, grad_bias);
 
-
-  
-  int im_size = W*H*C;
-  int col_size = out_w*out_h*out_channel;
- 
-  // weight = out_channel*FC
-  // delta = batch*out_w*out_h*FC
   float *delta_col = new float[batch*out_channel*out_w*out_h];
-  memset(delta_col, 0, batch*out_channel*out_w*out_h*sizeof(float));
   gemm_tb(batch*out_w*out_h, out_channel, FC, 1.0, delta, weight, delta_col);
-  //delta_col = batch*out_w*out_h*out_channel 
-
-  memset(m_delta, 0, batch*W*H*C*sizeof(float));
 
   for(int i = 0; i < batch; i++) {
-    memset(col, 0, col_size*sizeof(float));
     memcpy(col, delta_col + i*col_size, col_size*sizeof(float));
     col2im(W, H, C, FW, FH, FC, stride, pad, im, col);
     memcpy(m_delta + i*im_size, im, im_size*sizeof(float));
   }
 
   free(delta_col);
-
-
 
 }
 

@@ -158,33 +158,29 @@ int main(void) {
   //show_label(Y, 2);
 
   Convolution conv1(28, 28, 1, 5, 5, 3, 1, true);
-  //Connected conn1(28*28*1, 10);
   Relu relu1(28*28*3);
   Pooling pool1(28, 28, 3, 2, 2, 3, 2, false); 
-  //Convolution conv2(14, 14, 3, 3, 3, 3, 1, true);
-  //Relu relu2(14*14*3);
-  //Pooling pool2(14, 14, 3, 2, 2, 3, 2, false); 
-  //Connected conn1(7*7*3, 10);
-  Connected conn1(14*14*3, 10);
+  Convolution conv2(14, 14, 3, 3, 3, 3, 1, true);
+  Relu relu2(14*14*3);
+  Pooling pool2(14, 14, 3, 2, 2, 3, 2, false); 
+  Connected conn1(7*7*3, 10);
   SoftmaxWithCrossEntropy softmax(10, Y);
 
   Network network;
   network.add(&conv1);
   network.add(&relu1);
   network.add(&pool1);
-  //network.add(&conv2);
-  //network.add(&relu2);
-  //network.add(&pool2);
+  network.add(&conv2);
+  network.add(&relu2);
+  network.add(&pool2);
   network.add(&conn1);
   network.add(&softmax);
   int max_iter = 20000;
   float total_err = 0;
 
 
-  int data_num = 100;
-  int batch = 100;
-  int epoch = data_num/batch;
-  int step = -100;
+  int batch = 10000;
+  int epoch = 10;
 
   network.initial(batch, .1);
   for(int iter = 0; iter < max_iter; iter++) {
