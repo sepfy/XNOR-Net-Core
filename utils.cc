@@ -1,6 +1,7 @@
 #include <iostream>
 #include "utils.h"
 #include <sys/time.h>
+#include <random>
 using namespace std;
 
 void im2col(int W, int H, int C, int FW, int FH, int FC,
@@ -85,3 +86,12 @@ unsigned long long getms() {
   return tv.tv_sec*1.0e+3 + tv.tv_usec/1000;
 }
 
+void random_normal(int size, float *mat) {
+
+  random_device rd;
+  default_random_engine generator = default_random_engine(rd());
+  normal_distribution<float> distribution(0, 0.1);
+  int i;
+  for(i = 0; i < size; i++)
+    mat[i] = distribution(generator);
+}

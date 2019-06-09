@@ -33,14 +33,18 @@ class Network {
 
 
    void inference(float *input) {
+//     ms_t start = getms();   
      layers[0]->input = input;
      for(int i = 0; i < layers.size(); i++) {
+       
        layers[i]->forward();
      }
+//     cout << "forward time = " << (getms()-start) << endl;
    }
 
    void train(float *Y) {
 
+ //    ms_t start = getms();   
      float *delta = Y;
 
 //       ms_t start = getms();
@@ -49,10 +53,13 @@ class Network {
        layers[i]->backward(delta);
        delta = layers[i]->m_delta;
      }
+//     cout << "backward time = " << (getms()-start) << endl;
 
-     for(int i = layers.size() - 1; i >= 0; i--)
+//     start = getms();
+     for(int i = layers.size() - 1; i >= 0; i--) {
        layers[i]->update(lr);
-     
+     }
+ //    cout << "update time = " << (getms()-start) << endl;
 
    } 
 

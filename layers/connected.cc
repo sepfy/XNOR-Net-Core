@@ -19,13 +19,8 @@ void Connected::init() {
   grad_bias = new float[M];
   m_delta = new float[batch*N];
 
-  srand(time(NULL));
-  for(int j = 0; j < M; j++) {
-    bias[j] = 0.1*((float) rand()/(RAND_MAX + 1.0) - 0.5);
-    for(int i = 0; i < N; i++) {
-      weight[i*M+j] = 0.1*((float) rand()/(RAND_MAX + 1.0) -0.5);
-    }
-  }
+  random_normal(N*M, weight);
+  random_normal(M, bias);
 }
 
 void Connected::forward() {  

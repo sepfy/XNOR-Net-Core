@@ -43,23 +43,15 @@ void Convolution::init() {
   output = new float[batch*out_w*out_h*FC];
   out_col = new float[out_w*out_h*out_channel*batch];
 
-  bitset<H> binary_input;
   weight = new float[out_channel*FC];
   grad_weight = new float[out_channel*FC];
   bias = new float[out_w*out_h*FC];
   grad_bias = new float[out_w*out_h*FC];
   im = new float[H*W*C];
   m_delta = new float[batch*W*H*C]; 
-  // initialize weight with random number
-  srand(time(NULL));
-  for(int i = 0; i < out_channel; i++) {
-    for(int j = 0; j < FC; j++) {
-      weight[i*FC+j] = 0.1*((float) rand()/(RAND_MAX + 1.0) -0.5);
-    }
-  }
 
-  for(int i = 0; i < out_w*out_h*FC; i++)
-    bias[i] = 0.1*((float) rand()/(RAND_MAX + 1.0) -0.5);
+  random_normal(out_channel*FC, weight);
+  random_normal(out_w*out_h*FC, bias);
 
 }
 
@@ -72,7 +64,7 @@ void Convolution::binarize(float *input, int N) {
 
 void Convolution::forward() {
 
-  binarize(input, im_size);
+  //binarize(input, im_size);
   for(int i = 0; i < batch; i++) {
     memcpy(im, input + i*im_size, im_size*sizeof(float));
     im2col(W, H, C, FW, FH, FC, stride, pad, im, col);

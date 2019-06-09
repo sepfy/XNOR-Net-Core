@@ -157,6 +157,18 @@ int main(void) {
   //show_image(X, 2);
   //show_label(Y, 2);
 
+#if 0
+  Connected conn1(28*28, 256);
+  Connected conn2(256, 256);
+  Connected conn3(256, 10);
+  SoftmaxWithCrossEntropy softmax(10, Y);
+  Network network;
+  network.add(&conn1);
+  network.add(&conn2);
+  network.add(&conn3);
+  network.add(&softmax);
+#endif
+#if 1
   Convolution conv1(28, 28, 1, 5, 5, 3, 1, true);
   Relu relu1(28*28*3);
   Pooling pool1(28, 28, 3, 2, 2, 3, 2, false); 
@@ -175,11 +187,13 @@ int main(void) {
   network.add(&pool2);
   network.add(&conn1);
   network.add(&softmax);
+#endif
+
   int max_iter = 20000;
   float total_err = 0;
 
 
-  int batch = 10000;
+  int batch = 1000;
   int epoch = 10;
 
   network.initial(batch, .1);
@@ -193,12 +207,12 @@ int main(void) {
 
     total_err = accuracy(batch, 10, softmax.output, Y);// + step);
 
-    if(iter%epoch == 0) {
+   // if(iter%epoch == 0) {
       cout << "iter = " << iter << ", time = " << (getms() - start) << "ms, error = "
          << total_err << endl;
-    }
+    //}
 
-    if(total_err < 0.01)
+    if(total_err < 0.02)
       break;
   }
 
