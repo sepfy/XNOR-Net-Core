@@ -112,3 +112,11 @@ float Linf_norm(int N, int M, float *A) {
         max = A[i*M+j];
   return max;
 }
+
+
+void transpose(int N, int M, float *A, float *B) {
+
+  for(int j = 0; j < M; j++)
+    for(int i = 0; i < N; i++)
+      B[j*N+i] = A[i*M+j];   
+}

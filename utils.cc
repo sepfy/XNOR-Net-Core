@@ -88,8 +88,7 @@ unsigned long long getms() {
 
 void random_normal(int size, float *mat) {
 
-  random_device rd;
-  default_random_engine generator = default_random_engine(rd());
+  default_random_engine generator = default_random_engine(time(NULL));
   normal_distribution<float> distribution(0, 0.1);
   int i;
   for(i = 0; i < size; i++)

@@ -16,3 +16,6 @@ conv:
 
 gemm:
 	$(CXX) $(CFLAGS) $(INC) $(LIB) gemm_gtest.cc ../gemm.cc ../utils.cc -lgmock -lgtest -lpthread -o gemm_test
+
+blas:
+	g++ $(CFLAGS) $(INC) nn_gtest.cc $(SRC) -lgmock -lgtest -lpthread -o gtest 

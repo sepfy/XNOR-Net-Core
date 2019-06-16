@@ -7,7 +7,7 @@
 #include "utils.h"
 #include <string.h>
 
-#define XNOR_NET 1
+#define XNOR_NET
 using namespace std;
 
 class Layer {
@@ -82,11 +82,11 @@ class Convolution : public Layer {
     int out_w, out_h;
     int col_size;
     int im_size;
-
+    int weight_size;
+    int input_size;
 
     float *weight, *bias, *out_col, *im;
     float *grad_weight, *grad_bias;
-
 
 
 
@@ -98,8 +98,12 @@ class Convolution : public Layer {
     void backward(float *delta);
     void update(float lr);
 
-#if XNOR_NET
-    void binarize(float *input, int N);
+#ifdef XNOR_NET
+    float *binary_weight;
+    float *binary_input;
+    void swap_weight();
+    float binarize_weight();
+    float binarize_input();
 #endif
 };
 

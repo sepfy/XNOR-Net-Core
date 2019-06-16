@@ -189,11 +189,11 @@ int main(void) {
   network.add(&softmax);
 #endif
 
-  int max_iter = 20000;
+  int max_iter = 500;
   float total_err = 0;
 
 
-  int batch = 1000;
+  int batch = 100;
   int epoch = 10;
 
   network.initial(batch, .1);

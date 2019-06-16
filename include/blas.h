@@ -9,3 +9,4 @@ float cross_entropy(int batch, int N, float *output, float *target);
 float L1_norm(int N, int M, float *A);
 float L2_norm(int N, int M, float *A);
 float Linf_norm(int N, int M, float *A);
+void transpose(int N, int M, float *A, float *B);

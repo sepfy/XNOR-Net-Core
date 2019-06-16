@@ -1,5 +1,4 @@
 #include "layers.h"
-#include <bitset>
 
 using namespace std;
 
@@ -26,11 +25,11 @@ Convolution::Convolution(int _W, int _H, int _C,
     out_h = (H - FH)/stride + 1;
   }
 
-
   out_channel = FW*FH*C;
   col_size = out_w*out_h*out_channel;
   im_size = H*W*C;
-
+  weight_size = out_channel*FC;
+  input_size = batch*im_size;
 }
 
 Convolution::~Convolution() {
@@ -50,29 +49,79 @@ void Convolution::init() {
   im = new float[H*W*C];
   m_delta = new float[batch*W*H*C]; 
 
+#ifdef XNOR_NET
+  binary_weight = new float[out_channel*FC];
+#endif
+
   random_normal(out_channel*FC, weight);
   random_normal(out_w*out_h*FC, bias);
 
 }
 
-#if XNOR_NET
-void Convolution::binarize(float *input, int N) {
-
+#ifdef XNOR_NET
+void Convolution::swap_weight()
+{
+    float *swap = weight;
+    weight = binary_weight;
+    binary_weight = swap;
 }
-#endif
 
+float Convolution::binarize_weight() {
+
+  float l1 = 0.0;
+  for(int i = 0; i < weight_size; i++) {
+    l1 += fabs(weight[i]);
+    weight[i] >= 0 ? binary_weight[i] = 1 : binary_weight[i] = -1;
+  }
+  return l1/(float)weight_size;
+}
+
+float Convolution::binarize_input() {
+  float l1 = 0.0;
+  for(int i = 0; i < input_size; i++) {
+    l1 += fabs(input[i]);
+    input[i] >= 0 ? input[i] = 1 : input[i] = -1;
+  }
+  return l1/(float)im_size;
+}
+
+#endif
 
 void Convolution::forward() {
 
-  //binarize(input, im_size);
+// I am not sure why this code is not working. It should be equivalent below!
+#if 0
+ for(int i = 0; i < batch; i++) {
+    im2col(W, H, C, FW, FH, FC, stride, pad, input + i*im_size, col);
+    gemm(out_h*out_w, FC, out_channel, 1, col, weight, output+i*out_h*out_w*FC);
+  }
+#endif
+
+#ifdef XNOR_NET
+//  binarize_input();
   for(int i = 0; i < batch; i++) {
-    memcpy(im, input + i*im_size, im_size*sizeof(float));
-    im2col(W, H, C, FW, FH, FC, stride, pad, im, col);
+    //memcpy(im, input + i*im_size, im_size*sizeof(float));
+    im2col(W, H, C, FW, FH, FC, stride, pad, input + i*im_size, col);
     memcpy(out_col + i*col_size, col, col_size*sizeof(float));
   }
+  float alpha = binarize_weight();
+  swap_weight();
+  gemm(batch*out_h*out_w, FC, out_channel, alpha, out_col, weight, output);
 
+#else
+  for(int i = 0; i < batch; i++) {
+    //memcpy(im, input + i*im_size, im_size*sizeof(float));
+    im2col(W, H, C, FW, FH, FC, stride, pad, input + i*im_size, col);
+    memcpy(out_col + i*col_size, col, col_size*sizeof(float));
+  }
   gemm(batch*out_h*out_w, FC, out_channel, 1, out_col, weight, output);
+#endif
   bias_add(batch, out_h*out_w*FC, output, bias);
+
+#ifdef XNOR_NET
+  swap_weight();
+#endif
+
 }
 
 void Convolution::backward(float *delta) {
@@ -89,9 +138,7 @@ void Convolution::backward(float *delta) {
   gemm_tb(batch*out_w*out_h, out_channel, FC, 1.0, delta, weight, delta_col);
 
   for(int i = 0; i < batch; i++) {
-    memcpy(col, delta_col + i*col_size, col_size*sizeof(float));
-    col2im(W, H, C, FW, FH, FC, stride, pad, im, col);
-    memcpy(m_delta + i*im_size, im, im_size*sizeof(float));
+    col2im(W,H, C, FW, FH, FC, stride, pad, m_delta + i*im_size, delta_col + i*col_size);
   }
 
   free(delta_col);
