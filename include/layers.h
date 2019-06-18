@@ -58,9 +58,8 @@ class SoftmaxWithCrossEntropy : public Layer {
 
   public:
     int N;
-    float *target;
 
-    SoftmaxWithCrossEntropy(int _n, float *_target);
+    SoftmaxWithCrossEntropy(int _n);
     ~SoftmaxWithCrossEntropy();
     void init();
     void forward();
@@ -101,9 +100,13 @@ class Convolution : public Layer {
 #ifdef XNOR_NET
     float *binary_weight;
     float *binary_input;
+    float *avg_filter;
+    float *avg_col;
+    float *k_filter;
+    float *k_output;
     void swap_weight();
     float binarize_weight();
-    float binarize_input();
+    void binarize_input();
 #endif
 };
 

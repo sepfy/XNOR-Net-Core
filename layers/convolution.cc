@@ -51,6 +51,12 @@ void Convolution::init() {
 
 #ifdef XNOR_NET
   binary_weight = new float[out_channel*FC];
+  avg_filter = new float[batch*im_size];
+  avg_col = new float[out_w*out_h*FW*FC*batch];
+  k_filter = new float[FW*FH];
+  k_output = new float[out_w*out_h*batch];
+  for(int i = 0; i < FW*FH; i++)
+    k_filter[i] = 1.0/(float)(FW*FH);
 #endif
 
   random_normal(out_channel*FC, weight);
@@ -68,54 +74,76 @@ void Convolution::swap_weight()
 
 float Convolution::binarize_weight() {
 
-  float l1 = 0.0;
-  for(int i = 0; i < weight_size; i++) {
-    l1 += fabs(weight[i]);
-    weight[i] >= 0 ? binary_weight[i] = 1 : binary_weight[i] = -1;
+  for(int i = 0; i < FC; i++) {
+    float mean = 0.0;
+    for(int j = 0; j < out_channel; j++) 
+      mean += fabs(weight[i*out_channel+j]);
+
+    mean /= (float)(out_channel);
+    for(int j = 0; j < out_channel; j++) {
+      int widx = i*out_channel+j;
+       binary_weight[widx] = (weight[widx] > 0) ? mean : -mean;
+    }
   }
-  return l1/(float)weight_size;
+
 }
 
-float Convolution::binarize_input() {
-  float l1 = 0.0;
-  for(int i = 0; i < input_size; i++) {
-    l1 += fabs(input[i]);
-    input[i] >= 0 ? input[i] = 1 : input[i] = -1;
+void Convolution::binarize_input() {
+
+  for(int b = 0; b < batch; b++) {
+    for(int i = 0; i < H; i++) {
+      for(int j = 0; j < W; j++) {
+        int avg_idx = b*H*W + i*W + j;
+        int in_idx = b*im_size + i*W*C + j*C;
+        avg_filter[avg_idx] = 0.0;
+        for(int k = 0; k < C; k++)
+          avg_filter[avg_idx] += fabs(input[in_idx + k]);
+        avg_filter[avg_idx] /= (float)C;
+      }
+    }
   }
-  return l1/(float)im_size;
+
+  for(int i = 0; i < batch*im_size; i++) 
+    input[i] > 0 ? input[i] = 1 : input[i] = -1;
+ 
 }
 
 #endif
 
 void Convolution::forward() {
 
-// I am not sure why this code is not working. It should be equivalent below!
-#if 0
- for(int i = 0; i < batch; i++) {
-    im2col(W, H, C, FW, FH, FC, stride, pad, input + i*im_size, col);
-    gemm(out_h*out_w, FC, out_channel, 1, col, weight, output+i*out_h*out_w*FC);
-  }
-#endif
-
 #ifdef XNOR_NET
-//  binarize_input();
-  for(int i = 0; i < batch; i++) {
-    //memcpy(im, input + i*im_size, im_size*sizeof(float));
-    im2col(W, H, C, FW, FH, FC, stride, pad, input + i*im_size, col);
-    memcpy(out_col + i*col_size, col, col_size*sizeof(float));
-  }
-  float alpha = binarize_weight();
+
+  binarize_input();
+  for(int i = 0; i < batch; i++)
+    im2col(W, H, C, FW, FH, FC, stride, pad, 
+      input + i*im_size, out_col+i*col_size);
+
+  binarize_weight();
   swap_weight();
-  gemm(batch*out_h*out_w, FC, out_channel, alpha, out_col, weight, output);
+  gemm(batch*out_h*out_w, FC, out_channel, 1.0, out_col, weight, output);
+
+  // Do K = A (*) k
+  for(int i = 0; i < batch; i++) 
+    im2col(W, H, 1, FW, FH, 1, stride, pad, 
+      avg_filter + i*W*H, avg_col + i*out_w*out_h*FW*FH);
+  gemm(batch*out_h*out_w, 1, FW*FH, 1.0, avg_col, k_filter, k_output);
+
+  for(int b = 0; b < batch; b++)
+    for(int i = 0; i < out_h; i++)
+      for(int j = 0; j < out_w; j++) {
+        int idx = b*out_h*out_w+i*out_w+j;
+        scalar(FC, k_output[idx],
+         output+idx*FC, output+idx*FC);
+      }
 
 #else
-  for(int i = 0; i < batch; i++) {
-    //memcpy(im, input + i*im_size, im_size*sizeof(float));
-    im2col(W, H, C, FW, FH, FC, stride, pad, input + i*im_size, col);
-    memcpy(out_col + i*col_size, col, col_size*sizeof(float));
-  }
+  for(int i = 0; i < batch; i++)
+    im2col(W, H, C, FW, FH, FC, stride, pad, 
+      input + i*im_size, out_col+i*col_size);
   gemm(batch*out_h*out_w, FC, out_channel, 1, out_col, weight, output);
 #endif
+
   bias_add(batch, out_h*out_w*FC, output, bias);
 
 #ifdef XNOR_NET
@@ -137,9 +165,9 @@ void Convolution::backward(float *delta) {
   float *delta_col = new float[batch*out_channel*out_w*out_h];
   gemm_tb(batch*out_w*out_h, out_channel, FC, 1.0, delta, weight, delta_col);
 
-  for(int i = 0; i < batch; i++) {
-    col2im(W,H, C, FW, FH, FC, stride, pad, m_delta + i*im_size, delta_col + i*col_size);
-  }
+  for(int i = 0; i < batch; i++)
+    col2im(W,H, C, FW, FH, FC, stride, pad, 
+      m_delta + i*im_size, delta_col + i*col_size); 
 
   free(delta_col);
 

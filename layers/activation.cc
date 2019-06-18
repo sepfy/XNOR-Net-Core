@@ -29,10 +29,8 @@ void Sigmoid::update(float lr) {
 
 }
 
-SoftmaxWithCrossEntropy::SoftmaxWithCrossEntropy(
-    int _n, float *_target) {
+SoftmaxWithCrossEntropy::SoftmaxWithCrossEntropy(int _n) {
   N = _n;
-  target = _target;
 }
 
 void SoftmaxWithCrossEntropy::init() {
@@ -63,7 +61,7 @@ void SoftmaxWithCrossEntropy::forward() {
 }
 
 void SoftmaxWithCrossEntropy::backward(float *delta) {
-  mat_minus(batch, N, output, target, m_delta);  
+  mat_minus(batch, N, output, delta, m_delta);  
   mat_scalar(batch, N, m_delta, 1.0/(float)batch, m_delta);
 }
 

@@ -120,3 +120,10 @@ void transpose(int N, int M, float *A, float *B) {
     for(int i = 0; i < N; i++)
       B[j*N+i] = A[i*M+j];   
 }
+
+
+void scalar(int N, float s, float *A, float *B) {
+
+  for(int i = 0; i < N; i++)
+    B[i] = A[i]*s;
+}

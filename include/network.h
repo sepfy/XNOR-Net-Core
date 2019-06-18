@@ -32,7 +32,7 @@ class Network {
     }
 
 
-   void inference(float *input) {
+   float* inference(float *input) {
 //     ms_t start = getms();   
      layers[0]->input = input;
      for(int i = 0; i < layers.size(); i++) {
@@ -40,6 +40,7 @@ class Network {
        layers[i]->forward();
      }
 //     cout << "forward time = " << (getms()-start) << endl;
+     return layers[layers.size() - 1]->output;
    }
 
    void train(float *Y) {

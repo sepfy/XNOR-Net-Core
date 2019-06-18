@@ -10,3 +10,4 @@ float L1_norm(int N, int M, float *A);
 float L2_norm(int N, int M, float *A);
 float Linf_norm(int N, int M, float *A);
 void transpose(int N, int M, float *A, float *B);
+void scalar(int N, float s, float *A, float *B);

@@ -176,7 +176,7 @@ int main(void) {
   Relu relu2(14*14*3);
   Pooling pool2(14, 14, 3, 2, 2, 3, 2, false); 
   Connected conn1(7*7*3, 10);
-  SoftmaxWithCrossEntropy softmax(10, Y);
+  SoftmaxWithCrossEntropy softmax(10);
 
   Network network;
   network.add(&conv1);
@@ -189,38 +189,40 @@ int main(void) {
   network.add(&softmax);
 #endif
 
-  int max_iter = 500;
+  int max_iter = 50000;
   float total_err = 0;
 
 
   int batch = 100;
   int epoch = 10;
 
-  network.initial(batch, .1);
+  network.initial(batch, 0.01);
+ 
   for(int iter = 0; iter < max_iter; iter++) {
 
-    //step = (step + batch)%data_num;
+    int step = (iter*batch)%60000;
+    float *batch_xs = X + step*784;
+    float *batch_ys = Y + step*10;
+
     ms_t start = getms();
-    network.inference(X);// + step);
-    network.train(Y);// + step);
-   
+    float *output = network.inference(batch_xs);
+    network.train(batch_ys);// + step);
+ 
+    total_err = accuracy(batch, 10, output, batch_ys);// + step);
 
-    total_err = accuracy(batch, 10, softmax.output, Y);// + step);
-
-   // if(iter%epoch == 0) {
+    if(step == 0) {
       cout << "iter = " << iter << ", time = " << (getms() - start) << "ms, error = "
-         << total_err << endl;
-    //}
-
-    if(total_err < 0.02)
+       << total_err << endl;
+    }
+    if(total_err < 0.001)
       break;
   }
 
   
   X = read_validate_data();
   Y = read_validate_label();
-  network.inference(X);
-  total_err = accuracy(batch, 10, softmax.output, Y);
+  float *output = network.inference(X);
+  total_err = accuracy(batch, 10, output, Y);
   cout << "Validate set error = " << total_err << endl;
   
 
