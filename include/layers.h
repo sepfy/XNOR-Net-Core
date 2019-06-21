@@ -7,7 +7,7 @@
 #include "utils.h"
 #include <string.h>
 
-#define XNOR_NET
+//#define XNOR_NET
 using namespace std;
 
 class Layer {
@@ -32,7 +32,17 @@ class Connected : public Layer {
     // W is NxM matrix
     int N;   
     int M;
-   
+  
+    // Adam optimizer
+    float beta1 = 0.9;
+    float beta2 = 0.999;
+    float *m_weight;
+    float *v_weight;
+    float *m_bias;
+    float *v_bias;
+    float iter = 0.0;
+    float eplson = 1.0e+7;
+ 
     Connected(int _n, int _m);
     ~Connected();
     void init(); 
@@ -87,7 +97,15 @@ class Convolution : public Layer {
     float *weight, *bias, *out_col, *im;
     float *grad_weight, *grad_bias;
 
-
+    // Adam optimizer
+    float beta1 = 0.9;
+    float beta2 = 0.999;
+    float *m_weight;
+    float *v_weight;
+    float *m_bias;
+    float *v_bias;
+    float iter = 0.0;
+    float eplson = 1.0e+7;
 
     Convolution(int _W, int _H, int _C,
 	int _FW, int _FH, int _FC, int _stride, bool _pad);

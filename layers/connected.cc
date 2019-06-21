@@ -21,7 +21,24 @@ void Connected::init() {
 
   random_normal(N*M, weight);
   random_normal(M, bias);
+
+  //Adam
+  m_weight = new float[N*M];
+  v_weight = new float[N*M];
+  m_bias = new float[M];
+  v_bias = new float[M];
+  for(int i = 0; i < N*M; i++) {
+    m_weight[i] = 0.0;
+    v_weight[i] = 0.0;
+  }
+  for(int i = 0; i < M; i++) {
+    m_bias[i] = 0.0;
+    v_bias[i] = 0.0;
+  }
+
+
 }
+
 
 void Connected::forward() {  
   gemm(batch, M, N, 1, input, weight, output);
@@ -39,9 +56,35 @@ void Connected::backward(float *delta) {
 }
 
 void Connected::update(float lr) {
+
+  // Adam optimizer
+  /*
+  iter++;
+  float m_lr = lr * pow(1.0 - pow(beta2, iter), 0.5) / (1.0 - pow(beta1, iter));
+  for(int i = 0; i < N*M; i++) {
+    m_weight[i] = (1 - beta1)*grad_weight[i] + beta1*m_weight[i];
+    v_weight[i] = (1 - beta2)*pow(grad_weight[i], 2.0) + beta2*v_weight[i];
+  }
+
+  for(int i = 0; i < N*M; i++) {
+    weight[i] -= m_lr * m_weight[i]/(pow(v_weight[i], 0.5) + eplson);
+  }
+
+
+  for(int i = 0; i < M; i++) {
+    m_bias[i] = (1 - beta1)*grad_bias[i] + beta1*m_bias[i];
+    v_bias[i] = (1 - beta2)*pow(grad_bias[i], 2.0) + beta1*v_bias[i];
+  }
+
+  for(int i = 0; i < M; i++) {
+    bias[i] -= m_lr * m_bias[i]/(pow(v_bias[i], 0.5) + eplson);
+  }
+  */
+
   mat_scalar(N, M, grad_weight, lr, grad_weight);
   mat_minus(N, M, weight, grad_weight, weight);
   mat_scalar(1, M, grad_bias, lr, grad_bias);
   mat_minus(1, M, bias, grad_bias, bias);
+
 }
 

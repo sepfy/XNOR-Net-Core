@@ -189,18 +189,20 @@ int main(void) {
   network.add(&softmax);
 #endif
 
-  int max_iter = 50000;
+  int max_iter = 100000;
   float total_err = 0;
 
 
   int batch = 100;
   int epoch = 10;
 
-  network.initial(batch, 0.01);
+  network.initial(batch, .1);
+
  
   for(int iter = 0; iter < max_iter; iter++) {
 
-    int step = (iter*batch)%60000;
+    //int step = (iter*batch)%60000;
+    int step = 0;
     float *batch_xs = X + step*784;
     float *batch_ys = Y + step*10;
 
@@ -210,12 +212,13 @@ int main(void) {
  
     total_err = accuracy(batch, 10, output, batch_ys);// + step);
 
-    if(step == 0) {
+    //if(step == 0) {
       cout << "iter = " << iter << ", time = " << (getms() - start) << "ms, error = "
        << total_err << endl;
-    }
-    if(total_err < 0.001)
-      break;
+      if(total_err < 0.001)
+        break;
+//      total_err = 0.0;
+//    }
   }
 
   
