@@ -58,7 +58,7 @@ void Connected::backward(float *delta) {
 void Connected::update(float lr) {
 
   // Adam optimizer
-  /*
+  
   iter++;
   float m_lr = lr * pow(1.0 - pow(beta2, iter), 0.5) / (1.0 - pow(beta1, iter));
   for(int i = 0; i < N*M; i++) {
@@ -79,12 +79,12 @@ void Connected::update(float lr) {
   for(int i = 0; i < M; i++) {
     bias[i] -= m_lr * m_bias[i]/(pow(v_bias[i], 0.5) + eplson);
   }
-  */
-
+  
+#if 0
   mat_scalar(N, M, grad_weight, lr, grad_weight);
   mat_minus(N, M, weight, grad_weight, weight);
   mat_scalar(1, M, grad_bias, lr, grad_bias);
   mat_minus(1, M, bias, grad_bias, bias);
-
+#endif
 }
 

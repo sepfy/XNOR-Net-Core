@@ -168,7 +168,7 @@ int main(void) {
   network.add(&conn3);
   network.add(&softmax);
 #endif
-#if 1
+#if 0
   Convolution conv1(28, 28, 1, 5, 5, 3, 1, true);
   Relu relu1(28*28*3);
   Pooling pool1(28, 28, 3, 2, 2, 3, 2, false); 
@@ -189,20 +189,43 @@ int main(void) {
   network.add(&softmax);
 #endif
 
-  int max_iter = 100000;
+  Convolution conv1(28, 28, 1, 5, 5, 16, 1, true);
+  Relu relu1(28*28*16);
+  Pooling pool1(28, 28, 16, 2, 2, 16, 2, false); 
+  Convolution conv2(14, 14, 16, 5, 5, 32, 1, true);
+  Relu relu2(14*14*32);
+  Pooling pool2(14, 14, 32, 2, 2, 32, 2, false); 
+  Connected conn1(7*7*32, 128);
+  Connected conn2(128, 10);
+  SoftmaxWithCrossEntropy softmax(10);
+
+  Network network;
+  network.add(&conv1);
+  network.add(&relu1);
+  network.add(&pool1);
+  network.add(&conv2);
+  network.add(&relu2);
+  network.add(&pool2);
+  network.add(&conn1);
+  network.add(&conn2);
+  network.add(&softmax);
+
+
+
+  int max_iter = 1000;
   float total_err = 0;
 
 
   int batch = 100;
   int epoch = 10;
 
-  network.initial(batch, .1);
+  network.initial(batch, .001);
 
  
   for(int iter = 0; iter < max_iter; iter++) {
 
-    //int step = (iter*batch)%60000;
-    int step = 0;
+    int step = (iter*batch)%60000;
+    //int step = 0;
     float *batch_xs = X + step*784;
     float *batch_ys = Y + step*10;
 
@@ -212,13 +235,13 @@ int main(void) {
  
     total_err = accuracy(batch, 10, output, batch_ys);// + step);
 
-    //if(step == 0) {
+    if(iter%1 == 0) {
       cout << "iter = " << iter << ", time = " << (getms() - start) << "ms, error = "
        << total_err << endl;
-      if(total_err < 0.001)
-        break;
-//      total_err = 0.0;
-//    }
+      //if(total_err/600.0 < 0.001)
+      //  break;
+      //total_err = 0.0;
+    }
   }
 
   

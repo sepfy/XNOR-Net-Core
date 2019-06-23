@@ -41,7 +41,7 @@ class Connected : public Layer {
     float *m_bias;
     float *v_bias;
     float iter = 0.0;
-    float eplson = 1.0e+7;
+    float eplson = 1.0e-7;
  
     Connected(int _n, int _m);
     ~Connected();
@@ -105,7 +105,7 @@ class Convolution : public Layer {
     float *m_bias;
     float *v_bias;
     float iter = 0.0;
-    float eplson = 1.0e+7;
+    float eplson = 1.0e-7;
 
     Convolution(int _W, int _H, int _C,
 	int _FW, int _FH, int _FC, int _stride, bool _pad);

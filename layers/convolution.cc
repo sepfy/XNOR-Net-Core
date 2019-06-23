@@ -191,13 +191,10 @@ void Convolution::backward(float *delta) {
 void Convolution::update(float lr) {
 
   //Adam optimizer
-  /*
+  
   iter++;
   float m_lr = lr * pow(1.0 - pow(beta2, iter), 0.5) / (1.0 - pow(beta1, iter));
-  // WEIGHT
   for(int i = 0; i < out_channel*FC; i++) {
-    //m_weight[i] += (1 - beta1)*(grad_weight[i] - m_weight[i]);
-    //v_weight[i] += (1 - beta2)*(pow(grad_weight[i], 2.0) - v_weight[i]);
     m_weight[i] = (1 - beta1)*grad_weight[i] + beta1*m_weight[i];
     v_weight[i] = (1 - beta2)*pow(grad_weight[i], 2.0) + beta2*v_weight[i];
   }
@@ -206,10 +203,7 @@ void Convolution::update(float lr) {
     weight[i] -= m_lr * m_weight[i]/(pow(v_weight[i], 0.5) + eplson);
   }  
 
-  // BIAS
   for(int i = 0; i < out_w*out_h*FC; i++) {
-    //m_bias[i] += (1 - beta1)*(grad_bias[i] - m_bias[i]);
-    //v_bias[i] += (1 - beta2)*(pow(grad_bias[i], 2.0) - v_bias[i]);
     m_bias[i] = (1 - beta1)*grad_bias[i] + beta1*m_bias[i];
     v_bias[i] = (1 - beta2)*pow(grad_bias[i], 2.0) + beta1*v_bias[i];
   }
@@ -217,13 +211,15 @@ void Convolution::update(float lr) {
   for(int i = 0; i < out_w*out_h*FC; i++) {
     bias[i] -= m_lr * m_bias[i]/(pow(v_bias[i], 0.5) + eplson);
   }
-  */
+  
 
+
+#if 0
   mat_scalar(out_channel, FC, grad_weight, lr, grad_weight);
   mat_minus(out_channel, FC, weight, grad_weight, weight);
   mat_scalar(1, out_w*out_h*FC, grad_bias, lr, grad_bias);
   mat_minus(1, out_w*out_h*FC, bias, grad_bias, bias);
-
+#endif
 
 }
 
