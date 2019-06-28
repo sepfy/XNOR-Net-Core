@@ -52,10 +52,11 @@ float* read_images(char *filename) {
   for(int i = 0; i < N; i++) {
     for(int j = 0; j < M; j++) {
       fread(&value, sizeof(uint8_t), 1, fp);
-      if(value > 0)
-        X[i*M+j] = 1.0;
-      else
-        X[i*M+j] = 0.0;
+      //if(value > 0)
+      //  X[i*M+j] = 1.0;
+      //else
+      //  X[i*M+j] = 0.0;
+      X[i*M+j] = ((float)value - 127.5)/127.5;
     }
   }
   return X;
@@ -158,24 +159,28 @@ int main(void) {
   //show_label(Y, 2);
 
 #if 0
-  Connected conn1(28*28, 256);
-  Connected conn2(256, 256);
-  Connected conn3(256, 10);
-  SoftmaxWithCrossEntropy softmax(10, Y);
+  Connected conn1(28*28, 100);
+  Relu relu1(100);
+  Connected conn2(100, 10);
+  //Connected conn3(256, 10);
+  SoftmaxWithCrossEntropy softmax(10);
   Network network;
   network.add(&conn1);
+  network.add(&relu1);
   network.add(&conn2);
-  network.add(&conn3);
   network.add(&softmax);
 #endif
-#if 0
-  Convolution conv1(28, 28, 1, 5, 5, 3, 1, true);
-  Relu relu1(28*28*3);
-  Pooling pool1(28, 28, 3, 2, 2, 3, 2, false); 
-  Convolution conv2(14, 14, 3, 3, 3, 3, 1, true);
-  Relu relu2(14*14*3);
-  Pooling pool2(14, 14, 3, 2, 2, 3, 2, false); 
-  Connected conn1(7*7*3, 10);
+#if 1
+  Convolution conv1(28, 28, 1, 5, 5, 32, 1, true);
+  Relu relu1(28*28*32);
+  Pooling pool1(28, 28, 32, 2, 2, 32, 2, false); 
+  Convolution conv2(14, 14, 32, 5, 5, 64, 1, true);
+  Relu relu2(14*14*64);
+  Pooling pool2(14, 14, 64, 2, 2, 64, 2, false); 
+  Connected conn1(7*7*64, 128);
+
+  Relu relu3(128);
+  Connected conn2(128, 10);
   SoftmaxWithCrossEntropy softmax(10);
 
   Network network;
@@ -186,9 +191,12 @@ int main(void) {
   network.add(&relu2);
   network.add(&pool2);
   network.add(&conn1);
+  network.add(&relu3);
+  network.add(&conn2);
   network.add(&softmax);
 #endif
 
+#if 0
   Convolution conv1(28, 28, 1, 5, 5, 16, 1, true);
   Relu relu1(28*28*16);
   Pooling pool1(28, 28, 16, 2, 2, 16, 2, false); 
@@ -209,17 +217,17 @@ int main(void) {
   network.add(&conn1);
   network.add(&conn2);
   network.add(&softmax);
-
+#endif
 
 
   int max_iter = 1000;
   float total_err = 0;
 
 
-  int batch = 100;
+  int batch = 10000;
   int epoch = 10;
 
-  network.initial(batch, .001);
+  network.initial(batch, 1.0e-4);
 
  
   for(int iter = 0; iter < max_iter; iter++) {
@@ -243,14 +251,21 @@ int main(void) {
       //total_err = 0.0;
     }
   }
-
   
   X = read_validate_data();
   Y = read_validate_label();
-  float *output = network.inference(X);
-  total_err = accuracy(batch, 10, output, Y);
-  cout << "Validate set error = " << total_err << endl;
-  
+
+  total_err = 0.0;
+  int batch_num = 10000/batch;
+  for(int iter = 0; iter < batch_num; iter++) {
+
+    int step = (iter*batch);
+    float *batch_xs = X + step*784;
+    float *batch_ys = Y + step*10;
+    float *output = network.inference(batch_xs);
+    total_err += accuracy(batch, 10, output, batch_ys);
+  }
+  cout << "Validate set error = " << total_err/batch_num << endl;
 
 
   return 0;

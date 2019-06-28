@@ -173,12 +173,20 @@ void Convolution::backward(float *delta) {
   memset(grad_weight, 0, out_channel*FC*sizeof(float));
   gemm_ta(out_channel, FC, out_h*out_w*batch, 1.0, out_col, delta, grad_weight);
 
+  float *tmp = new float[out_channel*FC];
+  scalar(out_channel*FC, 0.01/(float)(out_channel*FC), weight, tmp);
+  add(out_channel, FC, grad_weight, tmp, grad_weight);
+  delete tmp;
+
+
   //bias
   memset(grad_bias, 0, out_w*out_h*FC*sizeof(float));
   row_sum(batch, out_w*out_h*FC, delta, grad_bias);
 
   float *delta_col = new float[batch*out_channel*out_w*out_h];
   gemm_tb(batch*out_w*out_h, out_channel, FC, 1.0, delta, weight, delta_col);
+
+
 
   for(int i = 0; i < batch; i++)
     col2im(W,H, C, FW, FH, FC, stride, pad, 
@@ -191,7 +199,8 @@ void Convolution::backward(float *delta) {
 void Convolution::update(float lr) {
 
   //Adam optimizer
-  
+
+#if 1
   iter++;
   float m_lr = lr * pow(1.0 - pow(beta2, iter), 0.5) / (1.0 - pow(beta1, iter));
   for(int i = 0; i < out_channel*FC; i++) {
@@ -205,13 +214,13 @@ void Convolution::update(float lr) {
 
   for(int i = 0; i < out_w*out_h*FC; i++) {
     m_bias[i] = (1 - beta1)*grad_bias[i] + beta1*m_bias[i];
-    v_bias[i] = (1 - beta2)*pow(grad_bias[i], 2.0) + beta1*v_bias[i];
+    v_bias[i] = (1 - beta2)*pow(grad_bias[i], 2.0) + beta2*v_bias[i];
   }
 
   for(int i = 0; i < out_w*out_h*FC; i++) {
     bias[i] -= m_lr * m_bias[i]/(pow(v_bias[i], 0.5) + eplson);
   }
-  
+#endif  
 
 
 #if 0

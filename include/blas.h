@@ -1,5 +1,6 @@
 #include <math.h>
 void bias_add(int N, int M, float *A, float *bias);
+void add(int N, int M, float *A, float *B, float *C);
 void row_sum(int N, int M, float *A, float *B);
 void col_sum(int N, int M, float *A, float *B);
 bool compare(int N, int M, float *A, float *B);

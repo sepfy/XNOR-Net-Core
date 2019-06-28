@@ -51,6 +51,11 @@ void Connected::backward(float *delta) {
   memset(m_delta, 0, batch*N*sizeof(float));
 
   gemm_ta(N, M, batch, 1.0, input, delta, grad_weight);
+
+  float *tmp = new float[N*M];
+  scalar(N*M, 0.01/(float)(N*M), weight, tmp); 
+  add(N, M, grad_weight, tmp, grad_weight);
+  delete tmp;
   gemm_tb(batch, N, M, 1.0, delta, weight, m_delta);
   row_sum(batch, M, delta, grad_bias);
 }
@@ -58,7 +63,7 @@ void Connected::backward(float *delta) {
 void Connected::update(float lr) {
 
   // Adam optimizer
-  
+#if 1
   iter++;
   float m_lr = lr * pow(1.0 - pow(beta2, iter), 0.5) / (1.0 - pow(beta1, iter));
   for(int i = 0; i < N*M; i++) {
@@ -73,13 +78,14 @@ void Connected::update(float lr) {
 
   for(int i = 0; i < M; i++) {
     m_bias[i] = (1 - beta1)*grad_bias[i] + beta1*m_bias[i];
-    v_bias[i] = (1 - beta2)*pow(grad_bias[i], 2.0) + beta1*v_bias[i];
+    v_bias[i] = (1 - beta2)*pow(grad_bias[i], 2.0) + beta2*v_bias[i];
   }
 
   for(int i = 0; i < M; i++) {
     bias[i] -= m_lr * m_bias[i]/(pow(v_bias[i], 0.5) + eplson);
   }
-  
+#endif  
+
 #if 0
   mat_scalar(N, M, grad_weight, lr, grad_weight);
   mat_minus(N, M, weight, grad_weight, weight);

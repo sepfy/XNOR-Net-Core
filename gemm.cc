@@ -24,7 +24,18 @@ void gemm(int M, int N, int P,
 */
 void gemm_ta(int M, int N, int P,
   float alpha, float *A, float *B, float *C) {
-  
+
+#if 1
+  // I am not sure why this procedure is faster than the following procedure.
+  // If anyone konws, please tell me! Thanks... 
+  #pragma omp parallel for
+  for(int i = 0; i < M; i++)
+    for(int k = 0; k < P; k++)
+      for(int j = 0; j < N; j++) {
+        C[i*N+j] += alpha*A[k*M+i]*B[k*N+j];
+    }
+#endif
+#if 0
   #pragma omp parallel for
   for(int i = 0; i < M; i++)
     for(int j = 0; j < N; j++) {
@@ -33,6 +44,8 @@ void gemm_ta(int M, int N, int P,
         C[i*N+j] += A[k*M+i]*B[k*N+j];
       C[i*N+j] *= alpha;
     }
+#endif
+
 }
 
 /*
