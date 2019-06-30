@@ -162,3 +162,25 @@ class Relu : public Layer {
     void backward(float *delta);
     void update(float lr);
 };
+
+class Batchnorm : public Layer {
+  public:
+    int N;
+    float *mean, *var;
+    float *normal;
+    float gamma = 1.0, beta = 0.0, epslon = 1.0e-8;
+
+    float *dxn;
+    float *dxc;
+    float *dvar;
+    float *dstd;
+    float *dmu;
+
+
+    Batchnorm(int _N);
+    ~Batchnorm();
+    void init();
+    void forward();
+    void backward(float *delta);
+    void update(float lr);
+};
