@@ -29,6 +29,11 @@ void Sigmoid::update(float lr) {
 
 }
 
+void Sigmoid::save(FILE *fp) {
+
+}
+
+
 SoftmaxWithCrossEntropy::SoftmaxWithCrossEntropy(int _n) {
   N = _n;
 }
@@ -67,6 +72,12 @@ void SoftmaxWithCrossEntropy::backward(float *delta) {
 
 void SoftmaxWithCrossEntropy::update(float lr) {
 }
+
+void SoftmaxWithCrossEntropy::save(FILE *fp) {
+
+}
+
+
 
 Relu::Relu(int _N) {
   N = _N;
@@ -118,3 +129,8 @@ void Relu::backward(float *delta) {
 
 void Relu::update(float lr) {
 }
+
+void Relu::save(FILE *fp) {
+
+}
+

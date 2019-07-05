@@ -20,6 +20,7 @@ class Layer {
     virtual void backward(float* delta) = 0;
     virtual void update(float lr) = 0;
     virtual void init() = 0;
+    virtual void save(FILE *fp) = 0;
 };
 
 class Connected : public Layer {
@@ -49,6 +50,7 @@ class Connected : public Layer {
     void forward();
     void backward(float *delta);
     void update(float lr);
+    void save(FILE *fp);
 
 };
 
@@ -62,6 +64,7 @@ class Sigmoid: public Layer {
     void forward();
     void backward(float *delta);
     void update(float lr);
+    void save(FILE *fp);
 };
 
 class SoftmaxWithCrossEntropy : public Layer {
@@ -75,6 +78,7 @@ class SoftmaxWithCrossEntropy : public Layer {
     void forward();
     void backward(float *delta);
     void update(float lr);
+    void save(FILE *fp);
 
 };
 
@@ -114,6 +118,7 @@ class Convolution : public Layer {
     void forward();
     void backward(float *delta);
     void update(float lr);
+    void save(FILE *fp);
 
 #ifdef XNOR_NET
     float *binary_weight;
@@ -149,6 +154,7 @@ class Pooling : public Layer {
     void forward();
     void backward(float *delta);
     void update(float lr);
+    void save(FILE *fp);
 };
 
 class Relu : public Layer {
@@ -161,6 +167,7 @@ class Relu : public Layer {
     void forward();
     void backward(float *delta);
     void update(float lr);
+    void save(FILE *fp);
 };
 
 class Batchnorm : public Layer {
@@ -183,4 +190,5 @@ class Batchnorm : public Layer {
     void forward();
     void backward(float *delta);
     void update(float lr);
+    void save(FILE *fp);
 };

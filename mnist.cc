@@ -56,7 +56,8 @@ float* read_images(char *filename) {
       //  X[i*M+j] = 1.0;
       //else
       //  X[i*M+j] = 0.0;
-      X[i*M+j] = ((float)value - 127.5)/127.5;
+      //X[i*M+j] = ((float)value - 127.5)/127.5;
+      X[i*M+j] = ((float)value)/255.0;
     }
   }
   return X;
@@ -172,19 +173,26 @@ int main(void) {
 #endif
 #if 1
   Convolution conv1(28, 28, 1, 5, 5, 32, 1, true);
+  Batchnorm norm1(28*28*32);
   Relu relu1(28*28*32);
   Pooling pool1(28, 28, 32, 2, 2, 32, 2, false); 
   Convolution conv2(14, 14, 32, 5, 5, 64, 1, true);
   Relu relu2(14*14*64);
   Pooling pool2(14, 14, 64, 2, 2, 64, 2, false); 
-  Connected conn1(7*7*64, 128);
+  Connected conn1(7*7*64, 1024);
 
-  Relu relu3(128);
-  Connected conn2(128, 10);
+  Relu relu3(1024);
+  Connected conn2(1024, 10);
   SoftmaxWithCrossEntropy softmax(10);
 
   Network network;
+
+  //network.load();
+
+  //cout <<  network.layers[0] << endl;
+  //return 0;
   network.add(&conv1);
+  //network.add(&norm1);
   network.add(&relu1);
   network.add(&pool1);
   network.add(&conv2);
@@ -194,6 +202,8 @@ int main(void) {
   network.add(&relu3);
   network.add(&conn2);
   network.add(&softmax);
+
+
 #endif
 
 #if 0
@@ -220,11 +230,11 @@ int main(void) {
 #endif
 
 
-  int max_iter = 1000;
+  int max_iter = 3;
   float total_err = 0;
 
 
-  int batch = 10000;
+  int batch = 100;
   int epoch = 10;
 
   network.initial(batch, 1.0e-4);
@@ -250,8 +260,20 @@ int main(void) {
       //  break;
       //total_err = 0.0;
     }
+/*
+    if(iter>500 && total_err>0.2)
+      iter--;
+    else if(iter>1000 && total_err>0.1)
+      iter--;
+    else if(iter>1500 && total_err>0.05)
+      iter--;
+    else if(iter>2000 && total_err>0.02)
+      iter--;
+*/
   }
   
+  network.save();
+  return 0;
   X = read_validate_data();
   Y = read_validate_label();
 
@@ -265,7 +287,7 @@ int main(void) {
     float *output = network.inference(batch_xs);
     total_err += accuracy(batch, 10, output, batch_ys);
   }
-  cout << "Validate set error = " << total_err/batch_num << endl;
+  cout << "Validate set error = " << (1.0 - total_err/batch_num)*100 << endl;
 
 
   return 0;

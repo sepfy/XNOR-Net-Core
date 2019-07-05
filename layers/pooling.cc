@@ -138,3 +138,7 @@ cout << max_seq[idx] << endl;
 void Pooling::update(float lr) {
 }
 
+void Pooling::save(FILE *fp) {
+
+}
+

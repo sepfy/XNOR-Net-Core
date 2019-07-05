@@ -232,3 +232,13 @@ void Convolution::update(float lr) {
 
 }
 
+void Convolution::save(FILE *fp) {
+
+  char buf[1024] = {0};
+  sprintf(buf, "Convolution,%d,%d,%d,%d,%d,%d,%d,%d\0", 
+    W, H, C, FW, FH, FC, stride, pad);
+  cout << buf << endl;
+  fwrite(buf, 1, sizeof(buf), fp);
+  //fwrite(weight, out_channel*FC, sizeof(float), fp);
+  //fwrite(bias, out_w*out_h*FC, sizeof(float), fp);
+}

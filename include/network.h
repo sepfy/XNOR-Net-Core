@@ -1,6 +1,8 @@
 #include <vector>
 #include <map>
 #include "layers.h"
+#include <fstream>
+#include <string>
 
 using namespace std; 
 
@@ -62,7 +64,46 @@ class Network {
      }
  //    cout << "update time = " << (getms()-start) << endl;
 
-   } 
+  } 
 
+  void save() {
+
+     for(int i = layers.size() - 1; i >= 0; i--) {
+       FILE *fp;
+       fp = fopen("test.net", "wb");
+       layers[i]->save(fp);
+       fclose(fp);
+     }
+  }
+
+  void load() {
+    FILE * fp;
+    char * line = NULL;
+    size_t len = 0;
+    ssize_t read;
+
+    fp = fopen("test.net", "r");
+
+    read = getline(&line, &len, fp);
+    line[read-1] = '\0';
+    char* token = strtok(line, ",");
+    if(!strcmp(token, "Convolution")) {
+      int para[8] = {0}; 
+      int idx = 0;
+      while (token) {
+        token = strtok(NULL, ",");
+        para[idx] = atoi(token);
+        idx++;
+        if(idx > 7)
+          break;
+      }
+      Convolution *conv = new Convolution(para[0], para[1], 
+        para[2], para[3], para[4], para[5], para[6], para[7]);
+      this->add(conv); 
+    }
+
+
+
+  }
 
 };

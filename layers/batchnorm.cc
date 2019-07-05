@@ -108,3 +108,8 @@ void Batchnorm::backward(float *delta) {
 
 void Batchnorm::update(float lr) {
 }
+
+void Batchnorm::save(FILE *fp) {
+
+}
+

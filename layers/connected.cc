@@ -94,3 +94,7 @@ void Connected::update(float lr) {
 #endif
 }
 
+void Connected::save(FILE *fp) {
+
+}
+
