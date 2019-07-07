@@ -29,7 +29,7 @@ void Sigmoid::update(float lr) {
 
 }
 
-void Sigmoid::save(FILE *fp) {
+void Sigmoid::save(fstream *file) {
 
 }
 
@@ -73,7 +73,20 @@ void SoftmaxWithCrossEntropy::backward(float *delta) {
 void SoftmaxWithCrossEntropy::update(float lr) {
 }
 
-void SoftmaxWithCrossEntropy::save(FILE *fp) {
+void SoftmaxWithCrossEntropy::save(fstream *file) {
+  char buf[64] = {0};
+  sprintf(buf, "Softmax,%d", N);
+  //cout << buf << endl;
+  file->write(buf, sizeof(buf));
+}
+
+SoftmaxWithCrossEntropy* SoftmaxWithCrossEntropy::load(char *buf) {
+  int para = 0;
+  char *token;
+  token = strtok(NULL, ",");
+  para = atoi(token);
+  SoftmaxWithCrossEntropy *softmax= new SoftmaxWithCrossEntropy(para);
+  return softmax;
 
 }
 
@@ -130,7 +143,19 @@ void Relu::backward(float *delta) {
 void Relu::update(float lr) {
 }
 
-void Relu::save(FILE *fp) {
-
+void Relu::save(fstream *file) {
+  char buf[64] = {0};
+  sprintf(buf, "Relu,%d", N);
+  //cout << buf << endl;
+  file->write(buf, sizeof(buf));
 }
 
+Relu* Relu::load(char *buf) {
+
+  int para = 0;
+  char *token;
+  token = strtok(NULL, ",");
+  para = atoi(token);
+  Relu *relu = new Relu(para);
+  return relu;
+}

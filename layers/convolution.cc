@@ -29,6 +29,7 @@ Convolution::Convolution(int _W, int _H, int _C,
   col_size = out_w*out_h*out_channel;
   im_size = H*W*C;
   weight_size = out_channel*FC;
+  bias_size = out_w*out_h*FC;
   input_size = batch*im_size;
 }
 
@@ -232,13 +233,33 @@ void Convolution::update(float lr) {
 
 }
 
-void Convolution::save(FILE *fp) {
+void Convolution::save(fstream *file) {
 
-  char buf[1024] = {0};
-  sprintf(buf, "Convolution,%d,%d,%d,%d,%d,%d,%d,%d\0", 
+  char buf[64] = {0};
+  sprintf(buf, "Convolution,%d,%d,%d,%d,%d,%d,%d,%d", 
     W, H, C, FW, FH, FC, stride, pad);
-  cout << buf << endl;
-  fwrite(buf, 1, sizeof(buf), fp);
-  //fwrite(weight, out_channel*FC, sizeof(float), fp);
-  //fwrite(bias, out_w*out_h*FC, sizeof(float), fp);
+  file->write(buf, sizeof(buf));
+  file->write((char*)weight, weight_size*sizeof(float));
+  file->write((char*)bias, bias_size*sizeof(float));
+  //cout << weight[0] << endl;
+  //cout << bias[0] << endl;
+}
+
+Convolution* Convolution::load(char *buf) {
+
+  int para[8] = {0};
+  int idx = 0;
+
+  char *token;
+  while (buf) {
+    token = strtok(NULL, ",");
+    para[idx] = atoi(token);
+    idx++;
+    if(idx > 7)
+      break;
+  }
+
+  Convolution *conv = new Convolution(para[0], para[1], 
+  para[2], para[3], para[4], para[5], para[6], para[7]);
+  return conv;
 }

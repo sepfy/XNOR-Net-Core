@@ -138,7 +138,32 @@ cout << max_seq[idx] << endl;
 void Pooling::update(float lr) {
 }
 
-void Pooling::save(FILE *fp) {
-
+void Pooling::save(fstream *file) {
+  char buf[64] = {0};
+  sprintf(buf, "Pooling,%d,%d,%d,%d,%d,%d,%d,%d",
+    W, H, C, FW, FH, FC, stride, pad);
+  //cout << buf << endl;
+  file->write(buf, sizeof(buf));
 }
+
+
+Pooling* Pooling::load(char* buf) {
+
+  int para[8] = {0};
+  int idx = 0;
+
+  char *token;
+  while (buf) {
+    token = strtok(NULL, ",");
+    para[idx] = atoi(token);
+    idx++;
+    if(idx > 7)
+      break;
+  }
+
+  Pooling *pool = new Pooling(para[0], para[1],
+  para[2], para[3], para[4], para[5], para[6], para[7]);
+  return pool;
+}
+
 

@@ -94,7 +94,32 @@ void Connected::update(float lr) {
 #endif
 }
 
-void Connected::save(FILE *fp) {
+void Connected::save(fstream *file) {
+
+  char buf[64] = {0};
+  sprintf(buf, "Connected,%d,%d", N, M);
+  //cout << buf << endl;
+  file->write(buf, sizeof(buf));
+  file->write((char*)weight, N*M*sizeof(float));
+  file->write((char*)bias, M*sizeof(float));
 
 }
 
+
+Connected* Connected::load(char *buf) {
+
+  int para[2] = {0};
+  int idx = 0;
+  char *token;
+  while (buf) {
+    token = strtok(NULL, ",");
+    para[idx] = atoi(token);
+    idx++;
+    if(idx > 1)
+      break;
+  }
+  Connected *conn = new Connected(para[0], para[1]);
+  return conn;
+
+
+}

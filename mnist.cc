@@ -5,12 +5,6 @@
 #include "loss.h"
 #include <byteswap.h>
 
-#if 0
-#include <libkern/OSByteOrder.h>
-#define bswap_16(x) OSSwapInt16(x)
-#define bswap_32(x) OSSwapInt32(x)
-#define bswap_64(x) OSSwapInt64(x)
-#endif
 
 float* read_images(char *filename) {
 
@@ -171,9 +165,13 @@ int main(void) {
   network.add(&conn2);
   network.add(&softmax);
 #endif
-#if 1
+
+  int max_iter = 2000;
+  float total_err = 0;
+  int batch = 100;
+  int epoch = 10;
+
   Convolution conv1(28, 28, 1, 5, 5, 32, 1, true);
-  Batchnorm norm1(28*28*32);
   Relu relu1(28*28*32);
   Pooling pool1(28, 28, 32, 2, 2, 32, 2, false); 
   Convolution conv2(14, 14, 32, 5, 5, 64, 1, true);
@@ -185,14 +183,12 @@ int main(void) {
   Connected conn2(1024, 10);
   SoftmaxWithCrossEntropy softmax(10);
 
+
   Network network;
+  //network.load(100);
 
-  //network.load();
-
-  //cout <<  network.layers[0] << endl;
-  //return 0;
+#if 1
   network.add(&conv1);
-  //network.add(&norm1);
   network.add(&relu1);
   network.add(&pool1);
   network.add(&conv2);
@@ -203,42 +199,7 @@ int main(void) {
   network.add(&conn2);
   network.add(&softmax);
 
-
-#endif
-
-#if 0
-  Convolution conv1(28, 28, 1, 5, 5, 16, 1, true);
-  Relu relu1(28*28*16);
-  Pooling pool1(28, 28, 16, 2, 2, 16, 2, false); 
-  Convolution conv2(14, 14, 16, 5, 5, 32, 1, true);
-  Relu relu2(14*14*32);
-  Pooling pool2(14, 14, 32, 2, 2, 32, 2, false); 
-  Connected conn1(7*7*32, 128);
-  Connected conn2(128, 10);
-  SoftmaxWithCrossEntropy softmax(10);
-
-  Network network;
-  network.add(&conv1);
-  network.add(&relu1);
-  network.add(&pool1);
-  network.add(&conv2);
-  network.add(&relu2);
-  network.add(&pool2);
-  network.add(&conn1);
-  network.add(&conn2);
-  network.add(&softmax);
-#endif
-
-
-  int max_iter = 3;
-  float total_err = 0;
-
-
-  int batch = 100;
-  int epoch = 10;
-
   network.initial(batch, 1.0e-4);
-
  
   for(int iter = 0; iter < max_iter; iter++) {
 
@@ -260,20 +221,11 @@ int main(void) {
       //  break;
       //total_err = 0.0;
     }
-/*
-    if(iter>500 && total_err>0.2)
-      iter--;
-    else if(iter>1000 && total_err>0.1)
-      iter--;
-    else if(iter>1500 && total_err>0.05)
-      iter--;
-    else if(iter>2000 && total_err>0.02)
-      iter--;
-*/
   }
   
-  network.save();
-  return 0;
+#endif
+
+
   X = read_validate_data();
   Y = read_validate_label();
 
@@ -289,6 +241,7 @@ int main(void) {
   }
   cout << "Validate set error = " << (1.0 - total_err/batch_num)*100 << endl;
 
+  network.save();
 
   return 0;
 }

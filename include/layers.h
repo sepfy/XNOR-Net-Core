@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include "utils.h"
 #include <string.h>
-
+#include <fstream>
 //#define XNOR_NET
 using namespace std;
 
@@ -20,7 +20,7 @@ class Layer {
     virtual void backward(float* delta) = 0;
     virtual void update(float lr) = 0;
     virtual void init() = 0;
-    virtual void save(FILE *fp) = 0;
+    virtual void save(fstream *file) = 0;
 };
 
 class Connected : public Layer {
@@ -50,7 +50,8 @@ class Connected : public Layer {
     void forward();
     void backward(float *delta);
     void update(float lr);
-    void save(FILE *fp);
+    void save(fstream *file);
+    static Connected* load(char *buf);
 
 };
 
@@ -64,7 +65,7 @@ class Sigmoid: public Layer {
     void forward();
     void backward(float *delta);
     void update(float lr);
-    void save(FILE *fp);
+    void save(fstream *file);
 };
 
 class SoftmaxWithCrossEntropy : public Layer {
@@ -78,7 +79,8 @@ class SoftmaxWithCrossEntropy : public Layer {
     void forward();
     void backward(float *delta);
     void update(float lr);
-    void save(FILE *fp);
+    void save(fstream *file);
+    static SoftmaxWithCrossEntropy* load(char *buf);
 
 };
 
@@ -96,6 +98,7 @@ class Convolution : public Layer {
     int col_size;
     int im_size;
     int weight_size;
+    int bias_size;
     int input_size;
 
     float *weight, *bias, *out_col, *im;
@@ -118,7 +121,8 @@ class Convolution : public Layer {
     void forward();
     void backward(float *delta);
     void update(float lr);
-    void save(FILE *fp);
+    void save(fstream *file);
+    static Convolution* load(char *buf);
 
 #ifdef XNOR_NET
     float *binary_weight;
@@ -154,7 +158,8 @@ class Pooling : public Layer {
     void forward();
     void backward(float *delta);
     void update(float lr);
-    void save(FILE *fp);
+    void save(fstream *file);
+    static Pooling* load(char *buf);
 };
 
 class Relu : public Layer {
@@ -167,7 +172,8 @@ class Relu : public Layer {
     void forward();
     void backward(float *delta);
     void update(float lr);
-    void save(FILE *fp);
+    void save(fstream *file);
+    static Relu* load(char *buf);
 };
 
 class Batchnorm : public Layer {
@@ -190,5 +196,5 @@ class Batchnorm : public Layer {
     void forward();
     void backward(float *delta);
     void update(float lr);
-    void save(FILE *fp);
+    void save(fstream *file);
 };
