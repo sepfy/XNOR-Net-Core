@@ -35,13 +35,13 @@ class Network {
 
 
    float* inference(float *input) {
-//     ms_t start = getms();   
      layers[0]->input = input;
      for(int i = 0; i < layers.size(); i++) {
        
+     ms_t start = getms();   
        layers[i]->forward();
+     cout << "layer: " << i << ", time = " << (getms()-start) << endl;
      }
-//     cout << "forward time = " << (getms()-start) << endl;
      return layers[layers.size() - 1]->output;
    }
 

@@ -7,7 +7,7 @@
 #include "utils.h"
 #include <string.h>
 #include <fstream>
-//#define XNOR_NET
+#define XNOR_NET
 using namespace std;
 
 class Layer {
@@ -103,7 +103,7 @@ class Convolution : public Layer {
 
     float *weight, *bias, *out_col, *im;
     float *grad_weight, *grad_bias;
-
+    float *mean;
     // Adam optimizer
     float beta1 = 0.9;
     float beta2 = 0.999;
