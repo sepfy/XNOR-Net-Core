@@ -1,5 +1,4 @@
 #include "layers.h"
-#include "binary.h"
 using namespace std;
 
 Convolution::Convolution(int _W, int _H, int _C,
@@ -59,6 +58,16 @@ void Convolution::init() {
   for(int i = 0; i < FW*FH; i++)
     k_filter[i] = 1.0/(float)(FW*FH);
   mean = new float[FC];
+
+  bitset_outcol = new Bitset[batch*out_h*out_w];
+  bitset_weight = new Bitset[FC];
+
+  for(int i = 0; i < batch*out_h*out_w; i++)
+    bitset_outcol[i].init(out_channel);
+
+  for(int i = 0; i < FC; i++)
+    bitset_weight[i].init(out_channel);
+
 #endif
 
   random_normal(out_channel*FC, weight);
@@ -139,12 +148,25 @@ void Convolution::forward() {
   binarize_weight();
   swap_weight();
 
-  for(int i = 0; i < batch*out_h*out_w*out_channel; i++)
-    out_col[i] > 0 ? out_col[i] = 1 : out_col[i] = -1;
-//ms_t start = getms();
+//  for(int i = 0; i < batch*out_h*out_w*out_channel; i++)
+//    out_col[i] > 0 ? out_col[i] = 1 : out_col[i] = -1;
+  ms_t start = getms();
+
+  /*
+   *   For deploy
+   */
+  for(int i = 0; i < batch*out_h*out_w; i++) {
+    bitset_outcol[i].set(out_col+i*out_channel);
+  }
+  bin_gemm(batch*out_h*out_w, FC, out_channel, 1.0, 
+    bitset_outcol, bitset_weight, output);
+  cout << getms() - start << endl;
+
+
+  // For training
   //gemm(batch*out_h*out_w, FC, out_channel, 1.0, out_col, weight, output);
-  bin_gemm(batch*out_h*out_w, FC, out_channel, 1.0, out_col, weight, output);
-//cout << getms() - start << endl;
+  //bin_gemm(batch*out_h*out_w, FC, out_channel, 1.0, out_col, weight, output);
+
   // Do K = A (*) k
   for(int i = 0; i < batch; i++) 
     im2col(W, H, 1, FW, FH, 1, stride, pad, 

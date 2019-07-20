@@ -3,7 +3,6 @@
 #include "layers.h"
 #include <fstream>
 #include <string>
-
 using namespace std; 
 
 class Network {
@@ -98,6 +97,20 @@ class Network {
         conv->init();
         rfile.read((char*)conv->weight, conv->weight_size*sizeof(float));
         rfile.read((char*)conv->bias, conv->bias_size*sizeof(float));
+
+#ifdef XNOR_NET
+        float *BB = new float[conv->FC*conv->out_channel];
+        for(int i = 0; i < conv->FC; i++)
+          for(int j = 0; j < conv->out_channel; j++)
+            BB[i*conv->out_channel+j] = conv->weight[j*conv->FC+i];
+
+        for(int i = 0; i < conv->FC; i++) {
+          conv->bitset_weight[i].set(BB+i*conv->out_channel);
+        }
+        delete BB;
+#endif
+
+
         this->add(conv); 
         //cout << conv->weight[0] << endl;
         //cout << conv->bias[0] << endl;

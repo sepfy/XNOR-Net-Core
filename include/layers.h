@@ -7,6 +7,7 @@
 #include "utils.h"
 #include <string.h>
 #include <fstream>
+#include "binary.h"
 #define XNOR_NET
 using namespace std;
 
@@ -131,6 +132,7 @@ class Convolution : public Layer {
     float *avg_col;
     float *k_filter;
     float *k_output;
+    Bitset *bitset_outcol, *bitset_weight;
     void swap_weight();
     float binarize_weight();
     void binarize_input();
