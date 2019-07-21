@@ -1,11 +1,13 @@
-
-INC = -I ./include/
-LAYERS = $(wildcard layers/*.cc)
-
+INCLUDE = -I ./include/
+SRC = $(wildcard src/*.cc)
 CXXFLAGS = -O2 -std=c++11 -Wno-unused-result 
+LIBS = -lm -fopenmp
+
 all:
-	#g++ nn.cc read.cc -lm -o nn
-	$(CXX) $(CXXFLAGS) $(INC) mnist.cc blas.cc gemm.cc loss.cc binary.cc utils.cc $(LAYERS) -lm -fopenmp -o mnist
+	$(CXX) $(CXXFLAGS) $(INCLUDE) mnist.cc $(SRC) $(LIBS) -o mnist
+
+objs: $(SRC) 
+	$(CXX) $(CXXFLAGS) $(INCLUDE) $(SRC) -c
 
 clean:
 	rm -r mnist

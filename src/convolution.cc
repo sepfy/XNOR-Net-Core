@@ -150,22 +150,20 @@ void Convolution::forward() {
 
 //  for(int i = 0; i < batch*out_h*out_w*out_channel; i++)
 //    out_col[i] > 0 ? out_col[i] = 1 : out_col[i] = -1;
+/*
   ms_t start = getms();
 
-  /*
-   *   For deploy
-   */
   for(int i = 0; i < batch*out_h*out_w; i++) {
     bitset_outcol[i].set(out_col+i*out_channel);
   }
   bin_gemm(batch*out_h*out_w, FC, out_channel, 1.0, 
     bitset_outcol, bitset_weight, output);
   cout << getms() - start << endl;
-
+*/
 
   // For training
   //gemm(batch*out_h*out_w, FC, out_channel, 1.0, out_col, weight, output);
-  //bin_gemm(batch*out_h*out_w, FC, out_channel, 1.0, out_col, weight, output);
+  bin_gemm(batch*out_h*out_w, FC, out_channel, 1.0, out_col, weight, output);
 
   // Do K = A (*) k
   for(int i = 0; i < batch; i++) 

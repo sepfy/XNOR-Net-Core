@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <stdint.h>
 #include "network.h"
-#include "loss.h"
 #include <byteswap.h>
 
 
@@ -184,10 +183,10 @@ int main(void) {
 
 
   Network network;
-  network.load(100);
+  //network.load(100);
   ms_t start;
 
-#if 0
+#if 1
   network.add(&conv1);
   network.add(&relu1);
   network.add(&pool1);

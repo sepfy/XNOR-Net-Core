@@ -12,3 +12,5 @@ float L2_norm(int N, int M, float *A);
 float Linf_norm(int N, int M, float *A);
 void transpose(int N, int M, float *A, float *B);
 void scalar(int N, float s, float *A, float *B);
+int* argmax(int batch, int N, float *A);
+float accuracy(int batch, int N, float *A, float *B);
