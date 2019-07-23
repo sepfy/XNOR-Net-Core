@@ -102,6 +102,8 @@ class Convolution : public Layer {
     int bias_size;
     int input_size;
 
+    bool trainable = true;
+
     float *weight, *bias, *out_col, *im;
     float *grad_weight, *grad_bias;
     float *mean;

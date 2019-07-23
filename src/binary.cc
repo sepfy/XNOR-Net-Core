@@ -55,12 +55,12 @@ float popcount_xnor(Bitset *b1, Bitset *b2) {
 void bin_gemm(int M, int N, int P,
   float alpha, Bitset *bA, Bitset *bB, float *C) {
 
-ms_t start = getms();
+//ms_t start = getms();
   #pragma omp parallel for 
   for(int i = 0; i < M; i++)
     for(int j = 0; j < N; j++)
       C[i*N+j] = popcount_xnor(bA+i, bB+j); 
-cout << "popcount time = " << getms() -start << endl;
+//cout << "popcount time = " << getms() -start << endl;
 }
 
 

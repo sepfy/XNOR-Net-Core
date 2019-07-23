@@ -78,20 +78,16 @@ void Network::load(int batch) {
       Convolution *conv = Convolution::load(token);
       conv->batch = batch;
       conv->init();
-      rfile.read((char*)conv->weight, conv->weight_size*sizeof(float));
-      rfile.read((char*)conv->bias, conv->bias_size*sizeof(float));
-
+      conv->trainable = false;
 #ifdef XNOR_NET
-      float *BB = new float[conv->FC*conv->out_channel];
-      for(int i = 0; i < conv->FC; i++)
-	for(int j = 0; j < conv->out_channel; j++)
-	  BB[i*conv->out_channel+j] = conv->weight[j*conv->FC+i];
-
       for(int i = 0; i < conv->FC; i++) {
-	conv->bitset_weight[i].set(BB+i*conv->out_channel);
+	rfile.read((char*)conv->bitset_weight[i].bits, 
+                          conv->bitset_weight[i].N*sizeof(uint64_t));
       }
-      delete BB;
+#else
+      rfile.read((char*)conv->weight, conv->weight_size*sizeof(float));
 #endif
+      rfile.read((char*)conv->bias, conv->bias_size*sizeof(float));
 
 
       this->add(conv); 

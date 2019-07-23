@@ -5,7 +5,7 @@ int main(void) {
   X = read_train_data();
   Y = read_train_label();
 
-  int max_iter = 200;
+  int max_iter = 20000;
   float total_err = 0;
   int batch = 100;
 
@@ -56,7 +56,7 @@ int main(void) {
   Y = read_validate_label();
 
   total_err = 0.0;
-  int batch_num = 100/batch;
+  int batch_num = 10000/batch;
 
   ms_t start = getms();
   for(int iter = 0; iter < batch_num; iter++) {

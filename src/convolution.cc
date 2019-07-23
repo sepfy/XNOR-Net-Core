@@ -150,20 +150,22 @@ void Convolution::forward() {
 
 //  for(int i = 0; i < batch*out_h*out_w*out_channel; i++)
 //    out_col[i] > 0 ? out_col[i] = 1 : out_col[i] = -1;
-/*
-  ms_t start = getms();
 
-  for(int i = 0; i < batch*out_h*out_w; i++) {
-    bitset_outcol[i].set(out_col+i*out_channel);
+//  ms_t start = getms();
+  if(trainable) {
+    // For training
+    //gemm(batch*out_h*out_w, FC, out_channel, 1.0, out_col, weight, output);
+    bin_gemm(batch*out_h*out_w, FC, out_channel, 1.0, out_col, weight, output);
   }
-  bin_gemm(batch*out_h*out_w, FC, out_channel, 1.0, 
-    bitset_outcol, bitset_weight, output);
-  cout << getms() - start << endl;
-*/
+ else {
+    for(int i = 0; i < batch*out_h*out_w; i++) {
+      bitset_outcol[i].set(out_col+i*out_channel);
+    }
+    bin_gemm(batch*out_h*out_w, FC, out_channel, 1.0, 
+      bitset_outcol, bitset_weight, output);
+  }
+//  cout << getms() - start << endl;
 
-  // For training
-  //gemm(batch*out_h*out_w, FC, out_channel, 1.0, out_col, weight, output);
-  bin_gemm(batch*out_h*out_w, FC, out_channel, 1.0, out_col, weight, output);
 
   // Do K = A (*) k
   for(int i = 0; i < batch; i++) 
@@ -266,11 +268,30 @@ void Convolution::save(fstream *file) {
   char buf[64] = {0};
   sprintf(buf, "Convolution,%d,%d,%d,%d,%d,%d,%d,%d", 
     W, H, C, FW, FH, FC, stride, pad);
-  file->write(buf, sizeof(buf));
-  file->write((char*)weight, weight_size*sizeof(float));
-  file->write((char*)bias, bias_size*sizeof(float));
   //cout << weight[0] << endl;
   //cout << bias[0] << endl;
+  file->write(buf, sizeof(buf));
+#ifdef XNOR_NET
+  float *BB = new float[FC*out_channel];
+  for(int i = 0; i < FC; i++)
+    for(int j = 0; j < out_channel; j++)
+      BB[i*out_channel+j] = weight[j*FC+i];
+
+  for(int i = 0; i < FC; i++) {
+    bitset_weight[i].set(BB+i*out_channel);
+  }
+  delete BB;
+  for(int i = 0; i < FC; i++) {
+    file->write((char*)bitset_weight[i].bits,
+                       bitset_weight[i].N*sizeof(uint64_t));
+  }
+ 
+#else
+  file->write((char*)weight, weight_size*sizeof(float));
+#endif
+  file->write((char*)bias, bias_size*sizeof(float));
+
+
 }
 
 Convolution* Convolution::load(char *buf) {
