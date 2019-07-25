@@ -107,8 +107,9 @@ void Pooling::backward(float *delta) {
     col2im(W, H, C, FW, FH, C, stride, pad, im, col);
     memcpy(m_delta + i*im_size, im, im_size*sizeof(float));
   }
-  free(im);
-  
+ 
+  delete[] im;
+  delete[] col; 
 /*
   int filter_size = FH*FW;
   for(int i = 0; i < batch; i++) 

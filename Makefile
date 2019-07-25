@@ -21,7 +21,7 @@ lib: $(OBJ)
 	chmod 777 $(LIB)
 
 $(OUTDIR)/%.o: $(SRCDIR)/%.cc $(OUTDIR)
-	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $< -o $@ 
+	$(CXX) $(CXXFLAGS) $(INCLUDE) $(LIBS) -c $< -o $@ 
 
 $(OUTDIR):
 	mkdir -p $(OUTDIR)

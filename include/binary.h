@@ -14,6 +14,7 @@ class Bitset {
     int offset;
     int N, BN;
     Bitset(){}; 
+    ~Bitset(); 
     void init(int input_size);
     void set(float *inputs);
 };

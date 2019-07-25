@@ -55,7 +55,7 @@ void Connected::backward(float *delta) {
   float *tmp = new float[N*M];
   scalar(N*M, 0.01/(float)(N*M), weight, tmp); 
   add(N, M, grad_weight, tmp, grad_weight);
-  delete tmp;
+  delete[] tmp;
   gemm_tb(batch, N, M, 1.0, delta, weight, m_delta);
   row_sum(batch, M, delta, grad_bias);
 }

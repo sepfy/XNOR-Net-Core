@@ -6,6 +6,10 @@
 #include "binary.h"
 using namespace std;
 
+Bitset::~Bitset() {
+  delete[] bits;
+}
+
 void Bitset::init(int input_size) {
   BN = sizeof(uint64_t)*8;
   bitnum = input_size;
@@ -87,6 +91,10 @@ void bin_gemm(int M, int N, int P,
   }
 
   bin_gemm(M, N, P, alpha, bA, bB, C);
+ 
+  delete[] BB; 
+  delete[] bA;
+  delete[] bB;
 
 }
 

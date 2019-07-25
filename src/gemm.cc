@@ -1,7 +1,7 @@
 #include <iostream>
 #include <omp.h>
 #include "gemm.h"
-
+#include <string.h>
 using namespace std;
 /*
   C = MxN, A = MxP, B = PxN
@@ -9,13 +9,13 @@ using namespace std;
 void gemm(int M, int N, int P,
   float alpha, float *A, float *B, float *C) {
 
+  memset(C, 0, M*N*sizeof(float));
   #pragma omp parallel for
   for(int i = 0; i < M; i++)
-    for(int j = 0; j < N; j++) {
-      C[i*N+j] = 0.0;
-      for(int k = 0; k < P; k++)
-        C[i*N+j] += A[i*P+k]*B[k*N+j];
-      C[i*N+j] *= alpha;
+    for(int k = 0; k < P; k++) {
+      float A_PART = alpha*A[i*P+k];
+      for(int j = 0; j < N; j++) 
+        C[i*N+j] += A_PART*B[k*N+j];
     }
 }
 
