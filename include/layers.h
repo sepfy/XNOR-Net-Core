@@ -201,4 +201,5 @@ class Batchnorm : public Layer {
     void backward(float *delta);
     void update(float lr);
     void save(fstream *file);
+    static Batchnorm* load(char *buf);
 };

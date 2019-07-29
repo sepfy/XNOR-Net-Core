@@ -16,6 +16,7 @@ class Bitset {
     Bitset(){}; 
     ~Bitset(); 
     void init(int input_size);
+    void clean();
     void set(float *inputs);
 };
 

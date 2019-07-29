@@ -84,6 +84,7 @@ void Network::load(int batch) {
 	rfile.read((char*)conv->bitset_weight[i].bits, 
                           conv->bitset_weight[i].N*sizeof(uint64_t));
       }
+      rfile.read((char*)conv->mean, conv->FC*sizeof(float));
 #else
       rfile.read((char*)conv->weight, conv->weight_size*sizeof(float));
 #endif
@@ -116,6 +117,13 @@ void Network::load(int batch) {
       relu->batch = batch;
       relu->init(); 
       this->add(relu);
+      //cout << relu->N << endl;
+    }
+    else if(!strcmp(token, "Batchnorm")) {
+      Batchnorm *bn = Batchnorm::load(token);
+      bn->batch = batch;
+      bn->init();
+      this->add(bn);
       //cout << relu->N << endl;
     }
     else if(!strcmp(token, "Softmax")) {

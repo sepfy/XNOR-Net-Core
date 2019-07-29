@@ -145,22 +145,22 @@ void Convolution::forward() {
     im2col(W, H, C, FW, FH, FC, stride, pad, 
       input + i*im_size, out_col+i*col_size);
 
-  binarize_weight();
-  swap_weight();
-
-
 //  ms_t start = getms();
   if(trainable) {
-    // For training
+    binarize_weight();
+    swap_weight();
     //gemm(batch*out_h*out_w, FC, out_channel, 1.0, out_col, weight, output);
-  for(int i = 0; i < batch*out_h*out_w*out_channel; i++)
-    out_col[i] > 0 ? out_col[i] = 1 : out_col[i] = -1;
+    //for(int i = 0; i < batch*out_h*out_w*out_channel; i++)
+    //  out_col[i] > 0 ? out_col[i] = 1 : out_col[i] = -1;
     bin_gemm(batch*out_h*out_w, FC, out_channel, 1.0, out_col, weight, output);
   }
  else {
+
     for(int i = 0; i < batch*out_h*out_w; i++) {
+      bitset_outcol[i].clean();
       bitset_outcol[i].set(out_col+i*out_channel);
     }
+
     bin_gemm(batch*out_h*out_w, FC, out_channel, 1.0, 
       bitset_outcol, bitset_weight, output);
   }
@@ -281,10 +281,13 @@ void Convolution::save(fstream *file) {
     bitset_weight[i].set(BB+i*out_channel);
   }
   delete[] BB;
+
   for(int i = 0; i < FC; i++) {
     file->write((char*)bitset_weight[i].bits,
                        bitset_weight[i].N*sizeof(uint64_t));
   }
+
+  file->write((char*)mean, FC*sizeof(float));
  
 #else
   file->write((char*)weight, weight_size*sizeof(float));

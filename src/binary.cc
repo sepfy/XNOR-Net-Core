@@ -36,6 +36,9 @@ void Bitset::set(float *inputs) {
   }
 }
 
+void Bitset::clean() {
+  memset(bits, 0, sizeof(uint64_t)*N);
+}
 
 int bitcount(uint64_t n){
   return  __builtin_popcountl(n);

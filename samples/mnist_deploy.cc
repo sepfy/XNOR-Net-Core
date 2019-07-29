@@ -11,7 +11,7 @@ int main(void) {
 
   int batch = 100;
   float total_err = 0.0;
-  int batch_num = 100/batch;
+  int batch_num = 10000/batch;
 
   ms_t start = getms();
   for(int iter = 0; iter < batch_num; iter++) {

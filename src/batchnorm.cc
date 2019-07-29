@@ -110,6 +110,17 @@ void Batchnorm::update(float lr) {
 }
 
 void Batchnorm::save(fstream *file) {
+  char buf[64] = {0};
+  sprintf(buf, "Batchnorm,%d", N);
+  file->write(buf, sizeof(buf));
+}
 
+Batchnorm* Batchnorm::load(char *buf) {
+  int para = 0;
+  char *token;
+  token = strtok(NULL, ",");
+  para = atoi(token);
+  Batchnorm *bn = new Batchnorm(para);
+  return bn;
 }
 
