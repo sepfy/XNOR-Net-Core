@@ -50,14 +50,14 @@ void Connected::backward(float *delta) {
   memset(grad_weight, 0, N*M*sizeof(float));
   memset(m_delta, 0, batch*N*sizeof(float));
 
-  gemm_ta(N, M, batch, 1.0, input, delta, grad_weight);
-
-  float *tmp = new float[N*M];
-  scalar(N*M, 0.01/(float)(N*M), weight, tmp); 
-  add(N, M, grad_weight, tmp, grad_weight);
-  delete[] tmp;
   gemm_tb(batch, N, M, 1.0, delta, weight, m_delta);
+  gemm_ta(N, M, batch, 1.0, input, delta, grad_weight);
   row_sum(batch, M, delta, grad_bias);
+
+  //float *tmp = new float[N*M];
+  //scalar(N*M, 0.01/(float)(N*M), weight, tmp); 
+  //add(N, M, grad_weight, tmp, grad_weight);
+  //delete[] tmp;
 }
 
 void Connected::update(float lr) {

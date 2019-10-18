@@ -8,7 +8,7 @@
 #include <string.h>
 #include <fstream>
 #include "binary.h"
-#define XNOR_NET
+//#define XNOR_NET
 using namespace std;
 
 class Layer {

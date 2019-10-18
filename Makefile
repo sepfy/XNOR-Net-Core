@@ -10,11 +10,17 @@ INCLUDE = -I ./include/
 LIBS = -lm -fopenmp
 LIB = libxnnc.a
 
-all: mnist lib 
+all: mnist lib test 
 
 mnist: lib
 	$(CXX) $(CXXFLAGS) -Wno-unused-result $(INCLUDE) $(LIBS) $(SAMPLE)/mnist_train.cc $(LIB) -o $(SAMPLE)/mnist_train
 	$(CXX) $(CXXFLAGS) -Wno-unused-result $(INCLUDE) $(LIBS) $(SAMPLE)/mnist_deploy.cc $(LIB) -o $(SAMPLE)/mnist_deploy
+
+test: lib
+	$(CXX) $(CXXFLAGS) -Wno-unused-result $(INCLUDE) $(LIBS) unittest/conn_test.cc $(LIB) -o unittest/conn_test
+	$(CXX) $(CXXFLAGS) -Wno-unused-result $(INCLUDE) $(LIBS) unittest/conv_test.cc $(LIB) -o unittest/conv_test
+
+
 
 lib: $(OBJ)
 	$(AR) rvs $(LIB) $^

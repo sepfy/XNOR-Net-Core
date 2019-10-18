@@ -28,7 +28,7 @@ Convolution::Convolution(int _W, int _H, int _C,
   col_size = out_w*out_h*out_channel;
   im_size = H*W*C;
   weight_size = out_channel*FC;
-  bias_size = out_w*out_h*FC;
+  bias_size = FC;
   input_size = batch*im_size;
 }
 
@@ -44,8 +44,8 @@ void Convolution::init() {
 
   weight = new float[out_channel*FC];
   grad_weight = new float[out_channel*FC];
-  bias = new float[out_w*out_h*FC];
-  grad_bias = new float[out_w*out_h*FC];
+  bias = new float[FC];
+  grad_bias = new float[FC];
   im = new float[H*W*C];
   m_delta = new float[batch*W*H*C]; 
 
@@ -71,19 +71,19 @@ void Convolution::init() {
 #endif
 
   random_normal(out_channel*FC, weight);
-  random_normal(out_w*out_h*FC, bias);
+  random_normal(FC, bias);
 
   
   //Adam
   m_weight = new float[out_channel*FC];
   v_weight = new float[out_channel*FC];
-  m_bias = new float[out_w*out_h*FC];
-  v_bias = new float[out_w*out_h*FC];
+  m_bias = new float[FC];
+  v_bias = new float[FC];
   for(int i = 0; i < out_channel*FC; i++) {
     m_weight[i] = 0.0;
     v_weight[i] = 0.0;
   }
-  for(int i = 0; i < out_w*out_h*FC; i++) {
+  for(int i = 0; i < FC; i++) {
     m_bias[i] = 0.0;
     v_bias[i] = 0.0;
   }
@@ -190,7 +190,13 @@ void Convolution::forward() {
   gemm(batch*out_h*out_w, FC, out_channel, 1, out_col, weight, output);
 #endif
 
-  bias_add(batch, out_h*out_w*FC, output, bias);
+// bias_add(batch, out_h*out_w*FC, output, bias);
+
+  for(int b = 0; b < batch; b++)
+    for(int i = 0; i < out_h; i++)
+      for(int j = 0; j < out_w; j++)
+        for(int k = 0; k < FC; k++)
+          output[b*out_h*out_w*FC + i*out_w*FC + j*FC + k] += bias[k];
 
 #ifdef XNOR_NET
   swap_weight();
@@ -204,15 +210,9 @@ void Convolution::backward(float *delta) {
   memset(grad_weight, 0, out_channel*FC*sizeof(float));
   gemm_ta(out_channel, FC, out_h*out_w*batch, 1.0, out_col, delta, grad_weight);
 
-  float *tmp = new float[out_channel*FC];
-  scalar(out_channel*FC, 0.01/(float)(out_channel*FC), weight, tmp);
-  add(out_channel, FC, grad_weight, tmp, grad_weight);
-  delete[] tmp;
-
-
   //bias
-  memset(grad_bias, 0, out_w*out_h*FC*sizeof(float));
-  row_sum(batch, out_w*out_h*FC, delta, grad_bias);
+  memset(grad_bias, 0, FC*sizeof(float));
+  row_sum(batch*out_w*out_h, FC, delta, grad_bias);
 
   float *delta_col = new float[batch*out_channel*out_w*out_h];
   gemm_tb(batch*out_w*out_h, out_channel, FC, 1.0, delta, weight, delta_col);
@@ -243,12 +243,12 @@ void Convolution::update(float lr) {
     weight[i] -= m_lr * m_weight[i]/(pow(v_weight[i], 0.5) + eplson);
   }  
 
-  for(int i = 0; i < out_w*out_h*FC; i++) {
+  for(int i = 0; i < FC; i++) {
     m_bias[i] = (1 - beta1)*grad_bias[i] + beta1*m_bias[i];
     v_bias[i] = (1 - beta2)*pow(grad_bias[i], 2.0) + beta2*v_bias[i];
   }
 
-  for(int i = 0; i < out_w*out_h*FC; i++) {
+  for(int i = 0; i < FC; i++) {
     bias[i] -= m_lr * m_bias[i]/(pow(v_bias[i], 0.5) + eplson);
   }
 #endif  
