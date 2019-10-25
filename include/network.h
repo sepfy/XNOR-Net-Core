@@ -16,4 +16,5 @@ class Network {
     void train(float *Y);
     void save();
     void load(int batch);
+    void deploy();
 };

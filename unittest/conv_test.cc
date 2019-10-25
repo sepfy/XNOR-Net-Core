@@ -8,31 +8,52 @@ int main(void) {
   int batch = 100;
 
 
-  Convolution conv1(28, 28, 1, 5, 5, 30, 1, false);
-  Relu relu1(24*24*30);
-  Pooling pool1(24, 24, 30, 2, 2, 30, 2, false);
-  Connected conn1(12*12*30, 100);
-  Relu relu2(100);
-  Connected conn2(100, 10);
+  Convolution conv1(28, 28, 1, 5, 5, 16, 1, false);
+  Relu relu1(24*24*16);
+  Dropout conv1_drop(24*24*16, 0.5);
+  Pooling pool1(24, 24, 16, 2, 2, 16, 2, false);
+
+
+  Convolution conv2(12, 12, 16, 5, 5, 32, 1, false);
+  Relu relu2(8*8*32);
+  Dropout conv2_drop(8*8*32, 0.5);
+  Pooling pool2(8, 8, 32, 2, 2, 32, 2, false);
+
+  Connected conn1(4*4*32, 256);
+  Relu conn1_relu(256);
+  Dropout conn1_drop(256, 0.5);
+
+  Connected conn2(256, 10);
+  Dropout conn2_drop(10, 0.5);
   SoftmaxWithCrossEntropy softmax(10);
 
   Network network;
   network.add(&conv1);
   network.add(&relu1);
+  network.add(&conv1_drop);
   network.add(&pool1);
-  network.add(&conn1);
+
+  network.add(&conv2);
   network.add(&relu2);
+  network.add(&conv2_drop);
+  network.add(&pool2);
+
+  network.add(&conn1);
+  network.add(&conn1_relu);
+  network.add(&conn1_drop);
+
   network.add(&conn2);
+  //network.add(&conn2_drop);
   network.add(&softmax);
   network.initial(batch, 0.001);
-
+/*
   read_param("data/W1.bin", 750, conv1.weight);
   read_param("data/b1.bin", 30, conv1.bias);
   read_param("data/W2.bin", 432000, conn1.weight);
   read_param("data/b2.bin", 100, conn1.bias);
   read_param("data/W3.bin", 1000, conn2.weight);
   read_param("data/b3.bin", 10, conn2.bias);
-
+*/
   float *output = network.inference(X);
   int max_iter = 20000;
   /*
@@ -68,8 +89,9 @@ int main(void) {
 
   float total_err = 0.0;
   int batch_num = 10000/batch;
-
+  
   ms_t start = getms();
+  network.deploy();
   for(int iter = 0; iter < batch_num; iter++) {
 
     int step = (iter*batch);

@@ -14,6 +14,7 @@ using namespace std;
 class Layer {
   public:
     int batch;
+    bool train_flag = true;
     float *input;
     float *output;
     float *m_delta;
@@ -203,3 +204,19 @@ class Batchnorm : public Layer {
     void save(fstream *file);
     static Batchnorm* load(char *buf);
 };
+
+class Dropout : public Layer {
+  public:
+    int N;
+    float *mask;
+    float ratio;
+    Dropout(int _N, float _ratio);
+    ~Dropout();
+    void init();
+    void forward();
+    void backward(float *delta);
+    void update(float lr);
+    void save(fstream *file);
+    static Dropout* load(char *buf);
+};
+

@@ -129,8 +129,8 @@ void Convolution::binarize_input() {
     }
   }
 
-  for(int i = 0; i < batch*im_size; i++) 
-    input[i] > 0 ? input[i] = 1 : input[i] = -1;
+  //for(int i = 0; i < batch*im_size; i++) 
+  //  input[i] > 0 ? input[i] = 1 : input[i] = -1;
  
 }
 

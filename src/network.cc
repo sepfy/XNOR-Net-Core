@@ -48,6 +48,13 @@ void Network::train(float *Y) {
 
 } 
 
+void Network::deploy() {
+  for(int i = 0; i < layers.size(); i++) {
+    layers[i]->train_flag = false;
+  }
+
+}
+
 void Network::save() {
 
   fstream file;
