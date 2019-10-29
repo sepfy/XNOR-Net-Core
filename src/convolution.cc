@@ -138,8 +138,8 @@ void Convolution::binarize_input() {
 
 void Convolution::forward() {
 
-#ifdef XNOR_NET
-
+//#ifdef XNOR_NET
+if(xnor) {
   binarize_input();
   for(int i = 0; i < batch; i++)
     im2col(W, H, C, FW, FH, FC, stride, pad, 
@@ -182,14 +182,15 @@ void Convolution::forward() {
         for(int k = 0; k < FC; k++)
           output[idx*FC + k] *= mean[k];
       }
-
-#else
+}
+else {
+//#else
   for(int i = 0; i < batch; i++)
     im2col(W, H, C, FW, FH, FC, stride, pad, 
       input + i*im_size, out_col+i*col_size);
   gemm(batch*out_h*out_w, FC, out_channel, 1, out_col, weight, output);
-#endif
-
+//#endif
+}
 // bias_add(batch, out_h*out_w*FC, output, bias);
 
   for(int b = 0; b < batch; b++)
@@ -197,10 +198,11 @@ void Convolution::forward() {
       for(int j = 0; j < out_w; j++)
         for(int k = 0; k < FC; k++)
           output[b*out_h*out_w*FC + i*out_w*FC + j*FC + k] += bias[k];
-
-#ifdef XNOR_NET
+if(xnor) {
+//#ifdef XNOR_NET
   swap_weight();
-#endif
+//#endif
+}
 
 }
 

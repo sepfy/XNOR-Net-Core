@@ -9,22 +9,23 @@ int main(void) {
 
 
   Convolution conv1(28, 28, 1, 5, 5, 16, 1, false);
+  conv1.xnor = false;
   Relu relu1(24*24*16);
   Dropout conv1_drop(24*24*16, 0.5);
   Pooling pool1(24, 24, 16, 2, 2, 16, 2, false);
-
+  Batchnorm bn1(12*12*16);
 
   Convolution conv2(12, 12, 16, 5, 5, 32, 1, false);
   Relu relu2(8*8*32);
   Dropout conv2_drop(8*8*32, 0.5);
   Pooling pool2(8, 8, 32, 2, 2, 32, 2, false);
+  Batchnorm bn2(4*4*32);
 
-  Connected conn1(4*4*32, 256);
-  Relu conn1_relu(256);
-  Dropout conn1_drop(256, 0.5);
+  Convolution conv3(4, 4, 32, 4, 4, 512, 1, false);
+  Relu relu3(512);
+  Dropout conv3_drop(256, 0.5);
 
-  Connected conn2(256, 10);
-  Dropout conn2_drop(10, 0.5);
+  Connected conn1(512, 10);
   SoftmaxWithCrossEntropy softmax(10);
 
   Network network;
@@ -33,17 +34,18 @@ int main(void) {
   network.add(&conv1_drop);
   network.add(&pool1);
 
+  network.add(&bn1);
   network.add(&conv2);
   network.add(&relu2);
-  network.add(&conv2_drop);
+  //network.add(&conv2_drop);
   network.add(&pool2);
 
-  network.add(&conn1);
-  network.add(&conn1_relu);
-  network.add(&conn1_drop);
+  network.add(&bn2);
+  network.add(&conv3);
+  network.add(&relu3);
+  //network.add(&conv3_drop);
 
-  network.add(&conn2);
-  //network.add(&conn2_drop);
+  network.add(&conn1);
   network.add(&softmax);
   network.initial(batch, 0.001);
 /*

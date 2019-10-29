@@ -8,7 +8,7 @@
 #include <string.h>
 #include <fstream>
 #include "binary.h"
-//#define XNOR_NET
+#define XNOR_NET
 using namespace std;
 
 class Layer {
@@ -89,7 +89,7 @@ class SoftmaxWithCrossEntropy : public Layer {
 class Convolution : public Layer {
 
   public:
-
+    bool xnor = true;
     float *col;
     int FW, FH, FC;
     int stride, pad;
@@ -184,17 +184,16 @@ class Relu : public Layer {
 class Batchnorm : public Layer {
   public:
     int N;
-    float *mean, *var;
+    float *mean, *var, *running_mean, *running_var;
     float *normal;
-    float gamma = 1.0, beta = 0.0, epslon = 1.0e-8;
-
+    float epslon = 1.0e-7;
+    float *gamma, *beta, *dgamma, *dbeta;
     float *dxn;
     float *dxc;
     float *dvar;
     float *dstd;
     float *dmu;
-
-
+    float momentum = 0.9;
     Batchnorm(int _N);
     ~Batchnorm();
     void init();

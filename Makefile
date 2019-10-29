@@ -19,6 +19,7 @@ mnist: lib
 test: lib
 	$(CXX) $(CXXFLAGS) -Wno-unused-result $(INCLUDE) $(LIBS) unittest/conn_test.cc $(LIB) -o unittest/conn_test
 	$(CXX) $(CXXFLAGS) -Wno-unused-result $(INCLUDE) $(LIBS) unittest/conv_test.cc $(LIB) -o unittest/conv_test
+	$(CXX) $(CXXFLAGS) -Wno-unused-result $(INCLUDE) $(LIBS) unittest/bn_test.cc $(LIB) -o unittest/bn_test
 
 
 

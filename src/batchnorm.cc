@@ -12,6 +12,8 @@ void Batchnorm::init() {
 
   mean = new float[N];
   var  = new float[N];
+  running_mean = new float[N];
+  running_var  = new float[N];
   normal = new float[batch*N];
   output = new float[batch*N];
   m_delta = new float[batch*N];
@@ -21,43 +23,85 @@ void Batchnorm::init() {
   dvar = new float[N];
   dstd = new float[N];
   dmu = new float[N];
-  
+
+  dgamma = new float[N];
+  dbeta = new float[N];
+  gamma = new float[N];
+  beta = new float[N];
+  for(int i = 0; i < N; i++) {
+    gamma[i] = 1.0;
+    beta[i] = 0.0;
+    running_mean[i] = 0.0;
+    running_var[i] = 0.0;
+  }
+
 }
 
 void Batchnorm::forward() {
 
-  memset(mean, 0, N*sizeof(float));
-  memset(var, 0, N*sizeof(float));
 
-  for(int i = 0; i < batch; i++)
-    for(int j = 0; j < N; j++)
-      mean[j] += input[i*N+j];
+  if(train_flag) {
+    memset(mean, 0, N*sizeof(float));
+    memset(var, 0, N*sizeof(float));
+
+    for(int i = 0; i < batch; i++)
+      for(int j = 0; j < N; j++)
+        mean[j] += input[i*N+j];
   
-  for(int j = 0; j < N; j++)
-    mean[j] /= (float)batch;
-
-  for(int i = 0; i < batch; i++)
     for(int j = 0; j < N; j++)
-      var[j] += pow(input[i*N+j] - mean[j], 2.0);
+      mean[j] /= (float)batch;
 
-  for(int j = 0; j < N; j++)
-    var[j] /= (float)batch;
+    for(int i = 0; i < batch; i++)
+      for(int j = 0; j < N; j++)
+        var[j] += pow(input[i*N+j] - mean[j], 2.0);
+
+    for(int j = 0; j < N; j++)
+      var[j] /= (float)batch;
 
 
-  for(int i = 0; i < batch; i++)
+    for(int i = 0; i < batch; i++)
+      for(int j = 0; j < N; j++) {
+        normal[i*N+j] = (input[i*N+j] - mean[j])/pow(var[j] + epslon, 0.5);
+        output[i*N+j] = gamma[j]*normal[i*N+j] + beta[j];
+      }
+
     for(int j = 0; j < N; j++) {
-      normal[i*N+j] = (input[i*N+j] - mean[j])/pow(var[j] + epslon, 0.5);
-      output[i*N+j] = gamma*normal[i*N+j] + beta;
+      running_mean[j] = momentum*running_mean[j] + (1-momentum)*mean[j];
+      running_var[j] = momentum*running_var[j] + (1-momentum)*var[j];
     }
+  }
+  else {
+
+    for(int i = 0; i < batch; i++)
+      for(int j = 0; j < N; j++) {
+        normal[i*N+j] = (input[i*N+j] - running_mean[j])/pow(running_var[j] + epslon, 0.5);
+        output[i*N+j] = gamma[j]*normal[i*N+j] + beta[j];
+      }
+
+  }
+
+
+
+
 
 }
 
 void Batchnorm::backward(float *delta) {
 
+  memset(dbeta, 0 , N*sizeof(float));
+  memset(dgamma, 0 , N*sizeof(float));
+
+  for(int i = 0; i < batch; i++) {
+    for(int j = 0; j < N; j++) {
+      dbeta[j] += delta[i*N+j];
+      dgamma[j] += normal[i*N+j]*delta[i*N+j];
+    }
+  }
+
   // Step8
   for(int i = 0; i < batch; i++) {
     for(int j = 0; j < N; j++) {
-      dxn[i*N+j] = gamma*delta[i*N+j];
+      dxn[i*N+j] = gamma[j]*delta[i*N+j];
     }
   }
   
@@ -72,6 +116,7 @@ void Batchnorm::backward(float *delta) {
 
   
   // Step6+7
+  memset(dstd, 0, sizeof(float)*N);
   for(int i = 0; i < batch; i++) {
     for(int j = 0; j < N; j++) {
       dstd[j] -= dxn[i*N+j]*(input[i*N+j]-mean[j])/(var[j] + epslon);
@@ -91,6 +136,7 @@ void Batchnorm::backward(float *delta) {
 
 
   // Step1
+  memset(dmu, 0, N*sizeof(float));
   for(int i = 0; i < batch; i++) {
     for(int j = 0; j < N; j++) {
       dmu[j] += dxc[i*N+j];
@@ -107,6 +153,10 @@ void Batchnorm::backward(float *delta) {
 }
 
 void Batchnorm::update(float lr) {
+  for(int i = 0; i < N; i++) {
+    gamma[i] -= lr*dgamma[i];
+    beta[i] -= lr*dbeta[i];
+  } 
 }
 
 void Batchnorm::save(fstream *file) {
