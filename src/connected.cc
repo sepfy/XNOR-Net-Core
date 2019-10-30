@@ -72,7 +72,7 @@ void Connected::update(float lr) {
   }
 
   for(int i = 0; i < N*M; i++) {
-    weight[i] -= m_lr * m_weight[i]/(pow(v_weight[i], 0.5) + eplson);
+    weight[i] -= m_lr * m_weight[i]/(pow(v_weight[i], 0.5) + epsilon);
   }
 
 
@@ -82,7 +82,7 @@ void Connected::update(float lr) {
   }
 
   for(int i = 0; i < M; i++) {
-    bias[i] -= m_lr * m_bias[i]/(pow(v_bias[i], 0.5) + eplson);
+    bias[i] -= m_lr * m_bias[i]/(pow(v_bias[i], 0.5) + epsilon);
   }
 #endif  
 

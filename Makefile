@@ -21,7 +21,8 @@ test: lib
 	$(CXX) $(CXXFLAGS) -Wno-unused-result $(INCLUDE) $(LIBS) unittest/conv_test.cc $(LIB) -o unittest/conv_test
 	$(CXX) $(CXXFLAGS) -Wno-unused-result $(INCLUDE) $(LIBS) unittest/bn_test.cc $(LIB) -o unittest/bn_test
 
-
+vgg: lib
+	$(CXX) $(CXXFLAGS) -Wno-unused-result $(INCLUDE) $(LIBS) $(SAMPLE)/vgg.cc $(LIB) `pkg-config opencv --cflags --libs` -o $(SAMPLE)/vgg
 
 lib: $(OBJ)
 	$(AR) rvs $(LIB) $^

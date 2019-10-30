@@ -44,7 +44,7 @@ class Connected : public Layer {
     float *m_bias;
     float *v_bias;
     float iter = 0.0;
-    float eplson = 1.0e-7;
+    float epsilon = 1.0e-7;
  
     Connected(int _n, int _m);
     ~Connected();
@@ -116,7 +116,7 @@ class Convolution : public Layer {
     float *m_bias;
     float *v_bias;
     float iter = 0.0;
-    float eplson = 1.0e-7;
+    float epsilon = 1.0e-7;
 
     Convolution(int _W, int _H, int _C,
 	int _FW, int _FH, int _FC, int _stride, bool _pad);
@@ -184,16 +184,20 @@ class Relu : public Layer {
 class Batchnorm : public Layer {
   public:
     int N;
+    float iter = 0.0;
     float *mean, *var, *running_mean, *running_var;
     float *normal;
-    float epslon = 1.0e-7;
+    float epsilon = 1.0e-7;
     float *gamma, *beta, *dgamma, *dbeta;
+    float *m_gamma, *m_beta, *v_gamma, *v_beta;
     float *dxn;
     float *dxc;
     float *dvar;
     float *dstd;
     float *dmu;
     float momentum = 0.9;
+    float beta1 = 0.9;
+    float beta2 = 0.999;
     Batchnorm(int _N);
     ~Batchnorm();
     void init();

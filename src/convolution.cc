@@ -242,7 +242,7 @@ void Convolution::update(float lr) {
   }
 
   for(int i = 0; i < out_channel*FC; i++) {
-    weight[i] -= m_lr * m_weight[i]/(pow(v_weight[i], 0.5) + eplson);
+    weight[i] -= m_lr * m_weight[i]/(pow(v_weight[i], 0.5) + epsilon);
   }  
 
   for(int i = 0; i < FC; i++) {
@@ -251,7 +251,7 @@ void Convolution::update(float lr) {
   }
 
   for(int i = 0; i < FC; i++) {
-    bias[i] -= m_lr * m_bias[i]/(pow(v_bias[i], 0.5) + eplson);
+    bias[i] -= m_lr * m_bias[i]/(pow(v_bias[i], 0.5) + epsilon);
   }
 #endif  
 

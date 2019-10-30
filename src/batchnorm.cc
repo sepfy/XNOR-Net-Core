@@ -28,9 +28,19 @@ void Batchnorm::init() {
   dbeta = new float[N];
   gamma = new float[N];
   beta = new float[N];
+  m_gamma = new float[N];
+  m_beta = new float[N];
+  v_gamma = new float[N];
+  v_beta = new float[N];
   for(int i = 0; i < N; i++) {
     gamma[i] = 1.0;
     beta[i] = 0.0;
+
+    m_beta[i] = 0.0;
+    v_beta[i] = 0.0;
+    m_gamma[i] = 0.0;
+    m_gamma[i] = 0.0;
+
     running_mean[i] = 0.0;
     running_var[i] = 0.0;
   }
@@ -61,7 +71,7 @@ void Batchnorm::forward() {
 
     for(int i = 0; i < batch; i++)
       for(int j = 0; j < N; j++) {
-        normal[i*N+j] = (input[i*N+j] - mean[j])/pow(var[j] + epslon, 0.5);
+        normal[i*N+j] = (input[i*N+j] - mean[j])/pow(var[j] + epsilon, 0.5);
         output[i*N+j] = gamma[j]*normal[i*N+j] + beta[j];
       }
 
@@ -74,7 +84,7 @@ void Batchnorm::forward() {
 
     for(int i = 0; i < batch; i++)
       for(int j = 0; j < N; j++) {
-        normal[i*N+j] = (input[i*N+j] - running_mean[j])/pow(running_var[j] + epslon, 0.5);
+        normal[i*N+j] = (input[i*N+j] - running_mean[j])/pow(running_var[j] + epsilon, 0.5);
         output[i*N+j] = gamma[j]*normal[i*N+j] + beta[j];
       }
 
@@ -109,7 +119,7 @@ void Batchnorm::backward(float *delta) {
   // Step2+7
   for(int i = 0; i < batch; i++) {
     for(int j = 0; j < N; j++) {
-      dxc[i*N+j] = dxn[i*N+j]/pow(var[j] + epslon, 0.5);
+      dxc[i*N+j] = dxn[i*N+j]/pow(var[j] + epsilon, 0.5);
     }
   }
 
@@ -119,13 +129,13 @@ void Batchnorm::backward(float *delta) {
   memset(dstd, 0, sizeof(float)*N);
   for(int i = 0; i < batch; i++) {
     for(int j = 0; j < N; j++) {
-      dstd[j] -= dxn[i*N+j]*(input[i*N+j]-mean[j])/(var[j] + epslon);
+      dstd[j] -= dxn[i*N+j]*(input[i*N+j]-mean[j])/(var[j] + epsilon);
     }
   }
 
   // Step5
   for(int j = 0; j < N; j++) 
-    dvar[j] = 0.5*dstd[j]/pow(var[j] + epslon, 0.5);
+    dvar[j] = 0.5*dstd[j]/pow(var[j] + epsilon, 0.5);
 
   // Step3+4
   for(int i = 0; i < batch; i++) {
@@ -153,10 +163,28 @@ void Batchnorm::backward(float *delta) {
 }
 
 void Batchnorm::update(float lr) {
+
+  iter++;
+  float m_lr = lr * pow(1.0 - pow(beta2, iter), 0.5) / (1.0 - pow(beta1, iter));
+  for(int i = 0; i < N; i++) {
+    m_gamma[i] = (1 - beta1)*dgamma[i] + beta1*m_gamma[i];
+    v_gamma[i] = (1 - beta2)*pow(dgamma[i], 2.0) + beta2*v_gamma[i];
+    m_beta[i] = (1 - beta1)*dbeta[i] + beta1*m_beta[i];
+    v_beta[i] = (1 - beta2)*pow(dbeta[i], 2.0) + beta2*v_beta[i];
+  }
+
+  for(int i = 0; i < N; i++) {
+    gamma[i] -= m_lr * m_gamma[i]/(pow(v_gamma[i], 0.5) + epsilon);
+    beta[i] -= m_lr * m_beta[i]/(pow(v_beta[i], 0.5) + epsilon);
+  }
+
+#if 0
   for(int i = 0; i < N; i++) {
     gamma[i] -= lr*dgamma[i];
     beta[i] -= lr*dbeta[i];
   } 
+#endif
+
 }
 
 void Batchnorm::save(fstream *file) {
