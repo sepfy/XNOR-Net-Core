@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include "network.h"
+
 using namespace cv;
 using namespace std;
 
@@ -97,6 +98,16 @@ int read_data(const char *basedir, float *&inputs, float *&outputs) {
 }
 
 
+void get_mini_batch(int n, int b, float *data, float *label, float *&batch_xs, float *&batch_ys) {
+
+  srand(time(NULL));
+  for(int i = 0; i < b; i++) {
+    int p = rand()%n;
+    memcpy(batch_xs + 224*223*3*i, data + p*224*224*3, 224*224*3*sizeof(float));
+    memcpy(batch_ys + 2*i, label + p*2, 2*sizeof(float));
+  }
+}
+
 int main( int argc, char** argv )
 {
 
@@ -110,7 +121,7 @@ int main( int argc, char** argv )
 
   int max_iter = 200;
   float total_err = 0;
-  int batch = 10;
+  int batch = 50;
 
   Convolution conv1(224, 224, 3, 3, 3, 32, 1, true);
   conv1.xnor = false;
@@ -189,20 +200,23 @@ int main( int argc, char** argv )
   network.add(&conn3);
   network.add(&softmax);
   network.initial(batch, 0.001);
+  float *batch_xs, *batch_ys;
+  batch_xs = new float[batch*224*224*3];
+  batch_ys = new float[batch*2];
   for(int iter = 0; iter < max_iter; iter++) {
 
     ms_t start = getms();
     int step = (iter*batch)%train_num;
-    float *batch_xs = train_data + step*224*224*3;
-    float *batch_ys = train_label + step*2;
+    get_mini_batch(train_num, batch, train_data, train_label, batch_xs, batch_ys);
+    
     float *output = network.inference(batch_xs);
     network.train(batch_ys);
 
     float loss = cross_entropy(batch, 2, output, batch_ys);
-
+    float acc = accuracy(batch, 2, output, batch_ys); 
     if(iter%1 == 0) {
-      cout << "iter = " << iter << ", time = " << (getms() - start) << "ms, error = "
-       << loss << endl;
+      cout << "iter = " << iter << ", time = " << (getms() - start) << "ms, loss = "
+       << loss << " (accuracy = " << acc << ")" << endl;
     }
   }
 

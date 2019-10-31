@@ -76,7 +76,7 @@ float cross_entropy(int batch, int N, float *output, float *target) {
   for(int i = 0; i < batch; i++) {
     for(int j = 0; j < N; j++) {
       if(target[i*N+j] == 1)
-	      tmp -= log(output[i*N+j]);
+	      tmp -= log(output[i*N+j] + 1.0e-6);
       //tmp -= output[i*N+j]*log(target[i*N+j] + 1.0e-6)
       //  + (1.0 - output[i*N+j])*log(1.0 - target[i*N+j] + 1.0e-6);
     }
