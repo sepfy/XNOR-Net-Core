@@ -170,6 +170,7 @@ class Pooling : public Layer {
 class Relu : public Layer {
   public:
     int N;
+    float *cut;
     vector<int> mask;
     Relu(int _N);
     ~Relu();
@@ -222,4 +223,22 @@ class Dropout : public Layer {
     void save(fstream *file);
     static Dropout* load(char *buf);
 };
+
+
+class Shortcut : public Layer {
+  public:
+    int w, h, c;
+    Shortcut(int _w, int _h, int _c, Convolution *_conv, Relu *_activation);
+    ~Shortcut();
+    float *identity;
+    Convolution *conv;
+    Relu *activation;
+    void init();
+    void forward();
+    void backward(float *delta);
+    void update(float lr);
+    void save(fstream *file);
+    static Shortcut* load(char *buf);
+};
+
 

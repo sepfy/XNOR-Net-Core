@@ -24,6 +24,11 @@ test: lib
 vgg: lib
 	$(CXX) $(CXXFLAGS) -Wno-unused-result $(INCLUDE) $(LIBS) $(SAMPLE)/vgg.cc $(LIB) `pkg-config opencv --cflags --libs` -o $(SAMPLE)/vgg
 
+
+cifar: lib
+	$(CXX) $(CXXFLAGS) -Wno-unused-result $(INCLUDE) $(LIBS) $(SAMPLE)/cifar.cc $(LIB) `pkg-config opencv --cflags --libs` -o $(SAMPLE)/cifar
+
+
 lib: $(OBJ)
 	$(AR) rvs $(LIB) $^
 	chmod 777 $(LIB)
