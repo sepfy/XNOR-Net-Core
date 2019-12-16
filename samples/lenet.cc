@@ -12,7 +12,7 @@ using namespace std;
 
 #define LEARNING_RATE 1.0e-3
 #define BATCH 100
-#define MAX_ITER 1000
+#define MAX_ITER 100
 
 void LeNet(Network *network) {
 
@@ -73,20 +73,22 @@ int main( int argc, char** argv ) {
 
   if(strcmp(argv[1], "train") == 0) {
 
-    LeNet(&network);
-    network.initial(BATCH, LEARNING_RATE);
 
-    float *batch_xs, *batch_ys;
-    batch_xs = new float[BATCH*IM_SIZE];
-    batch_ys = new float[BATCH*NUM_OF_CLASS];
 
     float *train_data, *train_label;
-    int num_of_samples = read_data(argv[3], train_data, train_label);
+    char filename[256] = {0};
+    sprintf(filename, "%s/%s/", argv[3], "train");
+
+    int num_of_samples = read_data(filename, train_data, train_label);
+    float *batch_xs, *batch_ys;
+    LeNet(&network);
+    network.initial(BATCH, LEARNING_RATE);
+    batch_xs = new float[BATCH*IM_SIZE];
+    batch_ys = new float[BATCH*NUM_OF_CLASS];
 
     for(int iter = 0; iter < MAX_ITER; iter++) {
 
       get_mini_batch(num_of_samples, BATCH, train_data, train_label, batch_xs, batch_ys);
-
       ms_t start = getms();
       float *output = network.inference(batch_xs);
       network.train(batch_ys);
@@ -113,18 +115,19 @@ int main( int argc, char** argv ) {
 
  
 
-/*
+
   float *test_data, *test_label;
 
-  test_data = new float[10000*IM_SIZE];
-  test_label = new float[10000*NUM_OF_CLASS];
-  read_test_data(argv[3], test_data, test_label);
+  char filename[256] = {0};
+  sprintf(filename, "%s/%s/", argv[3], "test");
+  int num_of_samples = read_data(filename, test_data, test_label);
 
   float total = 0.0;
   ms_t start = getms();
-
-  for(int iter = 0; iter < 100; iter++) {
-    int step = (iter*BATCH)%10000;
+  int total_steps = num_of_samples/BATCH;
+cout << num_of_samples << ", " << total_steps << endl;
+  for(int iter = 0; iter < total_steps; iter++) {
+    int step = (iter*BATCH);
     float *batch_xs = test_data + step*IM_SIZE;
     float *batch_ys = test_label + step*NUM_OF_CLASS;
     float *output = network.inference(batch_xs);
@@ -132,13 +135,13 @@ int main( int argc, char** argv ) {
     total += accuracy(BATCH, NUM_OF_CLASS, output, batch_ys); 
   }
 
-  cout << "Validation accuracy = " << (total/100.0) 
+  cout << "Validation accuracy = " << (total/(float)total_steps)
        << ", time = " << (getms() - start) << endl;
 
 
   delete []test_data;
   delete []test_label;
-*/
+
 
   return 0;
 
