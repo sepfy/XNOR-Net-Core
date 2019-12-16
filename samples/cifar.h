@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdint.h>
+#include <string.h>
 #include <byteswap.h>
 #include <iostream>
 using namespace std;
@@ -9,8 +10,7 @@ using namespace std;
 #define NUM_OF_CLASS 10
 
 
-
-void read_images(const char *filename, float *inputs, float*outputs) {
+void read_images(char *filename, float *inputs, float*outputs) {
 
   FILE *fp;
 
@@ -50,35 +50,20 @@ void read_images(const char *filename, float *inputs, float*outputs) {
 }
 
 
-void read_train_data(float *inputs, float *outputs) {
+void read_train_data(char *path, float *inputs, float *outputs) {
   memset(inputs, 0, 50000*IM_SIZE);
   memset(outputs, 0, 50000*NUM_OF_CLASS);
   for(int i = 0; i < 5; i++) {
-    char filename[32] = {0};
-    sprintf(filename, "data_batch_%d.bin", (i+1));
+    char filename[64] = {0};
+    sprintf(filename, "%s/data_batch_%d.bin", path, (i+1));
     read_images(filename, inputs+10000*IM_SIZE*i, outputs+10000*NUM_OF_CLASS*i);
   }
 
 }
 
-void read_test_data(float *inputs, float *outputs) {
-  read_images("test_batch.bin", inputs, outputs);
+void read_test_data(char *path, float *inputs, float *outputs) {
+  char filename[64] = {0};
+  sprintf(filename, "%s/test_batch.bin", path);
+  read_images(filename, inputs, outputs);
 }
 
-/*
-int main(void) {
-
-
-  float *inputs, *outputs;
-  inputs = new float[50000*IM_SIZE];
-  outputs = new float[50000*NUM_OF_CLASS];
-
-  read_train_data(inputs, outputs);
-  read_test_data(inputs, outputs);
-
-
-
-  return 0;
-}
- 
-*/

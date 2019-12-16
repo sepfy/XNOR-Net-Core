@@ -1,9 +1,11 @@
 
 
-CFLAGS = -std=c++11 -O2
-INC = -I ../include/
+CFLAGS = -std=c++11 -O2 -Wno-unused-result
+INC = -I ../include/ -I ../samples/
 
-LIB = -fopenmp
+OPENCV = $(shell pkg-config opencv --cflags --libs)
+LIB_CV = $(OPENCV)
+LIB = -fopenmp ../libxnnc.a
 SRC = ../gemm.cc ../blas.cc ../utils.cc  ../layers/pooling.cc
 
 
@@ -18,4 +20,7 @@ gemm:
 	$(CXX) $(CFLAGS) $(INC) $(LIB) gemm_gtest.cc ../gemm.cc ../utils.cc -lgmock -lgtest -lpthread -o gemm_test
 
 blas:
-	g++ $(CFLAGS) $(INC) nn_gtest.cc $(SRC) -lgmock -lgtest -lpthread -o gtest 
+	g++ $(CFLAGS) $(INC) nn_gtest.cc $(SRC) -lgmock -lgtest -lpthread -o gtest
+
+cifar:
+	$(CXX) $(CFLAGS) $(INC) cifar_test.cc $(LIB_CV) $(LIB) -o cifar_test  

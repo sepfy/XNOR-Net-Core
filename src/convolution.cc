@@ -269,32 +269,34 @@ void Convolution::update(float lr) {
 void Convolution::save(fstream *file) {
 
   char buf[64] = {0};
-  sprintf(buf, "Convolution,%d,%d,%d,%d,%d,%d,%d,%d", 
-    W, H, C, FW, FH, FC, stride, pad);
+  sprintf(buf, "Convolution,%d,%d,%d,%d,%d,%d,%d,%d,%d", 
+    W, H, C, FW, FH, FC, stride, pad, xnor);
   //cout << weight[0] << endl;
   //cout << bias[0] << endl;
   file->write(buf, sizeof(buf));
-#ifdef XNOR_NET
-  float *BB = new float[FC*out_channel];
-  for(int i = 0; i < FC; i++)
-    for(int j = 0; j < out_channel; j++)
-      BB[i*out_channel+j] = weight[j*FC+i];
 
-  for(int i = 0; i < FC; i++) {
-    bitset_weight[i].set(BB+i*out_channel);
+  if(xnor) {
+    float *BB = new float[FC*out_channel];
+    for(int i = 0; i < FC; i++)
+      for(int j = 0; j < out_channel; j++)
+        BB[i*out_channel+j] = weight[j*FC+i];
+
+    for(int i = 0; i < FC; i++) {
+      bitset_weight[i].set(BB+i*out_channel);
+    }
+    delete[] BB;
+
+    for(int i = 0; i < FC; i++) {
+      file->write((char*)bitset_weight[i].bits,
+                         bitset_weight[i].N*sizeof(uint64_t));
+    } 
+
+    file->write((char*)mean, FC*sizeof(float));
+  } 
+  else {
+    file->write((char*)weight, weight_size*sizeof(float));
   }
-  delete[] BB;
 
-  for(int i = 0; i < FC; i++) {
-    file->write((char*)bitset_weight[i].bits,
-                       bitset_weight[i].N*sizeof(uint64_t));
-  }
-
-  file->write((char*)mean, FC*sizeof(float));
- 
-#else
-  file->write((char*)weight, weight_size*sizeof(float));
-#endif
   file->write((char*)bias, bias_size*sizeof(float));
 
 
@@ -302,7 +304,7 @@ void Convolution::save(fstream *file) {
 
 Convolution* Convolution::load(char *buf) {
 
-  int para[8] = {0};
+  int para[9] = {0};
   int idx = 0;
 
   char *token;
@@ -310,11 +312,12 @@ Convolution* Convolution::load(char *buf) {
     token = strtok(NULL, ",");
     para[idx] = atoi(token);
     idx++;
-    if(idx > 7)
+    if(idx > 8)
       break;
   }
 
   Convolution *conv = new Convolution(para[0], para[1], 
   para[2], para[3], para[4], para[5], para[6], para[7]);
+  conv->xnor = para[8];
   return conv;
 }

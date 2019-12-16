@@ -29,6 +29,9 @@ cifar: lib
 	$(CXX) $(CXXFLAGS) -Wno-unused-result $(INCLUDE) $(LIBS) $(SAMPLE)/cifar.cc $(LIB) `pkg-config opencv --cflags --libs` -o $(SAMPLE)/cifar
 
 
+lenet: lib
+	$(CXX) $(CXXFLAGS) -Wno-unused-result $(INCLUDE) $(LIBS) $(SAMPLE)/lenet.cc $(LIB) `pkg-config opencv --cflags --libs` -o $(SAMPLE)/lenet
+
 lib: $(OBJ)
 	$(AR) rvs $(LIB) $^
 	chmod 777 $(LIB)

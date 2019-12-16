@@ -5,8 +5,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdint.h>
-#include "cifar.h"
-#include "network.h"
+#include "lenet.h"
 
 using namespace std;
 
@@ -15,7 +14,7 @@ using namespace std;
 #define BATCH 100
 #define MAX_ITER 1000
 
-void CifarNet(Network *network) {
+void LeNet(Network *network) {
 
   Convolution *conv1 = new Convolution(32, 32, 3, 5, 5, 20, 1, false);
   conv1->xnor = false;
@@ -34,8 +33,8 @@ void CifarNet(Network *network) {
   Batchnorm *bn3 = new Batchnorm(500);
   Relu *relu3 = new Relu(500);
 
-  Connected *conn4 = new Connected(500, 10);
-  SoftmaxWithCrossEntropy *softmax = new SoftmaxWithCrossEntropy(10);
+  Connected *conn4 = new Connected(500, 2);
+  SoftmaxWithCrossEntropy *softmax = new SoftmaxWithCrossEntropy(2);
 
   
   network->add(conv1);
@@ -58,12 +57,13 @@ void CifarNet(Network *network) {
 }
 
 void help() {
-  cout << "Usage: ./cifar <train/deploy> <cifar dataset> <model name>" << endl; 
+  cout << "Usage: ./lenet <train/deploy> <model name> <dataset>" << endl; 
   exit(1);
 }
 
 int main( int argc, char** argv ) {
 
+ float *train_data, *train_label;
 
   if(argc < 4) {
     help();
@@ -73,20 +73,21 @@ int main( int argc, char** argv ) {
 
   if(strcmp(argv[1], "train") == 0) {
 
-    CifarNet(&network);
+    LeNet(&network);
     network.initial(BATCH, LEARNING_RATE);
 
+    float *batch_xs, *batch_ys;
+    batch_xs = new float[BATCH*IM_SIZE];
+    batch_ys = new float[BATCH*NUM_OF_CLASS];
+
     float *train_data, *train_label;
-    train_data = new float[50000*IM_SIZE];
-    train_label = new float[50000*NUM_OF_CLASS];
-    read_train_data(argv[3], train_data, train_label);
+    int num_of_samples = read_data(argv[3], train_data, train_label);
 
     for(int iter = 0; iter < MAX_ITER; iter++) {
 
+      get_mini_batch(num_of_samples, BATCH, train_data, train_label, batch_xs, batch_ys);
+
       ms_t start = getms();
-      int step = (iter*BATCH)%50000;
-      float *batch_xs = train_data + step*IM_SIZE;
-      float *batch_ys = train_label + step*NUM_OF_CLASS;
       float *output = network.inference(batch_xs);
       network.train(batch_ys);
 
@@ -112,7 +113,7 @@ int main( int argc, char** argv ) {
 
  
 
-
+/*
   float *test_data, *test_label;
 
   test_data = new float[10000*IM_SIZE];
@@ -137,8 +138,8 @@ int main( int argc, char** argv ) {
 
   delete []test_data;
   delete []test_label;
+*/
 
   return 0;
-
 
 }

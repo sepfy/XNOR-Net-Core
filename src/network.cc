@@ -55,21 +55,30 @@ void Network::deploy() {
 
 }
 
-void Network::save() {
+void Network::save(char *filename) {
 
   fstream file;
-  file.open("test.net", ios::out);
+  file.open(filename, ios::out);
+  if(!file) {
+    cout << "Open model file " << filename << " failed." << endl;
+    exit(-1);
+  }
+
   for(int i = 0; i < layers.size(); i++) {
     layers[i]->save(&file);
   }
   file.close();
 }
 
-void Network::load(int batch) {
+void Network::load(char *filename, int batch) {
 
   char buf[64] = {0};
   fstream rfile;
-  rfile.open("test.net", ios::in);
+  rfile.open(filename, ios::in);
+  if(!rfile) {
+    cout << "Open model file " << filename << " failed." << endl;
+    exit(-1);
+  }
 
   int ii = 0;
   int ret;
@@ -86,15 +95,17 @@ void Network::load(int batch) {
       conv->batch = batch;
       conv->init();
       conv->trainable = false;
-#ifdef XNOR_NET
-      for(int i = 0; i < conv->FC; i++) {
-	rfile.read((char*)conv->bitset_weight[i].bits, 
+      if(conv->xnor) {
+        for(int i = 0; i < conv->FC; i++) {
+          rfile.read((char*)conv->bitset_weight[i].bits, 
                           conv->bitset_weight[i].N*sizeof(uint64_t));
+        }
+        rfile.read((char*)conv->mean, conv->FC*sizeof(float));
       }
-      rfile.read((char*)conv->mean, conv->FC*sizeof(float));
-#else
-      rfile.read((char*)conv->weight, conv->weight_size*sizeof(float));
-#endif
+      else {
+        rfile.read((char*)conv->weight, conv->weight_size*sizeof(float));
+      }
+
       rfile.read((char*)conv->bias, conv->bias_size*sizeof(float));
 
 
@@ -129,7 +140,12 @@ void Network::load(int batch) {
     else if(!strcmp(token, "Batchnorm")) {
       Batchnorm *bn = Batchnorm::load(token);
       bn->batch = batch;
+      bn->train_flag = false;
       bn->init();
+      rfile.read((char*)bn->running_mean, bn->N*sizeof(float));
+      rfile.read((char*)bn->running_var, bn->N*sizeof(float));
+      rfile.read((char*)bn->gamma, bn->N*sizeof(float));
+      rfile.read((char*)bn->beta, bn->N*sizeof(float));
       this->add(bn);
       //cout << relu->N << endl;
     }
