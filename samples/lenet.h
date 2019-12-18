@@ -32,7 +32,8 @@ int load_images(char *dir, vector<Mat> *images) {
     char filepath[257] = {0};
     sprintf(filepath, "%s/%s", dir, dp->d_name);
     image = imread(filepath, IMREAD_COLOR);
-    image.convertTo(image, CV_32FC1);
+    cvtColor(image, image, CV_BGR2RGB);
+    image.convertTo(image, CV_32FC3);
     image = (image - 127.5)/127.5;
     images->push_back(image);
     count++;
@@ -89,15 +90,28 @@ int read_data(const char *basedir, float *&inputs, float *&outputs) {
   memset(outputs, 0, images.size()*NUM_OF_CLASS*sizeof(float));
 
   for(int i = 0; i < images.size(); i++) {
-    memcpy(inputs+IM_SIZE*i, images[i].data, IM_SIZE*sizeof(float));
-  }
+    float *pixel = (float*)images[i].data;
 
+    for(int j = 0; j < 1024; j++) {
+      inputs[i*IM_SIZE+3*j] = pixel[j];
+    }
+
+    for(int j = 0; j < 1024; j++) {
+      inputs[i*IM_SIZE+3*j+1] = pixel[j+1024];
+    }
+
+    for(int j = 0; j < 1024; j++) {
+      inputs[i*IM_SIZE+3*j+2] = pixel[j+2048];
+    }
+
+    //memcpy(inputs+IM_SIZE*i, images[i].data, IM_SIZE*sizeof(float));
+  }
   int shift = 0;
   for(int i = 0; i < counts.size(); i++) {
     for(int j = 0; j < counts[i]; j++) {
-      outputs[shift+counts.size()*j+i] = 1.0;
+      outputs[shift+NUM_OF_CLASS*j+i] = 1.0;
     }
-    shift = counts[i]*NUM_OF_CLASS;
+    shift += counts[i]*NUM_OF_CLASS;
   }
 
   // recover image for test
@@ -124,5 +138,20 @@ void get_mini_batch(int n, int b, float *data, float *label, float *&batch_xs, f
     memcpy(batch_xs + IM_SIZE*i, data + IM_SIZE*p, IM_SIZE*sizeof(float));
     memcpy(batch_ys + NUM_OF_CLASS*i, label + NUM_OF_CLASS*p, NUM_OF_CLASS*sizeof(float));
   }
+
+  /*
+  Mat image(32, 32, CV_32FC3);
+  memcpy(image.data, batch_xs+99*IM_SIZE, IM_SIZE*sizeof(float));
+  image = (image*127.5) + 127.5;
+  image.convertTo(image, CV_8UC3);
+  imshow("Display window", image );              
+  cout << NUM_OF_CLASS << endl; 
+  for(int i = 0; i < NUM_OF_CLASS; i++)
+	 cout << batch_ys[99*NUM_OF_CLASS+i];
+  cout << endl; 
+  // Show our image inside it.
+  waitKey(0); // Wait for a keystroke in the window
+*/
+
 }
 
