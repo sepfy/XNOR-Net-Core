@@ -1,72 +1,52 @@
 # NeuralNetwork
-This is a implemenation of [XNOR-Net](https://arxiv.org/abs/1603.05279) in C++. It is no dependency and easy to use.
-Becuase it doesn't implemet training with GPU. So
+This is an implemenation of [XNOR-Net](https://arxiv.org/abs/1603.05279) in C++. There is no dependency and easy to use.
 
-## Pretrain model
-### MNIST hand writting dataset
-A simple validation for convolution nerual network.
+## Pre-trained Model
 
-|                    | Accuracy | Size   | Model    |
-|--------------------|----------|--------|----------|
-| Full-Precision-Net | 99.34    | 120 MB |          |
-| XNOR-Net           | 98.37    | 10 MB  |  |
+### MNIST
+|  LeNet             | Accuracy | Size   | Model  |
+|--------------------|----------|--------|--------|
+| Full-Precision-Net | 99.34    |        |        |
+| XNOR-Net           | 98.37    |        |        |
 
-- Run training:
+To test the model
 ```bash
 $ make mnist
-$ cd samples
-$ ./mnist
+$ ./samples/mnist <train/deploy> <model name> <dataset>
 ```
 
+### CIFAR-10
+|  LeNet             | Accuracy | Size   | Model  |
+|--------------------|----------|--------|--------|
+| Full Precision Net |  0.6826  |        |        |
+| XNOR Net           |          |        |        |
 
-
-
-### INRIA person dataset
-This is a classifier which predicts whehter there is a person in the image or not.
-
-| Resnet-18          | Accuracy | Size   | Model    |
-|--------------------|----------|--------|----------|
-| Full-Precision-Net |          |        |          |
-| XNOR-Net           |          |        |          |
-
-- Run training
+To test the model
 ```
-$ make person
-$ cd samples
-$ ./person
+$ make cifar
+$ ./samples/cifar <train/deploy> <model name> <dataset>
 ```
-- Image size is 224x224
-- Classes is person and no-person
-- [Evaluation on Raspberry Pi Zero](#)
+
 
 ## Comaprison
-Framework     | Model Size   | Time (ms)
---------------|--------------| --------
-Tensorflow    | 120MB        |  1200    
-XNORNetCore   | 1MB          |   200
+Inference with LeNet and 1 batch.
 
-## How to use
-
-### Build library
-```
-$ make
-```
+| Framework    | Model Size   | Time (ms)  |
+|--------------|--------------|------------|
+| Tensorflow   |              |            |
+| XNORNetCore  |              |            |
 
 
-### API
 
-
-### Support layers
+## Support layers
 * Convolution
-* Max pooling
-* Fully connected
+* Max Pooling
+* Fully Connected
 * Relu
 * Dropout
-* Batch normalization
-* Softmax (with loss)
+* Batch Normalization
+* Softmax
 
 
 ## Todo
-- Train with cuDNN.
-- Inference optimization(NEON...)
-- Object detecion and more models.
+* Train with GPU.
