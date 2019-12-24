@@ -13,7 +13,49 @@ using namespace std;
 
 #define LEARNING_RATE 1.0e-3
 #define BATCH 100
-#define MAX_ITER 1000
+#define MAX_ITER 30000
+
+void CifarXNORNet(Network *network) {
+
+  Convolution *conv1 = new Convolution(32, 32, 3, 5, 5, 20, 1, false);
+  conv1->xnor = false;
+  Batchnorm *bn1 = new Batchnorm(28*28*20);
+  Relu *relu1 = new Relu(28*28*20);
+  Pooling *pool1 = new Pooling(28, 28, 20, 2, 2, 20, 2, false);
+
+  Convolution *conv2 = new Convolution(14, 14, 20, 5, 5, 50, 1, false);
+  Batchnorm *bn2 = new Batchnorm(14*14*20);
+  Relu *relu2 = new Relu(10*10*50);
+  Pooling *pool2 = new Pooling(10, 10, 50, 2, 2, 50, 2, false);
+
+  Convolution *conv3 = new Convolution(5, 5, 50, 5, 5, 500, 1, false);
+  Batchnorm *bn3 = new Batchnorm(5*5*50);
+  Relu *relu3 = new Relu(500);
+  Dropout *dropout3 = new Dropout(500, 0.5);
+
+  Connected *conn4 = new Connected(500, 10);
+  SoftmaxWithCrossEntropy *softmax = new SoftmaxWithCrossEntropy(10);
+
+  
+  network->add(conv1);
+  network->add(bn1);
+  network->add(relu1);
+  network->add(pool1);
+
+  network->add(bn2);
+  network->add(conv2);
+  network->add(relu2);
+  network->add(pool2);
+
+  network->add(bn3);
+  network->add(conv3);
+  network->add(relu3);
+
+  network->add(dropout3);
+  network->add(conn4);
+  network->add(softmax);
+
+}
 
 void CifarNet(Network *network) {
 
@@ -25,14 +67,15 @@ void CifarNet(Network *network) {
 
   Convolution *conv2 = new Convolution(14, 14, 20, 5, 5, 50, 1, false);
   conv2->xnor = false;
-  Batchnorm *bn2 = new Batchnorm(10*10*50);
+  Batchnorm *bn2 = new Batchnorm(14*14*20);
   Relu *relu2 = new Relu(10*10*50);
   Pooling *pool2 = new Pooling(10, 10, 50, 2, 2, 50, 2, false);
 
   Convolution *conv3 = new Convolution(5, 5, 50, 5, 5, 500, 1, false);
   conv3->xnor = false;
-  Batchnorm *bn3 = new Batchnorm(500);
+  Batchnorm *bn3 = new Batchnorm(5*5*50);
   Relu *relu3 = new Relu(500);
+  Dropout *dropout3 = new Dropout(500, 0.5);
 
   Connected *conn4 = new Connected(500, 10);
   SoftmaxWithCrossEntropy *softmax = new SoftmaxWithCrossEntropy(10);
@@ -52,13 +95,15 @@ void CifarNet(Network *network) {
   network->add(bn3);
   network->add(relu3);
 
+  network->add(dropout3);
   network->add(conn4);
   network->add(softmax);
 
 }
 
+
 void help() {
-  cout << "Usage: ./cifar <train/deploy> <cifar dataset> <model name>" << endl; 
+  cout << "Usage: ./cifar <train/deploy> <model name> <cifar dataset>" << endl; 
   exit(1);
 }
 
@@ -73,7 +118,7 @@ int main( int argc, char** argv ) {
 
   if(strcmp(argv[1], "train") == 0) {
 
-    CifarNet(&network);
+    CifarXNORNet(&network);
     network.initial(BATCH, LEARNING_RATE);
 
     float *train_data, *train_label;
@@ -121,7 +166,7 @@ int main( int argc, char** argv ) {
 
   float total = 0.0;
   ms_t start = getms();
-
+  network.deploy();
   for(int iter = 0; iter < 100; iter++) {
     int step = (iter*BATCH)%10000;
     float *batch_xs = test_data + step*IM_SIZE;

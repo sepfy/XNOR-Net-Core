@@ -146,8 +146,8 @@ if(xnor) {
     im2col(W, H, C, FW, FH, FC, stride, pad, 
       input + i*im_size, out_col+i*col_size);
 
-//  ms_t start = getms();
-  if(trainable) {
+  //ms_t start = getms();
+  if(!runtime) {
     binarize_weight();
     swap_weight();
     //gemm(batch*out_h*out_w, FC, out_channel, 1.0, out_col, weight, output);
@@ -155,7 +155,7 @@ if(xnor) {
     //  out_col[i] > 0 ? out_col[i] = 1 : out_col[i] = -1;
     bin_gemm(batch*out_h*out_w, FC, out_channel, 1.0, out_col, weight, output);
   }
- else {
+  else {
 
     for(int i = 0; i < batch*out_h*out_w; i++) {
       bitset_outcol[i].clean();
@@ -165,7 +165,8 @@ if(xnor) {
     bin_gemm(batch*out_h*out_w, FC, out_channel, 1.0, 
       bitset_outcol, bitset_weight, output);
   }
-//  cout << getms() - start << endl;
+
+  //  cout << getms() - start << endl;
 
 
   // Do K = A (*) k

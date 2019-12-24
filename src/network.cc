@@ -94,7 +94,7 @@ void Network::load(char *filename, int batch) {
       Convolution *conv = Convolution::load(token);
       conv->batch = batch;
       conv->init();
-      conv->trainable = false;
+      conv->runtime = true;
       if(conv->xnor) {
         for(int i = 0; i < conv->FC; i++) {
           rfile.read((char*)conv->bitset_weight[i].bits, 
@@ -163,5 +163,6 @@ void Network::load(char *filename, int batch) {
     this->layers[i]->input = layers[i-1]->output;
   }
 
+  deploy();
 }
 
