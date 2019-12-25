@@ -200,7 +200,7 @@ else {
       for(int j = 0; j < out_w; j++)
         for(int k = 0; k < FC; k++)
           output[b*out_h*out_w*FC + i*out_w*FC + j*FC + k] += bias[k];
-if(xnor) {
+if(xnor && !runtime) {
 //#ifdef XNOR_NET
   swap_weight();
 //#endif
