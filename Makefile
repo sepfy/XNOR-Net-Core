@@ -3,47 +3,47 @@ SRCDIR = src
 SAMPLE = samples
 
 SRC = $(wildcard $(SRCDIR)/*.cc)
-OBJ = $(addsuffix .o, $(basename $(patsubst $(SRCDIR)/%,$(OUTDIR)/%,$(SRC))))
+OBJS = $(addsuffix .o, $(basename $(patsubst $(SRCDIR)/%,$(OUTDIR)/%,$(SRC))))
 
-CXXFLAGS = -O2 -std=c++11
+CXXFLAGS = -O2 -std=c++11 -Wno-unused-result
 INCLUDE = -I ./include/
 LIBS = -lm -fopenmp
 LIB = libxnnc.a
 
-all: mnist lib test 
+OPENCV = `pkg-config opencv --cflags --libs`
 
-mnist: lib
-	$(CXX) $(CXXFLAGS) -Wno-unused-result $(INCLUDE) $(LIBS) $(SAMPLE)/mnist_train.cc $(LIB) -o $(SAMPLE)/mnist_train
-	$(CXX) $(CXXFLAGS) -Wno-unused-result $(INCLUDE) $(LIBS) $(SAMPLE)/mnist_deploy.cc $(LIB) -o $(SAMPLE)/mnist_deploy
+all: $(OUTDIR) $(LIB) samples
 
-test: lib
-	$(CXX) $(CXXFLAGS) -Wno-unused-result $(INCLUDE) $(LIBS) unittest/conn_test.cc $(LIB) -o unittest/conn_test
-	$(CXX) $(CXXFLAGS) -Wno-unused-result $(INCLUDE) $(LIBS) unittest/conv_test.cc $(LIB) -o unittest/conv_test
-	$(CXX) $(CXXFLAGS) -Wno-unused-result $(INCLUDE) $(LIBS) unittest/bn_test.cc $(LIB) -o unittest/bn_test
+samples: mnist cifar lenet
 
-vgg: lib
-	$(CXX) $(CXXFLAGS) -Wno-unused-result $(INCLUDE) $(LIBS) $(SAMPLE)/vgg.cc $(LIB) `pkg-config opencv --cflags --libs` -o $(SAMPLE)/vgg
+test: $(LIB)
+	$(CXX) $(CXXFLAGS) $(INCLUDE) $(LIBS) unittest/conn_test.cc $(LIB) -o unittest/conn_test
+	$(CXX) $(CXXFLAGS) $(INCLUDE) $(LIBS) unittest/conv_test.cc $(LIB) -o unittest/conv_test
+	$(CXX) $(CXXFLAGS) $(INCLUDE) $(LIBS) unittest/bn_test.cc $(LIB) -o unittest/bn_test
 
+vgg: $(LIB)
+	$(CXX) $(CXXFLAGS) $(INCLUDE) $(LIBS) $(SAMPLE)/vgg.cc $(LIB) $(OPENCV) -o $(SAMPLE)/$@
 
-cifar: lib
-	$(CXX) $(CXXFLAGS) -Wno-unused-result $(INCLUDE) $(LIBS) $(SAMPLE)/cifar.cc $(LIB) `pkg-config opencv --cflags --libs` -o $(SAMPLE)/cifar
+mnist: $(SAMPLE)/mnist.cc $(LIB) 
+	$(CXX) $(CXXFLAGS) $(INCLUDE) $(LIBS) $^ -o $(SAMPLE)/$@
 
+cifar: $(SAMPLE)/cifar.cc $(LIB)
+	$(CXX) $(CXXFLAGS) $(INCLUDE) $(LIBS) $^ $(OPENCV) -o $(SAMPLE)/$@
 
-lenet: lib
-	$(CXX) $(CXXFLAGS) -Wno-unused-result $(INCLUDE) $(LIBS) $(SAMPLE)/lenet.cc $(LIB) `pkg-config opencv --cflags --libs` -o $(SAMPLE)/lenet
+lenet: $(SAMPLE)/lenet.cc $(LIB)
+	$(CXX) $(CXXFLAGS) $(INCLUDE) $(LIBS) $^ $(OPENCV) -o $(SAMPLE)/$@
 
-lib: $(OBJ)
-	$(AR) rvs $(LIB) $^
-	chmod 777 $(LIB)
+$(LIB): $(OBJS) 
+	$(AR) rcs $@ $(OBJS)
 
-$(OUTDIR)/%.o: $(SRCDIR)/%.cc $(OUTDIR)
+$(OUTDIR)/%.o: $(SRCDIR)/%.cc 
 	$(CXX) $(CXXFLAGS) $(INCLUDE) $(LIBS) -c $< -o $@ 
 
 $(OUTDIR):
 	mkdir -p $(OUTDIR)
 
 clean:
-	rm -rf $(SAMPLE)/mnist_deploy $(SAMPLE)/mnist_train $(OUTDIR) libxnnc.a
+	rm -rf $(SAMPLE)/mnist $(SAMPLE)/cifar $(SAMPLE)/lenet $(OUTDIR) libxnnc.a
 
 .PHONY: clean $(OUTDIR)
 
