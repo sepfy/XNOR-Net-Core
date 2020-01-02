@@ -13,7 +13,7 @@ using namespace cv;
 using namespace std;
 
 #define IM_SIZE 32*32*3
-int NUM_OF_CLASS;
+#define NUM_OF_CLASS 10
 
 int load_images(char *dir, vector<Mat> *images) {
     
@@ -73,7 +73,7 @@ int read_data(const char *basedir, float *&inputs, float *&outputs) {
 
   vector<string> classes;
   load_classes(basedir, &classes);
-  NUM_OF_CLASS = classes.size();
+  sort(classes.begin(), classes.end());
   vector<Mat> images;
   vector<int> counts;
 
@@ -90,22 +90,9 @@ int read_data(const char *basedir, float *&inputs, float *&outputs) {
   memset(outputs, 0, images.size()*NUM_OF_CLASS*sizeof(float));
 
   for(int i = 0; i < images.size(); i++) {
-    float *pixel = (float*)images[i].data;
-
-    for(int j = 0; j < 1024; j++) {
-      inputs[i*IM_SIZE+3*j] = pixel[j];
-    }
-
-    for(int j = 0; j < 1024; j++) {
-      inputs[i*IM_SIZE+3*j+1] = pixel[j+1024];
-    }
-
-    for(int j = 0; j < 1024; j++) {
-      inputs[i*IM_SIZE+3*j+2] = pixel[j+2048];
-    }
-
-    //memcpy(inputs+IM_SIZE*i, images[i].data, IM_SIZE*sizeof(float));
+    memcpy(inputs+IM_SIZE*i, images[i].data, IM_SIZE*sizeof(float));
   }
+
   int shift = 0;
   for(int i = 0; i < counts.size(); i++) {
     for(int j = 0; j < counts[i]; j++) {
@@ -130,28 +117,19 @@ int read_data(const char *basedir, float *&inputs, float *&outputs) {
 }
 
 
-void get_mini_batch(int n, int b, float *data, float *label, float *&batch_xs, float *&batch_ys) {
+void get_mini_batch(int n, int b, float *data, float *label, float *batch_xs, float *batch_ys) {
 
-  srand(time(NULL));
-  for(int i = 0; i < b; i++) {
-    int p = rand()%n;
+  vector<int> range;
+  for(int i = 0; i < n; i++) {
+    range.push_back(i);
+  }
+ 
+  shuffle(range.begin(), range.end(), default_random_engine(0));
+  for(int i = 0; i < n; i++) {
+    int p = range[i];
     memcpy(batch_xs + IM_SIZE*i, data + IM_SIZE*p, IM_SIZE*sizeof(float));
     memcpy(batch_ys + NUM_OF_CLASS*i, label + NUM_OF_CLASS*p, NUM_OF_CLASS*sizeof(float));
   }
-
-  /*
-  Mat image(32, 32, CV_32FC3);
-  memcpy(image.data, batch_xs+99*IM_SIZE, IM_SIZE*sizeof(float));
-  image = (image*127.5) + 127.5;
-  image.convertTo(image, CV_8UC3);
-  imshow("Display window", image );              
-  cout << NUM_OF_CLASS << endl; 
-  for(int i = 0; i < NUM_OF_CLASS; i++)
-	 cout << batch_ys[99*NUM_OF_CLASS+i];
-  cout << endl; 
-  // Show our image inside it.
-  waitKey(0); // Wait for a keystroke in the window
-*/
 
 }
 

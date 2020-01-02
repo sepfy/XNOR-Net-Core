@@ -9,10 +9,9 @@
 
 using namespace std;
 
-
 #define LEARNING_RATE 1.0e-3
 #define BATCH 100
-#define MAX_ITER 100
+#define MAX_ITER 3000
 
 void LeNet(Network *network) {
 
@@ -32,9 +31,10 @@ void LeNet(Network *network) {
   conv3->xnor = false;
   Batchnorm *bn3 = new Batchnorm(500);
   Relu *relu3 = new Relu(500);
+  Dropout *dropout3 = new Dropout(500, 0.5);
 
-  Connected *conn4 = new Connected(500, 2);
-  SoftmaxWithCrossEntropy *softmax = new SoftmaxWithCrossEntropy(2);
+  Connected *conn4 = new Connected(500, NUM_OF_CLASS);
+  SoftmaxWithCrossEntropy *softmax = new SoftmaxWithCrossEntropy(NUM_OF_CLASS);
 
   
   network->add(conv1);
@@ -51,6 +51,7 @@ void LeNet(Network *network) {
   network->add(bn3);
   network->add(relu3);
 
+  network->add(dropout3);
   network->add(conn4);
   network->add(softmax);
 
@@ -73,28 +74,30 @@ int main( int argc, char** argv ) {
 
   if(strcmp(argv[1], "train") == 0) {
 
-
-
     float *train_data, *train_label;
     char filename[256] = {0};
     sprintf(filename, "%s/%s/", argv[3], "train");
 
-    int num_of_samples = read_data(filename, train_data, train_label);
-    float *batch_xs, *batch_ys;
     LeNet(&network);
     network.initial(BATCH, LEARNING_RATE);
-    batch_xs = new float[BATCH*IM_SIZE];
-    batch_ys = new float[BATCH*NUM_OF_CLASS];
+
+    int num_of_samples = read_data(filename, train_data, train_label);
+    float *batch_xs = new float[num_of_samples*IM_SIZE];
+    float *batch_ys = new float[num_of_samples*NUM_OF_CLASS];
+
+    get_mini_batch(num_of_samples, BATCH, train_data, train_label, batch_xs, batch_ys);
 
     for(int iter = 0; iter < MAX_ITER; iter++) {
+      int step = (iter*BATCH)%num_of_samples;
+      float *batch_mini_xs = batch_xs + step*IM_SIZE;
+      float *batch_mini_ys = batch_ys + step*NUM_OF_CLASS;
 
-      get_mini_batch(num_of_samples, BATCH, train_data, train_label, batch_xs, batch_ys);
       ms_t start = getms();
-      float *output = network.inference(batch_xs);
-      network.train(batch_ys);
+      float *output = network.inference(batch_mini_xs);
+      network.train(batch_mini_ys);
 
-      float loss = cross_entropy(BATCH, NUM_OF_CLASS, output, batch_ys);
-      float acc = accuracy(BATCH, NUM_OF_CLASS, output, batch_ys); 
+      float loss = cross_entropy(BATCH, NUM_OF_CLASS, output, batch_mini_ys);
+      float acc = accuracy(BATCH, NUM_OF_CLASS, output, batch_mini_ys); 
 
       if(iter%1 == 0) {
         cout << "iter = " << iter << ", time = " << (getms() - start) << "ms, loss = "
@@ -125,7 +128,7 @@ int main( int argc, char** argv ) {
   float total = 0.0;
   ms_t start = getms();
   int total_steps = num_of_samples/BATCH;
-cout << num_of_samples << ", " << total_steps << endl;
+  cout << num_of_samples << ", " << total_steps << endl;
   for(int iter = 0; iter < total_steps; iter++) {
     int step = (iter*BATCH);
     float *batch_xs = test_data + step*IM_SIZE;

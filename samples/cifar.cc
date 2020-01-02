@@ -67,13 +67,13 @@ void CifarNet(Network *network) {
 
   Convolution *conv2 = new Convolution(14, 14, 20, 5, 5, 50, 1, false);
   conv2->xnor = false;
-  Batchnorm *bn2 = new Batchnorm(14*14*20);
+  Batchnorm *bn2 = new Batchnorm(10*10*50);
   Relu *relu2 = new Relu(10*10*50);
   Pooling *pool2 = new Pooling(10, 10, 50, 2, 2, 50, 2, false);
 
   Convolution *conv3 = new Convolution(5, 5, 50, 5, 5, 500, 1, false);
   conv3->xnor = false;
-  Batchnorm *bn3 = new Batchnorm(5*5*50);
+  Batchnorm *bn3 = new Batchnorm(500);
   Relu *relu3 = new Relu(500);
   Dropout *dropout3 = new Dropout(500, 0.5);
 
