@@ -10,7 +10,9 @@ void gemm(int M, int N, int P,
   float alpha, float *A, float *B, float *C) {
 
   memset(C, 0, M*N*sizeof(float));
+#ifdef USE_OPENMP
   #pragma omp parallel for
+#endif
   for(int i = 0; i < M; i++)
     for(int k = 0; k < P; k++) {
       float A_PART = alpha*A[i*P+k];
@@ -28,7 +30,9 @@ void gemm_ta(int M, int N, int P,
 #if 1
   // I am not sure why this procedure is faster than the following procedure.
   // If anyone konws, please tell me! Thanks... 
+#ifdef USE_OPENMP
   #pragma omp parallel for
+#endif
   for(int i = 0; i < M; i++)
     for(int k = 0; k < P; k++)
       for(int j = 0; j < N; j++) {
@@ -54,7 +58,9 @@ void gemm_ta(int M, int N, int P,
 void gemm_tb(int M, int N, int P,
   float alpha, float *A, float *B, float *C) {
 
+#ifdef USE_OPENMP
   #pragma omp parallel for
+#endif
   for(int i = 0; i < M; i++)
     for(int j = 0; j < N; j++) {
       C[i*N+j] = 0;

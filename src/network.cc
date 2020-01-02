@@ -98,7 +98,7 @@ void Network::load(char *filename, int batch) {
       if(conv->xnor) {
         for(int i = 0; i < conv->FC; i++) {
           rfile.read((char*)conv->bitset_weight[i].bits, 
-                          conv->bitset_weight[i].N*sizeof(uint64_t));
+                          conv->bitset_weight[i].N*sizeof(BIT_BLK));
         }
         rfile.read((char*)conv->mean, conv->FC*sizeof(float));
       }

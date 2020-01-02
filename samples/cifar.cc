@@ -13,9 +13,9 @@ using namespace std;
 
 #define LEARNING_RATE 1.0e-3
 #define BATCH 100
-#define MAX_ITER 30000
+#define MAX_ITER 10000
 
-void CifarXNORNet(Network *network) {
+void CifarXnorNet(Network *network) {
 
   Convolution *conv1 = new Convolution(32, 32, 3, 5, 5, 20, 1, false);
   conv1->xnor = false;
@@ -118,7 +118,8 @@ int main( int argc, char** argv ) {
 
   if(strcmp(argv[1], "train") == 0) {
 
-    CifarXNORNet(&network);
+    CifarXnorNet(&network);
+    //CifarNet(&network);
     network.initial(BATCH, LEARNING_RATE);
 
     float *train_data, *train_label;

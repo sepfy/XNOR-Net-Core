@@ -1,3 +1,5 @@
+USE_OPENMP = 1
+
 OUTDIR = objs
 SRCDIR = src
 SAMPLE = samples
@@ -7,10 +9,16 @@ OBJS = $(addsuffix .o, $(basename $(patsubst $(SRCDIR)/%,$(OUTDIR)/%,$(SRC))))
 
 CXXFLAGS = -O2 -std=c++11 -Wno-unused-result
 INCLUDE = -I ./include/
-LIBS = -lm -fopenmp
+LIBS = -lm
 LIB = libxnnc.a
-
 OPENCV = `pkg-config opencv --cflags --libs`
+
+
+ifdef USE_OPENMP
+  MACRO = -D USE_OPENMP
+  LIBS += -fopenmp
+endif
+
 
 all: $(OUTDIR) $(LIB) samples
 
@@ -37,7 +45,7 @@ $(LIB): $(OBJS)
 	$(AR) rcs $@ $(OBJS)
 
 $(OUTDIR)/%.o: $(SRCDIR)/%.cc 
-	$(CXX) $(CXXFLAGS) $(INCLUDE) $(LIBS) -c $< -o $@ 
+	$(CXX) $(CXXFLAGS) $(MACRO) $(INCLUDE) $(LIBS) -c $< -o $@ 
 
 $(OUTDIR):
 	mkdir -p $(OUTDIR)

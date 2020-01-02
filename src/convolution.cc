@@ -289,7 +289,7 @@ void Convolution::save(fstream *file) {
 
     for(int i = 0; i < FC; i++) {
       file->write((char*)bitset_weight[i].bits,
-                         bitset_weight[i].N*sizeof(uint64_t));
+                         bitset_weight[i].N*sizeof(BIT_BLK));
     } 
 
     file->write((char*)mean, FC*sizeof(float));

@@ -5,12 +5,17 @@
 #include <stdint.h>
 using namespace std;
 
+//typedef uint64_t BIT_BLK;
+//#define BIT_BLK_MAX UINT64_MAX
+typedef uint32_t BIT_BLK;
+#define BIT_BLK_MAX UINT32_MAX
+
 class Bitset {
 
   public:
-    uint64_t *bits;
+    BIT_BLK *bits;
     int bitnum;
-    uint64_t complement;
+    BIT_BLK complement;
     int offset;
     int N, BN;
     Bitset(){}; 
@@ -21,7 +26,7 @@ class Bitset {
 };
 
 
-int bitcount(uint64_t n);
+int bitcount(BIT_BLK n);
 float popcount_xnor(Bitset *b1, Bitset *b2);
 void bin_gemm(int M, int N, int P,
   float alpha, Bitset *bA, Bitset *bB, float *C);
