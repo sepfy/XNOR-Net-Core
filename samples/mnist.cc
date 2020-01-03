@@ -2,7 +2,7 @@
 
 #define LEARNING_RATE 1.0e-3
 #define BATCH 100
-#define MAX_ITER 100
+#define MAX_ITER 25000
 
 void MnistXnorNet(Network *network) {
 
@@ -55,6 +55,7 @@ void MnistNet(Network *network) {
   conv3->xnor = false;
   Batchnorm *bn3 = new Batchnorm(512);
   Relu *relu3 = new Relu(512);
+  Dropout *dropout1 = new Dropout(512, 0.5);
 
   Connected *conn1 = new Connected(512, 10);
   SoftmaxWithCrossEntropy *softmax = new SoftmaxWithCrossEntropy(10);
@@ -69,6 +70,7 @@ void MnistNet(Network *network) {
   network->add(conv3);
   network->add(bn3);
   network->add(relu3);
+  network->add(dropout1);
   network->add(conn1);
   network->add(softmax);
 
@@ -136,7 +138,7 @@ int main( int argc, char** argv ) {
   test_label = read_validate_label(argv[3]);
 
   float total = 0.0;
-  int batch_num = 100/BATCH;
+  int batch_num = 10000/BATCH;
 
   network.deploy();
 
