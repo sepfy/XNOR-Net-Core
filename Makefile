@@ -1,4 +1,4 @@
-USE_OPENMP = 1
+#USE_OPENMP = 1
 
 OUTDIR = objs
 SRCDIR = src
@@ -22,12 +22,12 @@ endif
 
 all: $(OUTDIR) $(LIB) samples
 
-samples: mnist cifar lenet
+samples: mnist cifar
 
-test: $(LIB)
-	$(CXX) $(CXXFLAGS) $(INCLUDE) $(LIBS) unittest/conn_test.cc $(LIB) -o unittest/conn_test
-	$(CXX) $(CXXFLAGS) $(INCLUDE) $(LIBS) unittest/conv_test.cc $(LIB) -o unittest/conv_test
-	$(CXX) $(CXXFLAGS) $(INCLUDE) $(LIBS) unittest/bn_test.cc $(LIB) -o unittest/bn_test
+#test: $(LIB)
+#	$(CXX) $(CXXFLAGS) $(INCLUDE) $(LIBS) unittest/conn_test.cc $(LIB) -o unittest/conn_test
+#	$(CXX) $(CXXFLAGS) $(INCLUDE) $(LIBS) unittest/conv_test.cc $(LIB) -o unittest/conv_test
+#	$(CXX) $(CXXFLAGS) $(INCLUDE) $(LIBS) unittest/bn_test.cc $(LIB) -o unittest/bn_test
 
 vgg: $(LIB)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) $(LIBS) $(SAMPLE)/vgg.cc $(LIB) $(OPENCV) -o $(SAMPLE)/$@
@@ -36,7 +36,7 @@ mnist: $(SAMPLE)/mnist.cc $(LIB)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) $(LIBS) $^ -o $(SAMPLE)/$@
 
 cifar: $(SAMPLE)/cifar.cc $(LIB)
-	$(CXX) $(CXXFLAGS) $(INCLUDE) $(LIBS) $^ $(OPENCV) -o $(SAMPLE)/$@
+	$(CXX) $(CXXFLAGS) $(INCLUDE) $(LIBS) $^ -o $(SAMPLE)/$@
 
 lenet: $(SAMPLE)/lenet.cc $(LIB)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) $(LIBS) $^ $(OPENCV) -o $(SAMPLE)/$@
@@ -52,6 +52,12 @@ $(OUTDIR):
 
 clean:
 	rm -rf $(SAMPLE)/mnist $(SAMPLE)/cifar $(SAMPLE)/lenet $(OUTDIR) libxnnc.a
+
+
+test: $(OUTDIR) $(LIB) 
+	$(CXX) $(CXXFLAGS) $(MACRO) $(INCLUDE) gtest/gemm_gtest.cc $(LIB) $(LIBS) -lgmock -lgtest -lpthread -o gtest/gemm_test
+	./gtest/gemm_test	
+
 
 .PHONY: clean $(OUTDIR)
 

@@ -9,19 +9,16 @@ using ::testing::ElementsAreArray;
  
 TEST(BLAS, GEMM_TIME) { 
 
-  int M = 400;
-  int P = 19600;
-  int N = 32;
+  int M = 7840;
+  int P = 750;
+  int N = 200;
   float *A = new float[M*P];
   float *B = new float[P*N];
   float *C = new float[M*N];
   float alpha = 1.0;
 
-  for(int i = 0; i < 10000; i++) {
-    ms_t start = getms();
-    gemm_ta(M, N, P, alpha, A, B, C);
-    printf("%llu ms\n", getms() - start);
-  }
+  gemm(M, N, P, alpha, A, B, C);
+
 }
 
 int main(int argc, char **argv) {
