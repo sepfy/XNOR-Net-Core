@@ -1,5 +1,5 @@
-# NeuralNetwork
-This is an implemenation of [XNOR-Net](https://arxiv.org/abs/1603.05279) in C++. There is no dependency and easy to use.
+# XNOR-Net-Core
+This is an implemenation of [XNOR-Net](https://arxiv.org/abs/1603.05279) in C++. I have tried to compress the weights of convolution filter to uint32_t or uint64_t, so there is no dependency and easy to use.
 
 ## Pre-trained Model
 
@@ -29,12 +29,13 @@ $ ./samples/cifar <train/deploy> <model name> <dataset>
 
 
 ## Comaprison
-Inference with LeNet, 1 batch and single core on Raspberry Pi 3B.
+Inference with LeNet, 1 batch on Raspberry Pi 3B.
+To consider the restriction of embedded system, I compare the performance with OpenCV dnn module, because currently popular deep learning framework is not easy to compile to mobile or embedded platform. The model was trained by Tensorflow. See the detail of model and test program in [here](https://github.com/sepfy/tensorflow-tools/tree/master/cifar)
 
-| Framework            |  Time (ms)  |
-|----------------------|-------------|
-| Full Precision Net   |             |
-| XNOR Net             |             |
+| Framework       |  Time (ms)  | Model Size |
+|-----------------|-------------|------------|
+| OpenCV DNN      |             |   2.6 MB   |
+| XNOR-Net-Core   |             |   438 KB   |
 
 
 
@@ -47,6 +48,3 @@ Inference with LeNet, 1 batch and single core on Raspberry Pi 3B.
 * Batch Normalization
 * Softmax
 
-
-## Todo
-* Train with GPU.
