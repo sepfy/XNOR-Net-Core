@@ -21,8 +21,8 @@ $ ./samples/mnist <train/deploy> <model name> <dataset>
 ### CIFAR-10
 |  LeNet             | Accuracy | Size   | Model  |
 |--------------------|----------|--------|--------|
-| Full Precision Net |  68.26   |        |        |
-| XNOR Net           |          |        |        |
+| Full Precision Net |  68.29   | 2.9MB  |[cifar-20191224.net](https://drive.google.com/file/d/1Pmzzx0Ie7U3Swkd3KDs0E7CThG5wB6_V/view)|
+| XNOR Net           |  64.2    | 438KB  |[cifar-20200106.xnor.net](https://drive.google.com/file/d/15UU8bquuMD7DPGKGiGZ-CGRt75TyBEqh/view)|
 
 To test the model
 ```
@@ -33,14 +33,14 @@ $ ./samples/cifar <train/deploy> <model name> <dataset>
 
 ## Comaprison
 Inference with LeNet, 1 batch on Raspberry Pi 3B.
-To consider the restriction of embedded system, I compare the performance with OpenCV dnn module, because currently popular deep learning framework is not easy to compile to mobile or embedded platform. The model was trained by Tensorflow. See the detail of model and test program in [here](https://github.com/sepfy/tensorflow-tools/tree/master/cifar)
+To consider the restriction of embedded system, I compare the performance with OpenCV dnn module(3.4), because currently popular deep learning framework is not easy to compile to mobile or embedded platform. The model was trained by Tensorflow. See the detail of model in [here](https://github.com/sepfy/tensorflow-tools/tree/master/cifar)
 
 | Framework       |  Time (ms)  | Model Size |
 |-----------------|-------------|------------|
-| OpenCV DNN      |             |   2.6 MB   |
-| XNOR-Net-Core   |             |   438 KB   |
+| OpenCV DNN      |    48       |   2.6 MB   |
+| XNOR-Net-Core   |    28       |   438 KB   |
 
-
+I got 60% optimization of inference time and compress model size to 15%.
 
 ## Support layers
 * Convolution
