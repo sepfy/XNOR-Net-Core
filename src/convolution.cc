@@ -130,8 +130,8 @@ void Convolution::binarize_input() {
     }
   }
 
-  //for(int i = 0; i < batch*im_size; i++) 
-  //  input[i] > 0 ? input[i] = 1 : input[i] = -1;
+  for(int i = 0; i < batch*im_size; i++)
+    input[i] > 0 ? input[i] = 1 : input[i] = -1;
  
 }
 
@@ -139,21 +139,62 @@ void Convolution::binarize_input() {
 
 void Convolution::forward() {
 
+
 //#ifdef XNOR_NET
 if(xnor) {
+
+  // Clamp and mean center
+/*
+  float *tmp;
+  tmp = new float[batch*H*W];
+  for(int b = 0; b < batch; b++) {
+    for(int i = 0; i < H; i++) {
+      for(int j = 0; j < W; j++) {
+        int tidx = b*H*W+i*W+j;
+
+        tmp[tidx] = 0.0;
+
+        for(int k = 0; k < C; k++) {
+          int idx = b*H*W*C + i*W*C + j*C + k;
+          tmp[tidx] += input[idx];
+        }
+
+        tmp[tidx] /= (float)C;
+      }
+    }
+  }
+
+  for(int b = 0; b < batch; b++) {
+    for(int i = 0; i < H; i++) {
+      for(int j = 0; j < W; j++) {
+        int tidx = b*H*W+i*W+j;
+        for(int k = 0; k < C; k++) {
+          int idx = b*H*W*C + i*W*C + j*C + k;
+          input[idx] -= tmp[tidx];
+          if(input[idx] > 1.0)
+            input[idx] = 1.0;
+          else if(input[idx] < -1.0)
+            input[idx] = -1.0;
+        }
+      }
+    }
+  }
+  delete []tmp;
+*/
   binarize_input();
   for(int i = 0; i < batch; i++)
     im2col(W, H, C, FW, FH, FC, stride, pad, 
       input + i*im_size, out_col+i*col_size);
 
-  //ms_t start = getms();
   if(!runtime) {
+
     binarize_weight();
     swap_weight();
-    //gemm(batch*out_h*out_w, FC, out_channel, 1.0, out_col, weight, output);
+    gemm(batch*out_h*out_w, FC, out_channel, 1.0, out_col, weight, output);
     //for(int i = 0; i < batch*out_h*out_w*out_channel; i++)
     //  out_col[i] > 0 ? out_col[i] = 1 : out_col[i] = -1;
-    bin_gemm(batch*out_h*out_w, FC, out_channel, 1.0, out_col, weight, output);
+    //bin_gemm(batch*out_h*out_w, FC, out_channel, 1.0, out_col, weight, output);
+  
   }
   else {
 
@@ -165,9 +206,6 @@ if(xnor) {
     bin_gemm(batch*out_h*out_w, FC, out_channel, 1.0, 
       bitset_outcol, bitset_weight, output);
   }
-
-  //  cout << getms() - start << endl;
-
 
   // Do K = A (*) k
   for(int i = 0; i < batch; i++) 
@@ -214,12 +252,40 @@ void Convolution::backward(float *delta) {
   memset(grad_weight, 0, out_channel*FC*sizeof(float));
   gemm_ta(out_channel, FC, out_h*out_w*batch, 1.0, out_col, delta, grad_weight);
 
+  float *delta_col = new float[batch*out_channel*out_w*out_h];
+  if(xnor) {
+
+   /*
+    float sum = 0.0;
+    for(int i = 0; i < out_channel; i++) {
+      for(int j = 0; j < FC; j++) {
+        int idx = i*FC+j;
+        sum += grad_weight[idx]*(weight[idx] > 0 ? 1.0 : -1.0);
+      }
+    }
+    */
+    for(int i = 0; i < out_channel; i++)
+      for(int j = 0; j < FC; j++) {
+        int idx = i*FC+j;
+        grad_weight[idx] = (grad_weight[idx]*(1.0/(float)(out_channel) 
+                         + mean[j]*(fabs(weight[idx]) <= 1 ? weight[idx] : 0)))*(1.0 - 1.0/(float)C)*out_channel;
+        //grad_weight[idx] = ((weight[idx] > 0 ? 1.0 : -1.0)*1.0/(float)out_channel)*sum
+        //                 + grad_weight[idx]*mean[j]*(fabs(weight[idx]) <= 1 ? weight[idx] : 0);
+        //grad_weight[idx] = grad_weight[idx]*(1.0 - 1.0/(float)C)*out_channel;
+
+      }
+    gemm_tb(batch*out_w*out_h, out_channel, FC, 1.0, delta, binary_weight, delta_col);
+    //gemm_tb(batch*out_w*out_h, out_channel, FC, 1.0, delta, weight, delta_col);
+
+  }
+  else {
+    gemm_tb(batch*out_w*out_h, out_channel, FC, 1.0, delta, weight, delta_col);
+
+  }
   //bias
   memset(grad_bias, 0, FC*sizeof(float));
   row_sum(batch*out_w*out_h, FC, delta, grad_bias);
 
-  float *delta_col = new float[batch*out_channel*out_w*out_h];
-  gemm_tb(batch*out_w*out_h, out_channel, FC, 1.0, delta, weight, delta_col);
 
 
 
