@@ -103,6 +103,8 @@ Relu::~Relu() {
 void Relu::init() {
   output = new float[batch*N];
   m_delta = new float[batch*N];
+  cut = new float[batch*N];
+  memset(cut, 0, sizeof(float)*batch*N);
 }
 
 void Relu::forward() {
@@ -116,7 +118,7 @@ void Relu::backward(float *delta) {
 
   for(int i = 0; i < batch; i++) 
     for(int j = 0; j < N; j++) 
-      m_delta[i*N+j] = delta[i*N+j]*(input[i*N+j] >= 0);
+      m_delta[i*N+j] = (cut[i*N+j]+delta[i*N+j])*(input[i*N+j] >= 0);
 }
 
 void Relu::update(float lr) {

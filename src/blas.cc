@@ -157,7 +157,7 @@ float accuracy(int batch, int N, float *A, float *B) {
 
   float sum = 0;
   for(int i = 0; i < batch; i++)
-    if(argA[i] != argB[i])
+    if(argA[i] == argB[i])
       sum += 1.0;
   sum = sum/(float)batch;
   delete []argA;

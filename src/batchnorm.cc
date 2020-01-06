@@ -70,25 +70,26 @@ void Batchnorm::forward() {
 
 
     for(int i = 0; i < batch; i++)
-      for(int j = 0; j < N; j++) {
+      for(int j = 0; j < N; j++)
         normal[i*N+j] = (input[i*N+j] - mean[j])/pow(var[j] + epsilon, 0.5);
-        output[i*N+j] = gamma[j]*normal[i*N+j] + beta[j];
-      }
 
     for(int j = 0; j < N; j++) {
-      running_mean[j] = momentum*running_mean[j] + (1-momentum)*mean[j];
-      running_var[j] = momentum*running_var[j] + (1-momentum)*var[j];
+      running_mean[j] = momentum*running_mean[j] + (1.0 - momentum)*mean[j];
+      running_var[j] = momentum*running_var[j] + (1.0 - momentum)*var[j];
     }
+
   }
   else {
-
     for(int i = 0; i < batch; i++)
-      for(int j = 0; j < N; j++) {
+      for(int j = 0; j < N; j++) 
         normal[i*N+j] = (input[i*N+j] - running_mean[j])/pow(running_var[j] + epsilon, 0.5);
-        output[i*N+j] = gamma[j]*normal[i*N+j] + beta[j];
-      }
+      
 
   }
+
+  for(int i = 0; i < batch; i++)
+    for(int j = 0; j < N; j++)
+      output[i*N+j] = gamma[j]*normal[i*N+j] + beta[j];
 
 
 
@@ -191,6 +192,10 @@ void Batchnorm::save(fstream *file) {
   char buf[64] = {0};
   sprintf(buf, "Batchnorm,%d", N);
   file->write(buf, sizeof(buf));
+  file->write((char*)running_mean, N*sizeof(float));
+  file->write((char*)running_var, N*sizeof(float));
+  file->write((char*)gamma, N*sizeof(float));
+  file->write((char*)beta, N*sizeof(float));
 }
 
 Batchnorm* Batchnorm::load(char *buf) {

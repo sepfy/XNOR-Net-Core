@@ -4,6 +4,9 @@
 #include "network.h"
 #include <byteswap.h>
 
+#define IM_SIZE 28*28*1
+#define CLASSES 10
+
 float* read_images(char *filename) {
 
   FILE *fp;
@@ -111,24 +114,28 @@ void show_label(float *Y, int num) {
   printf("\n");
 }
 
-float* read_train_data() {
-  char filename[] = "train-images-idx3-ubyte";
+float* read_train_data(char *folder) {
+  char filename[64] = {0};
+  sprintf(filename, "%s/train-images-idx3-ubyte", folder);
   return read_images(filename);
 }
 
-float* read_train_label() {
-  char filename[] = "train-labels-idx1-ubyte";
+float* read_train_label(char *folder) {
+  char filename[64] = {0};
+  sprintf(filename, "%s/train-labels-idx1-ubyte", folder);
   return read_labels(filename);
 }
 
 
-float* read_validate_data() {
-  char filename[] = "t10k-images-idx3-ubyte";
+float* read_validate_data(char *folder) {
+  char filename[64] = {0};
+  sprintf(filename, "%s/t10k-images-idx3-ubyte", folder);
   return read_images(filename);
 }
 
-float* read_validate_label() {
-  char filename[] = "t10k-labels-idx1-ubyte";
+float* read_validate_label(char *folder) {
+  char filename[64] = {0};
+  sprintf(filename, "%s/t10k-labels-idx1-ubyte", folder);
   return read_labels(filename);
 }
 

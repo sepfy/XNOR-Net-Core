@@ -25,7 +25,6 @@ int load_images(char *dir, vector<Mat> *images) {
   while ((dp = readdir(fd)) != NULL) {
   if (!strcmp(dp->d_name, ".") || !strcmp(dp->d_name, ".."))
     continue;   
-
     Mat image;
     char filepath[257] = {0};
     sprintf(filepath, "%s/%s", dir, dp->d_name);
@@ -104,7 +103,7 @@ void get_mini_batch(int n, int b, float *data, float *label, float *&batch_xs, f
   for(int i = 0; i < b; i++) {
     int p = rand()%n;
     memcpy(batch_xs + 224*223*3*i, data + p*224*224*3, 224*224*3*sizeof(float));
-    memcpy(batch_ys + 2*i, label + p*2, 2*sizeof(float));
+    memcpy(batch_ys + 3*i, label + p*3, 3*sizeof(float));
   }
 }
 
@@ -114,97 +113,115 @@ int main( int argc, char** argv )
   float *train_data, *train_label;
   float *test_data, *test_label;
   int train_num, test_num;
-  train_num = read_data("train", train_data, train_label);
-  test_num = read_data("test", test_data, test_label);
-  cout << train_num << ", " << test_num << endl;
+  train_num = read_data("FIRE-SMOKE-DATASET/Train", train_data, train_label);
+  //test_num = read_data("FIRE-SMOKE-DATASET/Test/", test_data, test_label);
+  cout << train_num << endl;
+// ", " << test_num << endl;
 
 
-  int max_iter = 200;
+  int max_iter = 3000;
   float total_err = 0;
-  int batch = 50;
+  int batch = 20;
 
-  Convolution conv1(224, 224, 3, 3, 3, 32, 1, true);
+  Convolution conv1(224, 224, 3, 7, 7, 64, 2, true);
   conv1.xnor = false;
-  Relu relu1(224*224*32);
-  Pooling pool1(224, 224, 32, 2, 2, 32, 2, false);
+  Batchnorm bn1(112*112*64);
+  Relu relu1(112*112*64);
 
-  Convolution conv2(112, 112, 32, 3, 3, 64, 1, true);
-  conv2.xnor = false;
-  Relu relu2(112*112*64);
-  Pooling pool2(112, 112, 64, 2, 2, 64, 2, false);
+  Pooling pool1(112, 112, 64, 2, 2, 64, 2, false);
 
-  Convolution conv3_1(56, 56, 64, 3, 3, 128, 1, true);
+  Convolution conv2_1(56, 56, 64, 3, 3, 64, 1, true);
+  conv2_1.xnor = false;
+  Batchnorm bn2_1(56*56*64);
+  Relu relu2_1(56*56*64);
+
+  Convolution conv2_2(56, 56, 64, 3, 3, 64, 1, true);
+  conv2_2.xnor = false;
+  Batchnorm bn2_2(56*56*64);
+  Relu relu2_2(56*56*64);
+
+  Convolution conv3_1(56, 56, 64, 3, 3, 128, 2, true);
   conv3_1.xnor = false;
-  Relu relu3_1(56*56*128);
-  Convolution conv3_2(56, 56, 128, 3, 3, 128, 1, true);
+  Batchnorm bn3_1(28*28*128);
+  Relu relu3_1(28*28*128);
+
+  Convolution conv3_2(28, 28, 128, 3, 3, 128, 1, true);
+  Batchnorm bn3_2(28*28*128);
   conv3_2.xnor = false;
-  Relu relu3_2(56*56*128);
-  Pooling pool3(56, 56, 128, 2, 2, 128, 2, false);
+  Relu relu3_2(28*28*128);
 
-  Convolution conv4_1(28, 28, 128, 3, 3, 256, 1, true);
+  Convolution conv4_1(28, 28, 128, 3, 3, 256, 2, true);
   conv4_1.xnor = false;
-  Relu relu4_1(28*28*256);
-  Convolution conv4_2(28, 28, 256, 3, 3, 256, 1, true);
+  Batchnorm bn4_1(14*14*256);
+  Relu relu4_1(14*14*256);
+
+  Convolution conv4_2(14, 14, 256, 3, 3, 256, 1, true);
   conv4_2.xnor = false;
-  Relu relu4_2(28*28*256);
-  Pooling pool4(28, 28, 256, 2, 2, 256, 2, false);
+  Relu relu4_2(14*14*256);
+  Batchnorm bn4_2(14*14*256);
 
-  Convolution conv5_1(14, 14, 256, 3, 3, 256, 1, true);
+
+  Convolution conv5_1(14, 14, 256, 3, 3, 512, 2, true);
   conv5_1.xnor = false;
-  Relu relu5_1(14*14*256);
-  Convolution conv5_2(14, 14, 256, 3, 3, 256, 1, true);
-  conv5_2.xnor = false;
-  Relu relu5_2(14*14*256);
-  Pooling pool5(14, 14, 256, 2, 2, 256, 2, false);
+  Batchnorm bn5_1(7*7*512);
+  Relu relu5_1(7*7*512);
 
-  Connected conn1(7*7*256, 1024);
-  Relu conn1_relu(1024);
-  Connected conn2(1024, 1024);
-  Relu conn2_relu(1024);
-  Connected conn3(1024, 2);
-  SoftmaxWithCrossEntropy softmax(2);
+  Convolution conv5_2(7, 7, 512, 3, 3, 512, 1, true);
+  conv5_2.xnor = false;
+  Batchnorm bn5_2(7*7*512);
+  Relu relu5_2(7*7*512);
+
+  //Pooling pool5(14, 14, 256, 2, 2, 256, 2, false);
+
+  Connected conn1(7*7*512, 3);
+  SoftmaxWithCrossEntropy softmax(3);
 
   Network network;
   network.add(&conv1);
+  network.add(&bn1);
   network.add(&relu1);
   network.add(&pool1);
 
-  network.add(&conv2);
-  network.add(&relu2);
-  network.add(&pool2);
+  network.add(&conv2_1);
+  network.add(&bn2_1);
+  network.add(&relu2_1);
+
+  network.add(&conv2_2);
+  network.add(&bn2_2);
+  network.add(&relu2_2);
 
   network.add(&conv3_1);
+  network.add(&bn3_1);
   network.add(&relu3_1);
+
   network.add(&conv3_2);
+  network.add(&bn3_2);
   network.add(&relu3_2);
-  network.add(&pool3);
 
   network.add(&conv4_1);
+  network.add(&bn4_1);
   network.add(&relu4_1);
+
   network.add(&conv4_2);
+  network.add(&bn4_2);
   network.add(&relu4_2);
-  network.add(&pool4);
 
   network.add(&conv5_1);
+  network.add(&bn5_1);
   network.add(&relu5_1);
+
   network.add(&conv5_2);
+  network.add(&bn5_2);
   network.add(&relu5_2);
-  network.add(&pool5);
 
   network.add(&conn1);
-  network.add(&conn1_relu);
-
-  network.add(&conn2);
-  network.add(&conn2_relu);
-
-  network.add(&conn3);
   network.add(&softmax);
+
   network.initial(batch, 0.001);
   float *batch_xs, *batch_ys;
   batch_xs = new float[batch*224*224*3];
-  batch_ys = new float[batch*2];
+  batch_ys = new float[batch*3];
   for(int iter = 0; iter < max_iter; iter++) {
-
     ms_t start = getms();
     int step = (iter*batch)%train_num;
     get_mini_batch(train_num, batch, train_data, train_label, batch_xs, batch_ys);
@@ -212,15 +229,15 @@ int main( int argc, char** argv )
     float *output = network.inference(batch_xs);
     network.train(batch_ys);
 
-    float loss = cross_entropy(batch, 2, output, batch_ys);
-    float acc = accuracy(batch, 2, output, batch_ys); 
+    float loss = cross_entropy(batch, 3, output, batch_ys);
+    float acc = accuracy(batch, 3, output, batch_ys); 
     if(iter%1 == 0) {
       cout << "iter = " << iter << ", time = " << (getms() - start) << "ms, loss = "
        << loss << " (accuracy = " << acc << ")" << endl;
     }
   }
 
-
+  network.save();
 
   return 0;
 }

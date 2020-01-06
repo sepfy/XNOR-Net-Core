@@ -14,7 +14,8 @@ Convolution::Convolution(int _W, int _H, int _C,
 
 
   if(_pad == true) {
-    pad = 0.5*((stride - 1)*W - stride + FW);
+    //pad = 0.5*((stride - 1)*W - stride + FW);
+    pad = 0.5*(FW - 1);
     out_w = W;
     out_h = H;
   }
@@ -145,8 +146,8 @@ if(xnor) {
     im2col(W, H, C, FW, FH, FC, stride, pad, 
       input + i*im_size, out_col+i*col_size);
 
-//  ms_t start = getms();
-  if(trainable) {
+  //ms_t start = getms();
+  if(!runtime) {
     binarize_weight();
     swap_weight();
     //gemm(batch*out_h*out_w, FC, out_channel, 1.0, out_col, weight, output);
@@ -154,7 +155,7 @@ if(xnor) {
     //  out_col[i] > 0 ? out_col[i] = 1 : out_col[i] = -1;
     bin_gemm(batch*out_h*out_w, FC, out_channel, 1.0, out_col, weight, output);
   }
- else {
+  else {
 
     for(int i = 0; i < batch*out_h*out_w; i++) {
       bitset_outcol[i].clean();
@@ -164,7 +165,8 @@ if(xnor) {
     bin_gemm(batch*out_h*out_w, FC, out_channel, 1.0, 
       bitset_outcol, bitset_weight, output);
   }
-//  cout << getms() - start << endl;
+
+  //  cout << getms() - start << endl;
 
 
   // Do K = A (*) k
@@ -198,7 +200,7 @@ else {
       for(int j = 0; j < out_w; j++)
         for(int k = 0; k < FC; k++)
           output[b*out_h*out_w*FC + i*out_w*FC + j*FC + k] += bias[k];
-if(xnor) {
+if(xnor && !runtime) {
 //#ifdef XNOR_NET
   swap_weight();
 //#endif
@@ -268,32 +270,34 @@ void Convolution::update(float lr) {
 void Convolution::save(fstream *file) {
 
   char buf[64] = {0};
-  sprintf(buf, "Convolution,%d,%d,%d,%d,%d,%d,%d,%d", 
-    W, H, C, FW, FH, FC, stride, pad);
+  sprintf(buf, "Convolution,%d,%d,%d,%d,%d,%d,%d,%d,%d", 
+    W, H, C, FW, FH, FC, stride, pad, xnor);
   //cout << weight[0] << endl;
   //cout << bias[0] << endl;
   file->write(buf, sizeof(buf));
-#ifdef XNOR_NET
-  float *BB = new float[FC*out_channel];
-  for(int i = 0; i < FC; i++)
-    for(int j = 0; j < out_channel; j++)
-      BB[i*out_channel+j] = weight[j*FC+i];
 
-  for(int i = 0; i < FC; i++) {
-    bitset_weight[i].set(BB+i*out_channel);
+  if(xnor) {
+    float *BB = new float[FC*out_channel];
+    for(int i = 0; i < FC; i++)
+      for(int j = 0; j < out_channel; j++)
+        BB[i*out_channel+j] = weight[j*FC+i];
+
+    for(int i = 0; i < FC; i++) {
+      bitset_weight[i].set(BB+i*out_channel);
+    }
+    delete[] BB;
+
+    for(int i = 0; i < FC; i++) {
+      file->write((char*)bitset_weight[i].bits,
+                         bitset_weight[i].N*sizeof(BIT_BLK));
+    } 
+
+    file->write((char*)mean, FC*sizeof(float));
+  } 
+  else {
+    file->write((char*)weight, weight_size*sizeof(float));
   }
-  delete[] BB;
 
-  for(int i = 0; i < FC; i++) {
-    file->write((char*)bitset_weight[i].bits,
-                       bitset_weight[i].N*sizeof(uint64_t));
-  }
-
-  file->write((char*)mean, FC*sizeof(float));
- 
-#else
-  file->write((char*)weight, weight_size*sizeof(float));
-#endif
   file->write((char*)bias, bias_size*sizeof(float));
 
 
@@ -301,7 +305,7 @@ void Convolution::save(fstream *file) {
 
 Convolution* Convolution::load(char *buf) {
 
-  int para[8] = {0};
+  int para[9] = {0};
   int idx = 0;
 
   char *token;
@@ -309,11 +313,12 @@ Convolution* Convolution::load(char *buf) {
     token = strtok(NULL, ",");
     para[idx] = atoi(token);
     idx++;
-    if(idx > 7)
+    if(idx > 8)
       break;
   }
 
   Convolution *conv = new Convolution(para[0], para[1], 
   para[2], para[3], para[4], para[5], para[6], para[7]);
+  conv->xnor = para[8];
   return conv;
 }

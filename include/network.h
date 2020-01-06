@@ -14,7 +14,7 @@ class Network {
     void initial(int batch, float _lr);
     float* inference(float *input);
     void train(float *Y);
-    void save();
-    void load(int batch);
+    void save(char *filename);
+    void load(char *filename, int batch);
     void deploy();
 };

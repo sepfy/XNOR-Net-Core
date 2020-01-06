@@ -11,14 +11,14 @@ Bitset::~Bitset() {
 }
 
 void Bitset::init(int input_size) {
-  BN = sizeof(uint64_t)*8;
+  BN = sizeof(BIT_BLK)*8;
   bitnum = input_size;
   offset = input_size%BN;
 
   N = ceil((float)input_size/BN);
-  bits = new uint64_t[N];
-  memset(bits, 0, sizeof(uint64_t)*N);
-  complement = (UINT64_MAX << (BN - offset)) >> (BN - offset);
+  bits = new BIT_BLK[N];
+  memset(bits, 0, sizeof(BIT_BLK)*N);
+  complement = (BIT_BLK_MAX << (BN - offset)) >> (BN - offset);
 }
 
 void Bitset::set(float *inputs) {
@@ -26,21 +26,21 @@ void Bitset::set(float *inputs) {
     int bidx = i/BN;
     int offset = i%BN;
     if(inputs[i] > 0) {
-      uint64_t value = 1;
-      bits[bidx] |= ((uint64_t)1 << offset);
+      BIT_BLK value = 1;
+      bits[bidx] |= ((BIT_BLK)1 << offset);
     }
     else { 
-      uint64_t value = 1;
-      bits[bidx] |= ((uint64_t)0 << offset);
+      BIT_BLK value = 1;
+      bits[bidx] |= ((BIT_BLK)0 << offset);
     }
   }
 }
 
 void Bitset::clean() {
-  memset(bits, 0, sizeof(uint64_t)*N);
+  memset(bits, 0, sizeof(BIT_BLK)*N);
 }
 
-int bitcount(uint64_t n){
+int bitcount(BIT_BLK n){
   return  __builtin_popcountl(n);
 }
 
@@ -48,10 +48,10 @@ float popcount_xnor(Bitset *b1, Bitset *b2) {
 
   int c = 0;
   for(int i = 0; i < b1->N - 1; i++) {
-    uint64_t tmp = ~(b1->bits[i]^b2->bits[i]);
+    BIT_BLK tmp = ~(b1->bits[i]^b2->bits[i]);
     c += bitcount(tmp);
   } 
-  uint64_t tmp = ~(b1->bits[b1->N-1]^b2->bits[b1->N-1]);
+  BIT_BLK tmp = ~(b1->bits[b1->N-1]^b2->bits[b1->N-1]);
   tmp &= b1->complement;
   c += bitcount(tmp);
   
@@ -63,7 +63,9 @@ void bin_gemm(int M, int N, int P,
   float alpha, Bitset *bA, Bitset *bB, float *C) {
 
 //ms_t start = getms();
+#ifdef USE_OPENMP
   #pragma omp parallel for 
+#endif
   for(int i = 0; i < M; i++)
     for(int j = 0; j < N; j++)
       C[i*N+j] = popcount_xnor(bA+i, bB+j); 
