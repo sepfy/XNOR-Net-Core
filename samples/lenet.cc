@@ -128,6 +128,7 @@ int main( int argc, char** argv ) {
   float total = 0.0;
   ms_t start = getms();
   int total_steps = num_of_samples/BATCH;
+  network.deploy();
   cout << num_of_samples << ", " << total_steps << endl;
   for(int iter = 0; iter < total_steps; iter++) {
     int step = (iter*BATCH);

@@ -7,7 +7,7 @@ SAMPLE = samples
 SRC = $(wildcard $(SRCDIR)/*.cc)
 OBJS = $(addsuffix .o, $(basename $(patsubst $(SRCDIR)/%,$(OUTDIR)/%,$(SRC))))
 
-CXXFLAGS = -O2 -std=c++11 -Wno-unused-result
+CXXFLAGS = -O3 -std=c++11 -Wno-unused-result
 INCLUDE = -I ./include/
 LIBS = -lm
 LIB = libxnnc.a
