@@ -76,7 +76,7 @@ int read_data(const char *basedir, float *&inputs, float *&outputs) {
     for(int j = 0; j < counts[i]; j++) {
       outputs[shift+counts.size()*j+i] = 1.0;
     }
-    shift = counts[i]*num_of_class;
+    shift += counts[i]*num_of_class;
   }
 
   // recover image for test
@@ -237,7 +237,7 @@ int main( int argc, char** argv )
     }
   }
 
-  network.save();
+  network.save("tmp.net");
 
   return 0;
 }

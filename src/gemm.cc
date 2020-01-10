@@ -2,6 +2,11 @@
 #include <omp.h>
 #include "gemm.h"
 #include <string.h>
+
+#ifdef GPU
+#include "gpu.h"
+#endif
+
 using namespace std;
 /*
   C = MxN, A = MxP, B = PxN
@@ -216,3 +221,15 @@ void gemm_beta(int M, int N, int P,
 }
 
 
+#ifdef GPU
+void gemm_gpu(int M, int N, int P,
+  float alpha, float *A, float *B, float *C) {
+
+  float beta = 0.0;
+  cublasSgemm(gpu_handle(),
+              CUBLAS_OP_N, CUBLAS_OP_N,
+	      M, N, P, &alpha, A, M, B, P, &beta, C, M);
+  cudaDeviceSynchronize();
+}
+
+#endif

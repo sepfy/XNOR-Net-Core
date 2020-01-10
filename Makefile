@@ -1,4 +1,5 @@
-#USE_OPENMP = 1
+USE_OPENMP = 1
+USE_GPU = 1
 
 OUTDIR = objs
 SRCDIR = src
@@ -13,12 +14,16 @@ LIBS = -lm
 LIB = libxnnc.a
 OPENCV = `pkg-config opencv --cflags --libs`
 
-
-ifdef USE_OPENMP
-  MACRO = -D USE_OPENMP
+ifeq ($(USE_OPENMP), 1) 
+  MACRO += -D USE_OPENMP
   LIBS += -fopenmp
 endif
 
+ifeq ($(USE_GPU), 1) 
+  MACRO += -D GPU
+  LIBS += -L /usr/local/cuda/lib64 -lcublas -lcudart
+  INCLUDE += -I /usr/local/cuda/include/
+endif
 
 all: $(OUTDIR) $(LIB) samples
 
@@ -29,17 +34,17 @@ samples: mnist cifar
 #	$(CXX) $(CXXFLAGS) $(INCLUDE) $(LIBS) unittest/conv_test.cc $(LIB) -o unittest/conv_test
 #	$(CXX) $(CXXFLAGS) $(INCLUDE) $(LIBS) unittest/bn_test.cc $(LIB) -o unittest/bn_test
 
-vgg: $(LIB)
-	$(CXX) $(CXXFLAGS) $(INCLUDE) $(LIBS) $(SAMPLE)/vgg.cc $(LIB) $(OPENCV) -o $(SAMPLE)/$@
+vgg: $(SAMPLE)/vgg.cc $(LIB)
+	$(CXX) $(CXXFLAGS) $(MACRO) $(INCLUDE) $^ $(LIBS) $(OPENCV) -o $(SAMPLE)/$@
 
 mnist: $(SAMPLE)/mnist.cc $(LIB) 
-	$(CXX) $(CXXFLAGS) $(INCLUDE) $(LIBS) $^ -o $(SAMPLE)/$@
+	$(CXX) $(CXXFLAGS) $(MACRO) $(INCLUDE) $^ $(LIBS) -o $(SAMPLE)/$@
 
 cifar: $(SAMPLE)/cifar.cc $(LIB)
-	$(CXX) $(CXXFLAGS) $(INCLUDE) $(LIBS) $^ -o $(SAMPLE)/$@
+	$(CXX) $(CXXFLAGS) $(MACRO) $(INCLUDE) $^ $(LIBS) -o $(SAMPLE)/$@
 
 lenet: $(SAMPLE)/lenet.cc $(LIB)
-	$(CXX) $(CXXFLAGS) $(INCLUDE) $(LIBS) $^ $(OPENCV) -o $(SAMPLE)/$@
+	$(CXX) $(CXXFLAGS) $(MACRO) $(INCLUDE) $(LIBS) $^ $(OPENCV) -o $(SAMPLE)/$@
 
 $(LIB): $(OBJS) 
 	$(AR) rcs $@ $(OBJS)
@@ -55,8 +60,14 @@ clean:
 
 
 test: $(OUTDIR) $(LIB) 
-	$(CXX) $(CXXFLAGS) $(MACRO) $(INCLUDE) gtest/gemm_gtest.cc $(LIB) $(LIBS) -lgmock -lgtest -lpthread -o gtest/gemm_test
-	./gtest/gemm_test	
+	$(CXX) $(CXXFLAGS) $(MACRO) $(INCLUDE) gtest/gtest.cc $(LIB) $(LIBS) -lgmock -lgtest -lpthread -o gtest/gtest
+	./gtest/gtest	
+
+
+test_gpu: $(OUTDIR) $(LIB) 
+	$(CXX) $(CXXFLAGS) $(MACRO) $(INCLUDE) gtest/gtest_gpu.cc $(LIB) $(LIBS) -lgmock -lgtest -lpthread -o gtest/gtest_gpu
+	./gtest/gtest_gpu	
+
 
 
 .PHONY: clean $(OUTDIR)
