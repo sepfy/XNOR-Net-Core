@@ -1,5 +1,9 @@
 #include "layers.h"
 
+#ifdef GPU
+#include "gpu.h"
+#endif
+
 Connected::Connected(int _n, int _m) {
   N = _n;
   M = _m;
@@ -11,13 +15,21 @@ Connected::~Connected() {
 
 void Connected::init() {
 
+#ifdef GPU
+  weight = malloc_gpu(N*M);
+  bias   = malloc_gpu(M);
+  output = malloc_gpu(batch*M);
+  grad_weight = malloc_gpu(N*M);
+  grad_bias = malloc_gpu(M);
+  m_delta = malloc_gpu(batch*M);
+#else
   weight = new float[N*M];
   bias   = new float[M];
   output = new float[batch*M];
-
   grad_weight = new float[N*M];
   grad_bias = new float[M];
   m_delta = new float[batch*N];
+#endif
 
   random_normal(N*M, weight);
   random_normal(M, bias);
@@ -41,7 +53,12 @@ void Connected::init() {
 
 
 void Connected::forward() {  
+
+#ifdef GPU
+  gemm_gpu(batch, M, N, 1, input, weight, output);
+#else
   gemm(batch, M, N, 1, input, weight, output);
+#endif
   bias_add(batch, M, output, bias);
 }
 

@@ -225,10 +225,15 @@ void gemm_beta(int M, int N, int P,
 void gemm_gpu(int M, int N, int P,
   float alpha, float *A, float *B, float *C) {
 
+
   float beta = 0.0;
+  //cublasSgemm(gpu_handle(),
+  //            CUBLAS_OP_N, CUBLAS_OP_N,
+  //	      M, N, P, &alpha, A, M, B, P, &beta, C, M);
   cublasSgemm(gpu_handle(),
               CUBLAS_OP_N, CUBLAS_OP_N,
-	      M, N, P, &alpha, A, M, B, P, &beta, C, M);
+	      N, M, P, &alpha, B, N, A, P, &beta, C, N);
+
   cudaDeviceSynchronize();
 }
 

@@ -1,3 +1,4 @@
+#ifdef GPU
 #include "gpu.h"
 
 cublasHandle_t gpu_handle() {
@@ -14,4 +15,4 @@ float* malloc_gpu(size_t n) {
   cudaMallocManaged(&x_gpu, size);
   return x_gpu;
 }
-
+#endif

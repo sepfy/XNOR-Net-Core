@@ -1,5 +1,5 @@
-USE_OPENMP = 1
-USE_GPU = 1
+USE_OPENMP = 0
+USE_GPU = 0
 
 OUTDIR = objs
 SRCDIR = src

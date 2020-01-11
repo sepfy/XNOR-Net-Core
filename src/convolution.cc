@@ -1,4 +1,9 @@
 #include "layers.h"
+
+#ifdef GPU
+#include "gpu.h"
+#endif
+
 using namespace std;
 
 Convolution::Convolution(int _W, int _H, int _C,
@@ -39,16 +44,28 @@ Convolution::~Convolution() {
 
 void Convolution::init() {
 
+#ifdef GPU
+  col = malloc_gpu(out_w*out_h*out_channel);
+  output = malloc_gpu(batch*out_w*out_h*FC);
+  out_col = malloc_gpu(out_w*out_h*out_channel*batch);
+  weight = malloc_gpu(out_channel*FC);
+  grad_weight = malloc_gpu(out_channel*FC);
+  bias = malloc_gpu(FC);
+  grad_bias = malloc_gpu(FC);
+  im = malloc_gpu(H*W*C);
+  m_delta = malloc_gpu(batch*W*H*C); 
+#else
   col = new float[out_w*out_h*out_channel];
   output = new float[batch*out_w*out_h*FC];
   out_col = new float[out_w*out_h*out_channel*batch];
-
   weight = new float[out_channel*FC];
   grad_weight = new float[out_channel*FC];
   bias = new float[FC];
   grad_bias = new float[FC];
   im = new float[H*W*C];
   m_delta = new float[batch*W*H*C]; 
+#endif
+
 
 #ifdef XNOR_NET
   binary_weight = new float[out_channel*FC];
@@ -228,7 +245,12 @@ else {
   for(int i = 0; i < batch; i++)
     im2col(W, H, C, FW, FH, FC, stride, pad, 
       input + i*im_size, out_col+i*col_size);
+
+#ifdef GPU
+  gemm_gpu(batch*out_h*out_w, FC, out_channel, 1, out_col, weight, output);
+#else
   gemm(batch*out_h*out_w, FC, out_channel, 1, out_col, weight, output);
+#endif
 //#endif
 }
 // bias_add(batch, out_h*out_w*FC, output, bias);
