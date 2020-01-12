@@ -8,6 +8,11 @@
 #include <string.h>
 #include <fstream>
 #include "binary.h"
+
+#ifdef GPU
+#include "gpu.h"
+#endif
+
 #define XNOR_NET
 using namespace std;
 

@@ -40,11 +40,32 @@ Convolution::Convolution(int _W, int _H, int _C,
 
 Convolution::~Convolution() {
 
+#ifdef GPU
+
+#else
+  delete []col;
+  delete []output;
+  delete []out_col;
+  delete []weight;
+  delete []grad_weight;
+  delete [] grad_bias;
+  delete []im;
+  delete []m_delta;
+
+  /* Adam optimizer */
+  delete []m_weight;
+  delete []v_weight;
+  delete []m_bias;
+  delete []v_bias;
+
+#endif
+
 }
 
 void Convolution::init() {
 
 #ifdef GPU
+
   col = malloc_gpu(out_w*out_h*out_channel);
   output = malloc_gpu(batch*out_w*out_h*FC);
   out_col = malloc_gpu(out_w*out_h*out_channel*batch);
@@ -54,7 +75,15 @@ void Convolution::init() {
   grad_bias = malloc_gpu(FC);
   im = malloc_gpu(H*W*C);
   m_delta = malloc_gpu(batch*W*H*C); 
+
+  /* Adam optimizer */
+  m_weight = malloc_gpu(out_channel*FC);
+  v_weight = malloc_gpu(out_channel*FC);
+  m_bias = malloc_gpu(FC);
+  v_bias = malloc_gpu(FC);
+
 #else
+
   col = new float[out_w*out_h*out_channel];
   output = new float[batch*out_w*out_h*FC];
   out_col = new float[out_w*out_h*out_channel*batch];
@@ -64,7 +93,22 @@ void Convolution::init() {
   grad_bias = new float[FC];
   im = new float[H*W*C];
   m_delta = new float[batch*W*H*C]; 
+
+  /* Adam optimizer */
+  m_weight = new float[out_channel*FC];
+  v_weight = new float[out_channel*FC];
+  m_bias = new float[FC];
+  v_bias = new float[FC];
+
 #endif
+
+  random_normal(out_channel*FC, weight);
+  random_normal(FC, bias);
+
+  memset(m_weight, 0, out_channel*FC);
+  memset(v_weight, 0, out_channel*FC);
+  memset(m_bias, 0 , FC);  
+  memset(v_bias, 0 , FC);  
 
 
 #ifdef XNOR_NET
@@ -87,24 +131,6 @@ void Convolution::init() {
     bitset_weight[i].init(out_channel);
 
 #endif
-
-  random_normal(out_channel*FC, weight);
-  random_normal(FC, bias);
-
-  
-  //Adam
-  m_weight = new float[out_channel*FC];
-  v_weight = new float[out_channel*FC];
-  m_bias = new float[FC];
-  v_bias = new float[FC];
-  for(int i = 0; i < out_channel*FC; i++) {
-    m_weight[i] = 0.0;
-    v_weight[i] = 0.0;
-  }
-  for(int i = 0; i < FC; i++) {
-    m_bias[i] = 0.0;
-    v_bias[i] = 0.0;
-  }
 
 }
 
@@ -156,159 +182,119 @@ void Convolution::binarize_input() {
 
 void Convolution::forward() {
 
+  if(xnor) {
 
-//#ifdef XNOR_NET
-if(xnor) {
+    binarize_input();
+    for(int i = 0; i < batch; i++)
+      im2col(W, H, C, FW, FH, FC, stride, pad, 
+        input + i*im_size, out_col+i*col_size);
 
-  // Clamp and mean center
-/*
-  float *tmp;
-  tmp = new float[batch*H*W];
-  for(int b = 0; b < batch; b++) {
-    for(int i = 0; i < H; i++) {
-      for(int j = 0; j < W; j++) {
-        int tidx = b*H*W+i*W+j;
+    if(!runtime) {
 
-        tmp[tidx] = 0.0;
-
-        for(int k = 0; k < C; k++) {
-          int idx = b*H*W*C + i*W*C + j*C + k;
-          tmp[tidx] += input[idx];
-        }
-
-        tmp[tidx] /= (float)C;
-      }
+      binarize_weight();
+      swap_weight();
+      gemm_cpu(TRS_N, TRS_N,
+               batch*out_h*out_w, FC, out_channel, 1.0,
+                out_col, weight, output);  
     }
-  }
+    else {
 
-  for(int b = 0; b < batch; b++) {
-    for(int i = 0; i < H; i++) {
-      for(int j = 0; j < W; j++) {
-        int tidx = b*H*W+i*W+j;
-        for(int k = 0; k < C; k++) {
-          int idx = b*H*W*C + i*W*C + j*C + k;
-          input[idx] -= tmp[tidx];
-          if(input[idx] > 1.0)
-            input[idx] = 1.0;
-          else if(input[idx] < -1.0)
-            input[idx] = -1.0;
-        }
+      for(int i = 0; i < batch*out_h*out_w; i++) {
+        bitset_outcol[i].clean();
+        bitset_outcol[i].set(out_col+i*out_channel);
       }
+
+      bin_gemm(batch*out_h*out_w, FC, out_channel, 1.0, 
+        bitset_outcol, bitset_weight, output);
     }
-  }
-  delete []tmp;
-*/
-  binarize_input();
-  for(int i = 0; i < batch; i++)
-    im2col(W, H, C, FW, FH, FC, stride, pad, 
-      input + i*im_size, out_col+i*col_size);
 
-  if(!runtime) {
+    // Do K = A (*) k
+    for(int i = 0; i < batch; i++) 
+      im2col(W, H, 1, FW, FH, 1, stride, pad, 
+        avg_filter + i*W*H, avg_col + i*out_w*out_h*FW*FH);
+    gemm_cpu(TRS_N, TRS_N, batch*out_h*out_w, 1, FW*FH, 1.0, avg_col, k_filter, k_output);
 
-    binarize_weight();
-    swap_weight();
-    gemm(batch*out_h*out_w, FC, out_channel, 1.0, out_col, weight, output);
-    //for(int i = 0; i < batch*out_h*out_w*out_channel; i++)
-    //  out_col[i] > 0 ? out_col[i] = 1 : out_col[i] = -1;
-    //bin_gemm(batch*out_h*out_w, FC, out_channel, 1.0, out_col, weight, output);
-  
+    for(int b = 0; b < batch; b++)
+      for(int i = 0; i < out_h; i++)
+        for(int j = 0; j < out_w; j++) {
+          int idx = b*out_h*out_w+i*out_w+j;
+          scalar(FC, k_output[idx],
+           output+idx*FC, output+idx*FC);
+          for(int k = 0; k < FC; k++)
+            output[idx*FC + k] *= mean[k];
+        }
   }
   else {
 
-    for(int i = 0; i < batch*out_h*out_w; i++) {
-      bitset_outcol[i].clean();
-      bitset_outcol[i].set(out_col+i*out_channel);
-    }
-
-    bin_gemm(batch*out_h*out_w, FC, out_channel, 1.0, 
-      bitset_outcol, bitset_weight, output);
-  }
-
-  // Do K = A (*) k
-  for(int i = 0; i < batch; i++) 
-    im2col(W, H, 1, FW, FH, 1, stride, pad, 
-      avg_filter + i*W*H, avg_col + i*out_w*out_h*FW*FH);
-  gemm(batch*out_h*out_w, 1, FW*FH, 1.0, avg_col, k_filter, k_output);
-
-  for(int b = 0; b < batch; b++)
-    for(int i = 0; i < out_h; i++)
-      for(int j = 0; j < out_w; j++) {
-        int idx = b*out_h*out_w+i*out_w+j;
-        scalar(FC, k_output[idx],
-         output+idx*FC, output+idx*FC);
-        for(int k = 0; k < FC; k++)
-          output[idx*FC + k] *= mean[k];
-      }
-}
-else {
-//#else
-  for(int i = 0; i < batch; i++)
-    im2col(W, H, C, FW, FH, FC, stride, pad, 
-      input + i*im_size, out_col+i*col_size);
-
+    for(int i = 0; i < batch; i++)
+      im2col(W, H, C, FW, FH, FC, stride, pad, 
+        input + i*im_size, out_col+i*col_size);
 #ifdef GPU
-  gemm_gpu(batch*out_h*out_w, FC, out_channel, 1, out_col, weight, output);
+    gemm_cpu(TRS_N, TRS_N, batch*out_h*out_w, FC, out_channel, 1, out_col, weight, output);
 #else
-  gemm(batch*out_h*out_w, FC, out_channel, 1, out_col, weight, output);
+    gemm_cpu(TRS_N, TRS_N, batch*out_h*out_w, FC, out_channel, 1, out_col, weight, output);
 #endif
-//#endif
-}
-// bias_add(batch, out_h*out_w*FC, output, bias);
+
+  }
+  // bias_add(batch, out_h*out_w*FC, output, bias);
 
   for(int b = 0; b < batch; b++)
     for(int i = 0; i < out_h; i++)
       for(int j = 0; j < out_w; j++)
         for(int k = 0; k < FC; k++)
           output[b*out_h*out_w*FC + i*out_w*FC + j*FC + k] += bias[k];
-if(xnor && !runtime) {
-//#ifdef XNOR_NET
-  swap_weight();
-//#endif
-}
+
+  if(xnor && !runtime) {
+    swap_weight();
+  }
 
 }
 
 void Convolution::backward(float *delta) {
 
-  //weight
-  memset(grad_weight, 0, out_channel*FC*sizeof(float));
-  gemm_ta(out_channel, FC, out_h*out_w*batch, 1.0, out_col, delta, grad_weight);
+#ifdef GPU
+  gemm_gpu(TRS_T, TRS_N, 
+           out_channel, FC, out_h*out_w*batch, 1.0,
+           out_col, delta, grad_weight);
+#else
+  gemm_cpu(TRS_T, TRS_N, 
+           out_channel, FC, out_h*out_w*batch, 1.0,
+           out_col, delta, grad_weight);
+#endif
 
   float *delta_col = new float[batch*out_channel*out_w*out_h];
+
   if(xnor) {
 
-   /*
-    float sum = 0.0;
-    for(int i = 0; i < out_channel; i++) {
-      for(int j = 0; j < FC; j++) {
-        int idx = i*FC+j;
-        sum += grad_weight[idx]*(weight[idx] > 0 ? 1.0 : -1.0);
-      }
-    }
-    */
     for(int i = 0; i < out_channel; i++)
       for(int j = 0; j < FC; j++) {
         int idx = i*FC+j;
         grad_weight[idx] = (grad_weight[idx]*(1.0/(float)(out_channel) 
                          + mean[j]*(fabs(weight[idx]) <= 1 ? weight[idx] : 0)))*(1.0 - 1.0/(float)C)*out_channel;
-        //grad_weight[idx] = ((weight[idx] > 0 ? 1.0 : -1.0)*1.0/(float)out_channel)*sum
-        //                 + grad_weight[idx]*mean[j]*(fabs(weight[idx]) <= 1 ? weight[idx] : 0);
-        //grad_weight[idx] = grad_weight[idx]*(1.0 - 1.0/(float)C)*out_channel;
-
       }
-    gemm_tb(batch*out_w*out_h, out_channel, FC, 1.0, delta, binary_weight, delta_col);
-    //gemm_tb(batch*out_w*out_h, out_channel, FC, 1.0, delta, weight, delta_col);
+
+    gemm_cpu(TRS_N, TRS_T,
+           batch*out_w*out_h, out_channel, FC, 1.0,
+           delta, weight, delta_col);
 
   }
   else {
-    gemm_tb(batch*out_w*out_h, out_channel, FC, 1.0, delta, weight, delta_col);
 
+#ifdef GPU
+    gemm_gpu(TRS_N, TRS_T,
+           batch*out_w*out_h, out_channel, FC, 1.0,
+           delta, weight, delta_col);
+#else
+    gemm_cpu(TRS_N, TRS_T,
+           batch*out_w*out_h, out_channel, FC, 1.0,
+           delta, weight, delta_col);
+#endif
+    
   }
+
   //bias
   memset(grad_bias, 0, FC*sizeof(float));
   row_sum(batch*out_w*out_h, FC, delta, grad_bias);
-
-
 
 
   for(int i = 0; i < batch; i++)

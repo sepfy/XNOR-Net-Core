@@ -54,11 +54,11 @@ void Connected::init() {
 
 void Connected::forward() {  
 
-#ifdef GPU
-  gemm_gpu(batch, M, N, 1, input, weight, output);
-#else
+//#ifdef GPU
+//  gemm_gpu(TRS_N, TRS_N, batch, M, N, 1, input, weight, output);
+//#else
   gemm(batch, M, N, 1, input, weight, output);
-#endif
+//#endif
   bias_add(batch, M, output, bias);
 }
 

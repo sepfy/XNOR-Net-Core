@@ -11,6 +11,20 @@ using namespace std;
 /*
   C = MxN, A = MxP, B = PxN
 */
+
+void gemm_cpu(TRS TRS_A, TRS TRS_B,
+           int M, int N, int P,
+  float alpha, float *A, float *B, float *C) {
+
+  if(!TRS_A && !TRS_B)
+    gemm(M, N, P, alpha, A, B, C);
+  else if(TRS_A && !TRS_B)
+    gemm_ta(M, N, P, alpha, A, B, C);
+  else if(!TRS_A && TRS_B)
+    gemm_tb(M, N, P, alpha, A, B, C);
+
+}
+
 void gemm(int M, int N, int P,
   float alpha, float *A, float *B, float *C) {
 
@@ -32,6 +46,7 @@ void gemm(int M, int N, int P,
 void gemm_ta(int M, int N, int P,
   float alpha, float *A, float *B, float *C) {
 
+  memset(C, 0, M*N*sizeof(float));
 #if 1
   // I am not sure why this procedure is faster than the following procedure.
   // If anyone konws, please tell me! Thanks... 
@@ -222,17 +237,27 @@ void gemm_beta(int M, int N, int P,
 
 
 #ifdef GPU
-void gemm_gpu(int M, int N, int P,
+void gemm_gpu(TRS TRS_A, TRS TRS_B,
+              int M, int N, int P,
   float alpha, float *A, float *B, float *C) {
 
 
   float beta = 0.0;
-  //cublasSgemm(gpu_handle(),
-  //            CUBLAS_OP_N, CUBLAS_OP_N,
-  //	      M, N, P, &alpha, A, M, B, P, &beta, C, M);
-  cublasSgemm(gpu_handle(),
+
+
+  if(!TRS_A && !TRS_B)
+    cublasSgemm(gpu_handle(),
               CUBLAS_OP_N, CUBLAS_OP_N,
 	      N, M, P, &alpha, B, N, A, P, &beta, C, N);
+  else if(TRS_A && !TRS_B)
+    cublasSgemm(gpu_handle(),
+              CUBLAS_OP_N, CUBLAS_OP_T,
+	      N, M, P, &alpha, B, N, A, M, &beta, C, N);
+
+  else if(!TRS_A && TRS_B)
+    cublasSgemm(gpu_handle(),
+              CUBLAS_OP_T, CUBLAS_OP_N,
+	      N, M, P, &alpha, B, P, A, P, &beta, C, N);
 
   cudaDeviceSynchronize();
 }

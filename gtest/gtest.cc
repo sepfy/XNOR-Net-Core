@@ -1,10 +1,7 @@
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
 
-#include "utils.h"
-#include "gemm.h"
 #include "layers.h"
-#include "blas.h"
 
 #include "gemm_gtest.h"
 #include "util_gtest.h"
