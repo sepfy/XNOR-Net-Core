@@ -22,6 +22,11 @@ void Connected::init() {
   grad_weight = malloc_gpu(N*M);
   grad_bias = malloc_gpu(M);
   m_delta = malloc_gpu(batch*M);
+  /* Adam optimizer */
+  m_weight = malloc_gpu(N*M);
+  v_weight = malloc_gpu(N*M);
+  m_bias = malloc_gpu(M);
+  v_bias = malloc_gpu(M);
 #else
   weight = new float[N*M];
   bias   = new float[M];
@@ -29,52 +34,53 @@ void Connected::init() {
   grad_weight = new float[N*M];
   grad_bias = new float[M];
   m_delta = new float[batch*N];
+  /* Adam optimizer */
+  m_weight = new float[N*M];
+  v_weight = new float[N*M];
+  m_bias = new float[M];
+  v_bias = new float[M];
 #endif
 
   random_normal(N*M, weight);
   random_normal(M, bias);
 
-  //Adam
-  m_weight = new float[N*M];
-  v_weight = new float[N*M];
-  m_bias = new float[M];
-  v_bias = new float[M];
-  for(int i = 0; i < N*M; i++) {
-    m_weight[i] = 0.0;
-    v_weight[i] = 0.0;
-  }
-  for(int i = 0; i < M; i++) {
-    m_bias[i] = 0.0;
-    v_bias[i] = 0.0;
-  }
-
+  memset(m_weight, 0, N*M*sizeof(float));
+  memset(v_weight, 0, N*M*sizeof(float));
+  memset(m_bias, 0, M*sizeof(float));
+  memset(v_bias, 0, M*sizeof(float));
 
 }
 
+void Connected::bias_add() {
+
+  for(int i = 0; i < batch; i++)
+    for(int j  = 0; j < M; j++)
+      output[i*M+j] += bias[j];
+}
 
 void Connected::forward() {  
 
 //#ifdef GPU
 //  gemm_gpu(TRS_N, TRS_N, batch, M, N, 1, input, weight, output);
 //#else
-  gemm(batch, M, N, 1, input, weight, output);
+  gemm_cpu(TRS_N, TRS_N, batch, M, N, 1, input, weight, output);
 //#endif
-  bias_add(batch, M, output, bias);
+
+  bias_add();
 }
 
 void Connected::backward(float *delta) {
 
-  memset(grad_weight, 0, N*M*sizeof(float));
-  memset(m_delta, 0, batch*N*sizeof(float));
+#ifdef GPU
+  gemm_cpu(TRS_N, TRS_T, batch, N, M, 1.0, delta, weight, m_delta);
+  gemm_cpu(TRS_T, TRS_N, N, M, batch, 1.0, input, delta, grad_weight);
+#else
+  gemm_cpu(TRS_N, TRS_T, batch, N, M, 1.0, delta, weight, m_delta);
+  gemm_cpu(TRS_T, TRS_N, N, M, batch, 1.0, input, delta, grad_weight);
+#endif
 
-  gemm_tb(batch, N, M, 1.0, delta, weight, m_delta);
-  gemm_ta(N, M, batch, 1.0, input, delta, grad_weight);
   row_sum(batch, M, delta, grad_bias);
 
-  //float *tmp = new float[N*M];
-  //scalar(N*M, 0.01/(float)(N*M), weight, tmp); 
-  //add(N, M, grad_weight, tmp, grad_weight);
-  //delete[] tmp;
 }
 
 void Connected::update(float lr) {

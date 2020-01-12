@@ -95,8 +95,8 @@ int main( int argc, char** argv ) {
 
   if(strcmp(argv[1], "train") == 0) {
 
-    MnistXnorNet(&network);
-    //MnistNet(&network);
+    //MnistXnorNet(&network);
+    MnistNet(&network);
     network.initial(BATCH, LEARNING_RATE);
 
     float *train_data = read_train_data(argv[3]);

@@ -55,6 +55,7 @@ class Connected : public Layer {
     ~Connected();
     void init(); 
     void forward();
+    void bias_add();
     void backward(float *delta);
     void update(float lr);
     void save(fstream *file);
@@ -127,6 +128,12 @@ class Convolution : public Layer {
 	int _FW, int _FH, int _FC, int _stride, bool _pad);
     ~Convolution();
     void init();
+    
+    void bias_add();
+    void forward_xnor();
+    void forward_full();
+    float* backward_xnor(float *delta);
+    float* backward_full(float *delta);
     void forward();
     void backward(float *delta);
     void update(float lr);

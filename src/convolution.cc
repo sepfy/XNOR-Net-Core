@@ -105,11 +105,10 @@ void Convolution::init() {
   random_normal(out_channel*FC, weight);
   random_normal(FC, bias);
 
-  memset(m_weight, 0, out_channel*FC);
-  memset(v_weight, 0, out_channel*FC);
-  memset(m_bias, 0 , FC);  
-  memset(v_bias, 0 , FC);  
-
+  memset(m_weight, 0, out_channel*FC*sizeof(float));
+  memset(v_weight, 0, out_channel*FC*sizeof(float));
+  memset(m_bias, 0 , FC*sizeof(float));  
+  memset(v_bias, 0 , FC*sizeof(float));  
 
 #ifdef XNOR_NET
   binary_weight = new float[out_channel*FC];
@@ -180,74 +179,81 @@ void Convolution::binarize_input() {
 
 #endif
 
-void Convolution::forward() {
+void Convolution::forward_xnor() {
+  binarize_input();
+  for(int i = 0; i < batch; i++)
+    im2col(W, H, C, FW, FH, FC, stride, pad, 
+      input + i*im_size, out_col+i*col_size);
 
-  if(xnor) {
+  if(!runtime) {
 
-    binarize_input();
-    for(int i = 0; i < batch; i++)
-      im2col(W, H, C, FW, FH, FC, stride, pad, 
-        input + i*im_size, out_col+i*col_size);
-
-    if(!runtime) {
-
-      binarize_weight();
-      swap_weight();
-      gemm_cpu(TRS_N, TRS_N,
-               batch*out_h*out_w, FC, out_channel, 1.0,
-                out_col, weight, output);  
-    }
-    else {
-
-      for(int i = 0; i < batch*out_h*out_w; i++) {
-        bitset_outcol[i].clean();
-        bitset_outcol[i].set(out_col+i*out_channel);
-      }
-
-      bin_gemm(batch*out_h*out_w, FC, out_channel, 1.0, 
-        bitset_outcol, bitset_weight, output);
-    }
-
-    // Do K = A (*) k
-    for(int i = 0; i < batch; i++) 
-      im2col(W, H, 1, FW, FH, 1, stride, pad, 
-        avg_filter + i*W*H, avg_col + i*out_w*out_h*FW*FH);
-    gemm_cpu(TRS_N, TRS_N, batch*out_h*out_w, 1, FW*FH, 1.0, avg_col, k_filter, k_output);
-
-    for(int b = 0; b < batch; b++)
-      for(int i = 0; i < out_h; i++)
-        for(int j = 0; j < out_w; j++) {
-          int idx = b*out_h*out_w+i*out_w+j;
-          scalar(FC, k_output[idx],
-           output+idx*FC, output+idx*FC);
-          for(int k = 0; k < FC; k++)
-            output[idx*FC + k] *= mean[k];
-        }
+    binarize_weight();
+    swap_weight();
+    gemm_cpu(TRS_N, TRS_N,
+             batch*out_h*out_w, FC, out_channel, 1.0,
+              out_col, weight, output);  
   }
   else {
 
-    for(int i = 0; i < batch; i++)
-      im2col(W, H, C, FW, FH, FC, stride, pad, 
-        input + i*im_size, out_col+i*col_size);
+    for(int i = 0; i < batch*out_h*out_w; i++) {
+      bitset_outcol[i].clean();
+      bitset_outcol[i].set(out_col+i*out_channel);
+    }
+
+    bin_gemm(batch*out_h*out_w, FC, out_channel, 1.0, 
+      bitset_outcol, bitset_weight, output);
+  }
+
+  // Do K = A (*) k
+  for(int i = 0; i < batch; i++) 
+    im2col(W, H, 1, FW, FH, 1, stride, pad, 
+      avg_filter + i*W*H, avg_col + i*out_w*out_h*FW*FH);
+  gemm_cpu(TRS_N, TRS_N, batch*out_h*out_w, 1, FW*FH, 1.0, avg_col, k_filter, k_output);
+
+  for(int b = 0; b < batch; b++)
+    for(int i = 0; i < out_h; i++)
+      for(int j = 0; j < out_w; j++) {
+        int idx = b*out_h*out_w+i*out_w+j;
+        scalar(FC, k_output[idx],
+         output+idx*FC, output+idx*FC);
+        for(int k = 0; k < FC; k++)
+          output[idx*FC + k] *= mean[k];
+      }
+
+  if(xnor && !runtime) {
+    swap_weight();
+  }
+}
+
+void Convolution::forward_full() {
+  for(int i = 0; i < batch; i++)
+    im2col(W, H, C, FW, FH, FC, stride, pad, 
+      input + i*im_size, out_col+i*col_size);
 #ifdef GPU
-    gemm_cpu(TRS_N, TRS_N, batch*out_h*out_w, FC, out_channel, 1, out_col, weight, output);
+  gemm_cpu(TRS_N, TRS_N, batch*out_h*out_w, FC, out_channel, 1, out_col, weight, output);
 #else
-    gemm_cpu(TRS_N, TRS_N, batch*out_h*out_w, FC, out_channel, 1, out_col, weight, output);
+  gemm_cpu(TRS_N, TRS_N, batch*out_h*out_w, FC, out_channel, 1, out_col, weight, output);
 #endif
 
-  }
-  // bias_add(batch, out_h*out_w*FC, output, bias);
 
+}
+
+void Convolution::forward() {
+
+  if(xnor)
+    forward_xnor();
+  else 
+    forward_full();
+
+  bias_add();
+}
+
+void Convolution::bias_add() {
   for(int b = 0; b < batch; b++)
     for(int i = 0; i < out_h; i++)
       for(int j = 0; j < out_w; j++)
         for(int k = 0; k < FC; k++)
           output[b*out_h*out_w*FC + i*out_w*FC + j*FC + k] += bias[k];
-
-  if(xnor && !runtime) {
-    swap_weight();
-  }
-
 }
 
 void Convolution::backward(float *delta) {

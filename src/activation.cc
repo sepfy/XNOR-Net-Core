@@ -39,8 +39,15 @@ SoftmaxWithCrossEntropy::SoftmaxWithCrossEntropy(int _n) {
 }
 
 void SoftmaxWithCrossEntropy::init() {
+
+//#ifdef GPU
+//  output = malloc_gpu(batch*N);
+  m_delta = malloc_gpu(batch*N);
+//#else
   output = new float[batch*N];
   m_delta = new float[batch*N];
+//#endif
+
 }
 
 SoftmaxWithCrossEntropy::~SoftmaxWithCrossEntropy() {
