@@ -55,7 +55,7 @@ void Shortcut::backward(float *delta) {
 
 }
 
-void Shortcut::update(float lr) {
+void Shortcut::update(update_args a) {
 }
 
 void Shortcut::save(fstream *file) {

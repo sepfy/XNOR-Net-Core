@@ -9,6 +9,7 @@ class Network {
   public:
     vector<Layer*> layers;
     float lr;
+    update_args a;
     Network();
     void add(Layer* layer);
     void initial(int batch, float _lr);

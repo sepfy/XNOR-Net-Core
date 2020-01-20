@@ -21,8 +21,8 @@ void Connected::init() {
   output = malloc_gpu(batch*M);
   grad_weight = malloc_gpu(N*M);
   grad_bias = malloc_gpu(M);
-  m_delta = malloc_gpu(batch*M);
-  /* Adam optimizer */
+  m_delta = malloc_gpu(batch*N);
+  // Adam optimizer
   m_weight = malloc_gpu(N*M);
   v_weight = malloc_gpu(N*M);
   m_bias = malloc_gpu(M);
@@ -34,7 +34,7 @@ void Connected::init() {
   grad_weight = new float[N*M];
   grad_bias = new float[M];
   m_delta = new float[batch*N];
-  /* Adam optimizer */
+  // Adam optimizer 
   m_weight = new float[N*M];
   v_weight = new float[N*M];
   m_bias = new float[M];
@@ -60,11 +60,11 @@ void Connected::bias_add() {
 
 void Connected::forward() {  
 
-//#ifdef GPU
-//  gemm_gpu(TRS_N, TRS_N, batch, M, N, 1, input, weight, output);
-//#else
+#ifdef GPU
+  gemm_gpu(TRS_N, TRS_N, batch, M, N, 1, input, weight, output);
+#else
   gemm_cpu(TRS_N, TRS_N, batch, M, N, 1, input, weight, output);
-//#endif
+#endif
 
   bias_add();
 }
@@ -72,8 +72,8 @@ void Connected::forward() {
 void Connected::backward(float *delta) {
 
 #ifdef GPU
-  gemm_cpu(TRS_N, TRS_T, batch, N, M, 1.0, delta, weight, m_delta);
-  gemm_cpu(TRS_T, TRS_N, N, M, batch, 1.0, input, delta, grad_weight);
+  gemm_gpu(TRS_N, TRS_T, batch, N, M, 1.0, delta, weight, m_delta);
+  gemm_gpu(TRS_T, TRS_N, N, M, batch, 1.0, input, delta, grad_weight);
 #else
   gemm_cpu(TRS_N, TRS_T, batch, N, M, 1.0, delta, weight, m_delta);
   gemm_cpu(TRS_T, TRS_N, N, M, batch, 1.0, input, delta, grad_weight);
@@ -83,30 +83,14 @@ void Connected::backward(float *delta) {
 
 }
 
-void Connected::update(float lr) {
+void Connected::update(update_args a) {
 
-  // Adam optimizer
-#if 1
-  iter++;
-  float m_lr = lr * pow(1.0 - pow(beta2, iter), 0.5) / (1.0 - pow(beta1, iter));
-  for(int i = 0; i < N*M; i++) {
-    m_weight[i] = (1 - beta1)*grad_weight[i] + beta1*m_weight[i];
-    v_weight[i] = (1 - beta2)*pow(grad_weight[i], 2.0) + beta2*v_weight[i];
-  }
-
-  for(int i = 0; i < N*M; i++) {
-    weight[i] -= m_lr * m_weight[i]/(pow(v_weight[i], 0.5) + epsilon);
-  }
-
-
-  for(int i = 0; i < M; i++) {
-    m_bias[i] = (1 - beta1)*grad_bias[i] + beta1*m_bias[i];
-    v_bias[i] = (1 - beta2)*pow(grad_bias[i], 2.0) + beta2*v_bias[i];
-  }
-
-  for(int i = 0; i < M; i++) {
-    bias[i] -= m_lr * m_bias[i]/(pow(v_bias[i], 0.5) + epsilon);
-  }
+#if GPU
+  adam_gpu(N*M, weight, grad_weight, m_weight, v_weight, a);
+  adam_gpu(M, bias, grad_bias, m_bias, v_bias, a);
+#else
+  adam_cpu(N*M, weight, grad_weight, m_weight, v_weight, a);
+  adam_cpu(M, bias, grad_bias, m_bias, v_bias, a);
 #endif  
 
 #if 0

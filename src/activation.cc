@@ -25,7 +25,7 @@ void Sigmoid::backward(float *delta) {
       m_delta[i*N+j] = delta[i*N+j]*(1.0 - output[i*N+j])*output[i*N+j];
 }
 
-void Sigmoid::update(float lr) {
+void Sigmoid::update(update_args a) {
 
 }
 
@@ -40,13 +40,13 @@ SoftmaxWithCrossEntropy::SoftmaxWithCrossEntropy(int _n) {
 
 void SoftmaxWithCrossEntropy::init() {
 
-//#ifdef GPU
-//  output = malloc_gpu(batch*N);
+#ifdef GPU
+  output = malloc_gpu(batch*N);
   m_delta = malloc_gpu(batch*N);
-//#else
+#else
   output = new float[batch*N];
   m_delta = new float[batch*N];
-//#endif
+#endif
 
 }
 
@@ -56,6 +56,14 @@ SoftmaxWithCrossEntropy::~SoftmaxWithCrossEntropy() {
 
 void SoftmaxWithCrossEntropy::forward() {
 
+
+/*
+	  float check = 0.0;
+  for(int j = 0; j < N; j++)
+    check += input[j];
+  cout << check << endl;
+  getchar();
+*/
   for(int i = 0; i < batch; i++) {
     float tmp = 0;
     float max = 0;
@@ -70,6 +78,8 @@ void SoftmaxWithCrossEntropy::forward() {
     for(int j = 0; j < N; j++) 
       output[i*N+j] /= tmp;
   }
+
+
 }
 
 void SoftmaxWithCrossEntropy::backward(float *delta) {
@@ -77,7 +87,7 @@ void SoftmaxWithCrossEntropy::backward(float *delta) {
   mat_scalar(batch, N, m_delta, 1.0/(float)batch, m_delta);
 }
 
-void SoftmaxWithCrossEntropy::update(float lr) {
+void SoftmaxWithCrossEntropy::update(update_args a) {
 }
 
 void SoftmaxWithCrossEntropy::save(fstream *file) {
@@ -122,9 +132,23 @@ void Relu::init() {
 
 void Relu::forward() {
 
+/*	
+  float check = 0.0;
+  for(int j = 0; j < N; j++)
+    check += input[j];
+  cout << "Relu: " <<  check << endl;
+  getchar();
+*/
   for(int i = 0; i < batch; i++) 
     for(int j = 0; j < N; j++) 
       output[i*N+j] = (input[i*N+j] >= 0 ? input[i*N+j] : 0);
+/*
+ check = 0.0;
+  for(int j = 0; j < N*batch; j++)
+    check += output[j];
+  cout << "Relu out: " <<  check << endl;
+  getchar();
+*/
 }
 
 void Relu::backward(float *delta) {
@@ -134,7 +158,7 @@ void Relu::backward(float *delta) {
       m_delta[i*N+j] = (cut[i*N+j]+delta[i*N+j])*(input[i*N+j] >= 0);
 }
 
-void Relu::update(float lr) {
+void Relu::update(update_args a) {
 }
 
 void Relu::save(fstream *file) {

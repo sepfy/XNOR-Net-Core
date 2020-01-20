@@ -8,7 +8,7 @@
 #include <string.h>
 #include <fstream>
 #include "binary.h"
-
+#include "optimizer.h"
 #ifdef GPU
 #include "gpu.h"
 #endif
@@ -25,7 +25,7 @@ class Layer {
     float *m_delta;
     virtual void forward() = 0;
     virtual void backward(float* delta) = 0;
-    virtual void update(float lr) = 0;
+    virtual void update(update_args a) = 0;
     virtual void init() = 0;
     virtual void save(fstream *file) = 0;
 };
@@ -57,7 +57,7 @@ class Connected : public Layer {
     void forward();
     void bias_add();
     void backward(float *delta);
-    void update(float lr);
+    void update(update_args a);
     void save(fstream *file);
     static Connected* load(char *buf);
 
@@ -72,7 +72,7 @@ class Sigmoid: public Layer {
     void init();
     void forward();
     void backward(float *delta);
-    void update(float lr);
+    void update(update_args a);
     void save(fstream *file);
 };
 
@@ -86,7 +86,7 @@ class SoftmaxWithCrossEntropy : public Layer {
     void init();
     void forward();
     void backward(float *delta);
-    void update(float lr);
+    void update(update_args a);
     void save(fstream *file);
     static SoftmaxWithCrossEntropy* load(char *buf);
 
@@ -129,6 +129,7 @@ class Convolution : public Layer {
     ~Convolution();
     void init();
     
+    void bias_add_gpu();
     void bias_add();
     void forward_xnor();
     void forward_full();
@@ -136,7 +137,7 @@ class Convolution : public Layer {
     float* backward_full(float *delta);
     void forward();
     void backward(float *delta);
-    void update(float lr);
+    void update(update_args a);
     void save(fstream *file);
     static Convolution* load(char *buf);
 
@@ -174,7 +175,7 @@ class Pooling : public Layer {
     void init();
     void forward();
     void backward(float *delta);
-    void update(float lr);
+    void update(update_args a);
     void save(fstream *file);
     static Pooling* load(char *buf);
 };
@@ -189,7 +190,7 @@ class Relu : public Layer {
     void init();
     void forward();
     void backward(float *delta);
-    void update(float lr);
+    void update(update_args a);
     void save(fstream *file);
     static Relu* load(char *buf);
 };
@@ -216,7 +217,7 @@ class Batchnorm : public Layer {
     void init();
     void forward();
     void backward(float *delta);
-    void update(float lr);
+    void update(update_args a);
     void save(fstream *file);
     static Batchnorm* load(char *buf);
 };
@@ -231,7 +232,7 @@ class Dropout : public Layer {
     void init();
     void forward();
     void backward(float *delta);
-    void update(float lr);
+    void update(update_args a);
     void save(fstream *file);
     static Dropout* load(char *buf);
 };
@@ -248,7 +249,7 @@ class Shortcut : public Layer {
     void init();
     void forward();
     void backward(float *delta);
-    void update(float lr);
+    void update(update_args a);
     void save(fstream *file);
     static Shortcut* load(char *buf);
 };

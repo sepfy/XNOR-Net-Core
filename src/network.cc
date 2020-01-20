@@ -9,7 +9,7 @@ void Network::add(Layer* layer) {
 }
 
 void Network::initial(int batch, float _lr) {
-  lr = _lr;
+  a.lr = _lr;
   for(int i = 0; i < layers.size(); i++) {
     layers[i]->batch = batch;
     layers[i]->init();
@@ -25,7 +25,6 @@ void Network::initial(int batch, float _lr) {
 float* Network::inference(float *input) {
   layers[0]->input = input;
   for(int i = 0; i < layers.size(); i++) {
-
     //ms_t start = getms();   
     layers[i]->forward();
     //cout << "layer: " << i << ", time = " << (getms()-start) << endl;
@@ -36,16 +35,18 @@ float* Network::inference(float *input) {
 void Network::train(float *Y) {
 
   float *delta = Y;
-
+ 
   for(int i = layers.size() - 1; i >= 0; i--) {
+    //ms_t start = getms();   
     layers[i]->backward(delta);
     delta = layers[i]->m_delta;
+    //cout << "layer: " << i << ", time = " << (getms()-start) << endl;
   }
 
+  a.iter++;
   for(int i = layers.size() - 1; i >= 0; i--) {
-    layers[i]->update(lr);
+    layers[i]->update(a);
   }
-
 } 
 
 void Network::deploy() {

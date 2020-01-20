@@ -40,7 +40,11 @@ float* read_images(char *filename) {
  
   M = rows*cols;
 
+#ifdef GPU
+  float *X = malloc_gpu(N*M);
+#else
   float *X = new float[N*M];
+#endif
 //  memset(X, 0, N*M*sizeof(float));
 
   uint8_t value;
@@ -92,7 +96,11 @@ float* read_labels(char *filename) {
   N = bswap_32(buff);
   printf("Number of images = %d\n", N);
   
+#ifdef GPU
+  float *Y = malloc_gpu(N*10); 
+#else
   float *Y = new float[N*10]; 
+#endif
   uint8_t value;
 
   for(int i = 0; i < N; i++) {

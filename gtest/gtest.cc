@@ -3,11 +3,12 @@
 
 #include "layers.h"
 
-#include "gemm_gtest.h"
-#include "util_gtest.h"
-#include "conv_gtest.h"
-#include "blas_gtest.h"
-#include "pooling_gtest.h"
+#include "cpu/gemm_gtest.h"
+#include "cpu/util_gtest.h"
+#include "cpu/conv_gtest.h"
+#include "cpu/blas_gtest.h"
+#include "cpu/pooling_gtest.h"
+
 using ::testing::ElementsAreArray;
 
 int main(int argc, char **argv) {

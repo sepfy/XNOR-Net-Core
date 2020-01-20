@@ -46,7 +46,7 @@ void Dropout::backward(float *delta) {
       //m_delta[i*N+j] = delta[i*N+j]*(input[i*N+j] >= 0);
 }
 
-void Dropout::update(float lr) {
+void Dropout::update(update_args a) {
 }
 
 void Dropout::save(fstream *file) {

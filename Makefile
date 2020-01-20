@@ -1,12 +1,15 @@
 USE_OPENMP = 0
 USE_GPU = 0
 
+NVCC = /usr/local/cuda/bin/nvcc
+
 OUTDIR = objs
 SRCDIR = src
 SAMPLE = samples
 
 SRC = $(wildcard $(SRCDIR)/*.cc)
 OBJS = $(addsuffix .o, $(basename $(patsubst $(SRCDIR)/%,$(OUTDIR)/%,$(SRC))))
+
 
 CXXFLAGS = -O3 -std=c++11 -Wno-unused-result
 INCLUDE = -I ./include/
@@ -23,6 +26,8 @@ ifeq ($(USE_GPU), 1)
   MACRO += -D GPU
   LIBS += -L /usr/local/cuda/lib64 -lcublas -lcudart
   INCLUDE += -I /usr/local/cuda/include/
+  CUDA_SRC = $(wildcard $(SRCDIR)/*.cu)
+  OBJS += $(addsuffix .o, $(basename $(patsubst $(SRCDIR)/%,$(OUTDIR)/%,$(CUDA_SRC))))
 endif
 
 all: $(OUTDIR) $(LIB) samples
@@ -51,6 +56,9 @@ $(LIB): $(OBJS)
 
 $(OUTDIR)/%.o: $(SRCDIR)/%.cc 
 	$(CXX) $(CXXFLAGS) $(MACRO) $(INCLUDE) $(LIBS) -c $< -o $@ 
+
+$(OUTDIR)/%.o: $(SRCDIR)/%.cu 
+	$(NVCC) $(INCLUDE) -c $< -o $@ 
 
 $(OUTDIR):
 	mkdir -p $(OUTDIR)

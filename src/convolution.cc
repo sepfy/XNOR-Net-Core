@@ -76,7 +76,7 @@ void Convolution::init() {
   im = malloc_gpu(H*W*C);
   m_delta = malloc_gpu(batch*W*H*C); 
 
-  /* Adam optimizer */
+  // Adam optimizer
   m_weight = malloc_gpu(out_channel*FC);
   v_weight = malloc_gpu(out_channel*FC);
   m_bias = malloc_gpu(FC);
@@ -226,12 +226,18 @@ void Convolution::forward_xnor() {
 }
 
 void Convolution::forward_full() {
+
+#ifdef GPU
+
+  for(int i = 0; i < batch; i++)
+    im2col_gpu(W, H, C, FW, FH, FC, stride, pad, 
+      input + i*im_size, out_col+i*col_size);
+
+  gemm_gpu(TRS_N, TRS_N, batch*out_h*out_w, FC, out_channel, 1, out_col, weight, output);
+#else
   for(int i = 0; i < batch; i++)
     im2col(W, H, C, FW, FH, FC, stride, pad, 
       input + i*im_size, out_col+i*col_size);
-#ifdef GPU
-  gemm_cpu(TRS_N, TRS_N, batch*out_h*out_w, FC, out_channel, 1, out_col, weight, output);
-#else
   gemm_cpu(TRS_N, TRS_N, batch*out_h*out_w, FC, out_channel, 1, out_col, weight, output);
 #endif
 
@@ -245,15 +251,19 @@ void Convolution::forward() {
   else 
     forward_full();
 
+#ifdef GPU
+  bias_add_gpu();
+#else
   bias_add();
+#endif
+
 }
 
 void Convolution::bias_add() {
   for(int b = 0; b < batch; b++)
-    for(int i = 0; i < out_h; i++)
-      for(int j = 0; j < out_w; j++)
-        for(int k = 0; k < FC; k++)
-          output[b*out_h*out_w*FC + i*out_w*FC + j*FC + k] += bias[k];
+    for(int i = 0; i < out_w*out_h; i++)
+        for(int j = 0; j < FC; j++)
+          output[b*out_w*out_h*FC + i*FC + j] += bias[j];
 }
 
 void Convolution::backward(float *delta) {
@@ -262,13 +272,14 @@ void Convolution::backward(float *delta) {
   gemm_gpu(TRS_T, TRS_N, 
            out_channel, FC, out_h*out_w*batch, 1.0,
            out_col, delta, grad_weight);
+  float *delta_col = malloc_gpu(batch*out_channel*out_w*out_h);
 #else
   gemm_cpu(TRS_T, TRS_N, 
            out_channel, FC, out_h*out_w*batch, 1.0,
            out_col, delta, grad_weight);
+  float *delta_col = new float[batch*out_channel*out_w*out_h];
 #endif
 
-  float *delta_col = new float[batch*out_channel*out_w*out_h];
 
   if(xnor) {
 
@@ -303,39 +314,30 @@ void Convolution::backward(float *delta) {
   row_sum(batch*out_w*out_h, FC, delta, grad_bias);
 
 
+
+#ifdef GPU
+  for(int i = 0; i < batch; i++)
+    col2im_gpu(W,H, C, FW, FH, FC, stride, pad, 
+      m_delta + i*im_size, delta_col + i*col_size);
+  cudaFree(delta_col);
+#else
   for(int i = 0; i < batch; i++)
     col2im(W,H, C, FW, FH, FC, stride, pad, 
-      m_delta + i*im_size, delta_col + i*col_size); 
-
+      m_delta + i*im_size, delta_col + i*col_size);
   delete[] delta_col;
+#endif
 
 }
 
-void Convolution::update(float lr) {
+void Convolution::update(update_args a) {
 
-  //Adam optimizer
-
-#if 1
-  iter++;
-  float m_lr = lr * pow(1.0 - pow(beta2, iter), 0.5) / (1.0 - pow(beta1, iter));
-  for(int i = 0; i < out_channel*FC; i++) {
-    m_weight[i] = (1 - beta1)*grad_weight[i] + beta1*m_weight[i];
-    v_weight[i] = (1 - beta2)*pow(grad_weight[i], 2.0) + beta2*v_weight[i];
-  }
-
-  for(int i = 0; i < out_channel*FC; i++) {
-    weight[i] -= m_lr * m_weight[i]/(pow(v_weight[i], 0.5) + epsilon);
-  }  
-
-  for(int i = 0; i < FC; i++) {
-    m_bias[i] = (1 - beta1)*grad_bias[i] + beta1*m_bias[i];
-    v_bias[i] = (1 - beta2)*pow(grad_bias[i], 2.0) + beta2*v_bias[i];
-  }
-
-  for(int i = 0; i < FC; i++) {
-    bias[i] -= m_lr * m_bias[i]/(pow(v_bias[i], 0.5) + epsilon);
-  }
-#endif  
+#ifdef GPU
+  adam_gpu(out_channel*FC, weight, grad_weight, m_weight, v_weight, a);
+  adam_gpu(FC, bias, grad_bias, m_bias, v_bias, a);
+#else
+  adam_cpu(out_channel*FC, weight, grad_weight, m_weight, v_weight, a);
+  adam_cpu(FC, bias, grad_bias, m_bias, v_bias, a);
+#endif
 
 
 #if 0

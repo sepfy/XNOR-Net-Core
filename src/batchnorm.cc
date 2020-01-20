@@ -163,20 +163,19 @@ void Batchnorm::backward(float *delta) {
   }
 }
 
-void Batchnorm::update(float lr) {
+void Batchnorm::update(update_args a) {
 
-  iter++;
-  float m_lr = lr * pow(1.0 - pow(beta2, iter), 0.5) / (1.0 - pow(beta1, iter));
+  float m_lr = a.lr * pow(1.0 - pow(a.beta2, a.iter), 0.5) / (1.0 - pow(a.beta1, a.iter));
   for(int i = 0; i < N; i++) {
-    m_gamma[i] = (1 - beta1)*dgamma[i] + beta1*m_gamma[i];
-    v_gamma[i] = (1 - beta2)*pow(dgamma[i], 2.0) + beta2*v_gamma[i];
-    m_beta[i] = (1 - beta1)*dbeta[i] + beta1*m_beta[i];
-    v_beta[i] = (1 - beta2)*pow(dbeta[i], 2.0) + beta2*v_beta[i];
+    m_gamma[i] = (1 - a.beta1)*dgamma[i] + a.beta1*m_gamma[i];
+    v_gamma[i] = (1 - a.beta2)*pow(dgamma[i], 2.0) + a.beta2*v_gamma[i];
+    m_beta[i] = (1 - a.beta1)*dbeta[i] + a.beta1*m_beta[i];
+    v_beta[i] = (1 - a.beta2)*pow(dbeta[i], 2.0) + a.beta2*v_beta[i];
   }
 
   for(int i = 0; i < N; i++) {
-    gamma[i] -= m_lr * m_gamma[i]/(pow(v_gamma[i], 0.5) + epsilon);
-    beta[i] -= m_lr * m_beta[i]/(pow(v_beta[i], 0.5) + epsilon);
+    gamma[i] -= m_lr * m_gamma[i]/(pow(v_gamma[i], 0.5) + a.epsilon);
+    beta[i] -= m_lr * m_beta[i]/(pow(v_beta[i], 0.5) + a.epsilon);
   }
 
 #if 0
