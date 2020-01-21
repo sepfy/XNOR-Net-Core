@@ -132,23 +132,16 @@ void Relu::init() {
 
 void Relu::forward() {
 
-/*	
-  float check = 0.0;
-  for(int j = 0; j < N; j++)
-    check += input[j];
-  cout << "Relu: " <<  check << endl;
-  getchar();
+/*
+#ifdef GPU
+  forward_gpu();
+#else
 */
   for(int i = 0; i < batch; i++) 
     for(int j = 0; j < N; j++) 
       output[i*N+j] = (input[i*N+j] >= 0 ? input[i*N+j] : 0);
-/*
- check = 0.0;
-  for(int j = 0; j < N*batch; j++)
-    check += output[j];
-  cout << "Relu out: " <<  check << endl;
-  getchar();
-*/
+//#endif
+
 }
 
 void Relu::backward(float *delta) {

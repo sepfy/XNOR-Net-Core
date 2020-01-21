@@ -10,6 +10,32 @@ Batchnorm::~Batchnorm() {
 
 void Batchnorm::init() {
 
+
+#ifdef GPU
+  mean = malloc_gpu(N);
+  var  = malloc_gpu(N);
+  running_mean = malloc_gpu(N);
+  running_var  = malloc_gpu(N);
+  normal = malloc_gpu(batch*N);
+  output = malloc_gpu(batch*N);
+  m_delta = malloc_gpu(batch*N);
+
+  dxn = malloc_gpu(batch*N);
+  dxc = malloc_gpu(batch*N);
+  dvar = malloc_gpu(N);
+  dstd = malloc_gpu(N);
+  dmu = malloc_gpu(N);
+
+  dgamma = malloc_gpu(N);
+  dbeta = malloc_gpu(N);
+  gamma = malloc_gpu(N);
+  beta = malloc_gpu(N);
+  m_gamma = malloc_gpu(N);
+  m_beta = malloc_gpu(N);
+  v_gamma = malloc_gpu(N);
+  v_beta = malloc_gpu(N);
+
+#else
   mean = new float[N];
   var  = new float[N];
   running_mean = new float[N];
@@ -32,6 +58,8 @@ void Batchnorm::init() {
   m_beta = new float[N];
   v_gamma = new float[N];
   v_beta = new float[N];
+#endif
+
   for(int i = 0; i < N; i++) {
     gamma[i] = 1.0;
     beta[i] = 0.0;
@@ -47,36 +75,61 @@ void Batchnorm::init() {
 
 }
 
+
+void Batchnorm::get_mean() {
+
+  memset(mean, 0, N*sizeof(float));
+  for(int i = 0; i < batch; i++)
+    for(int j = 0; j < N; j++)
+      mean[j] += input[i*N+j]/(float)batch;
+}
+
+void Batchnorm::get_variance() {
+
+  memset(var, 0, N*sizeof(float));
+  for(int i = 0; i < batch; i++)
+    for(int j = 0; j < N; j++)
+      var[j] += (pow(input[i*N+j] - mean[j], 2.0))/(float)batch;
+
+
+}
+
+void Batchnorm::normalize() {
+  for(int i = 0; i < batch; i++)
+    for(int j = 0; j < N; j++)
+      normal[i*N+j] = (input[i*N+j] - mean[j])/pow(var[j] + epsilon, 0.5);
+
+  for(int j = 0; j < N; j++) {
+    running_mean[j] = momentum*running_mean[j] + (1.0 - momentum)*mean[j];
+    running_var[j] = momentum*running_var[j] + (1.0 - momentum)*var[j];
+  }
+
+}
+
+void Batchnorm::scale_and_shift() {
+
+  for(int i = 0; i < batch; i++)
+    for(int j = 0; j < N; j++)
+      output[i*N+j] = gamma[j]*normal[i*N+j] + beta[j];
+}
+
 void Batchnorm::forward() {
 
 
+//    ms_t s = getms();
+//cout << (getms() -s) << endl;
+
   if(train_flag) {
-    memset(mean, 0, N*sizeof(float));
-    memset(var, 0, N*sizeof(float));
 
-    for(int i = 0; i < batch; i++)
-      for(int j = 0; j < N; j++)
-        mean[j] += input[i*N+j];
-  
-    for(int j = 0; j < N; j++)
-      mean[j] /= (float)batch;
-
-    for(int i = 0; i < batch; i++)
-      for(int j = 0; j < N; j++)
-        var[j] += pow(input[i*N+j] - mean[j], 2.0);
-
-    for(int j = 0; j < N; j++)
-      var[j] /= (float)batch;
-
-
-    for(int i = 0; i < batch; i++)
-      for(int j = 0; j < N; j++)
-        normal[i*N+j] = (input[i*N+j] - mean[j])/pow(var[j] + epsilon, 0.5);
-
-    for(int j = 0; j < N; j++) {
-      running_mean[j] = momentum*running_mean[j] + (1.0 - momentum)*mean[j];
-      running_var[j] = momentum*running_var[j] + (1.0 - momentum)*var[j];
-    }
+#ifdef GPU
+    get_mean_gpu();
+    get_variance_gpu();
+    normalize_gpu();
+#else
+    get_mean();
+    get_variance();
+    normalize();
+#endif
 
   }
   else {
@@ -87,17 +140,21 @@ void Batchnorm::forward() {
 
   }
 
-  for(int i = 0; i < batch; i++)
-    for(int j = 0; j < N; j++)
-      output[i*N+j] = gamma[j]*normal[i*N+j] + beta[j];
-
-
-
+#ifdef GPU
+  scale_and_shift_gpu();
+#else
+  scale_and_shift();
+#endif
 
 
 }
 
 void Batchnorm::backward(float *delta) {
+
+
+#ifdef GPU
+  backward_gpu(delta);
+#else
 
   memset(dbeta, 0 , N*sizeof(float));
   memset(dgamma, 0 , N*sizeof(float));
@@ -161,9 +218,22 @@ void Batchnorm::backward(float *delta) {
 
     }
   }
+#endif
 }
 
 void Batchnorm::update(update_args a) {
+
+
+#ifdef GPU
+  adam_gpu(N, gamma, dgamma, m_gamma, v_gamma, a);
+  adam_gpu(N, beta, dbeta, m_beta, v_beta, a);
+#else
+  adam_cpu(N, gamma, dgamma, m_gamma, v_gamma, a);
+  adam_cpu(N, beta, dbeta, m_beta, v_beta, a);
+#endif
+
+
+#if 0
 
   float m_lr = a.lr * pow(1.0 - pow(a.beta2, a.iter), 0.5) / (1.0 - pow(a.beta1, a.iter));
   for(int i = 0; i < N; i++) {
@@ -178,7 +248,6 @@ void Batchnorm::update(update_args a) {
     beta[i] -= m_lr * m_beta[i]/(pow(v_beta[i], 0.5) + a.epsilon);
   }
 
-#if 0
   for(int i = 0; i < N; i++) {
     gamma[i] -= lr*dgamma[i];
     beta[i] -= lr*dbeta[i];

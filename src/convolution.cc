@@ -234,11 +234,15 @@ void Convolution::forward_full() {
       input + i*im_size, out_col+i*col_size);
 
   gemm_gpu(TRS_N, TRS_N, batch*out_h*out_w, FC, out_channel, 1, out_col, weight, output);
+
 #else
+
   for(int i = 0; i < batch; i++)
     im2col(W, H, C, FW, FH, FC, stride, pad, 
       input + i*im_size, out_col+i*col_size);
+
   gemm_cpu(TRS_N, TRS_N, batch*out_h*out_w, FC, out_channel, 1, out_col, weight, output);
+
 #endif
 
 
@@ -309,21 +313,24 @@ void Convolution::backward(float *delta) {
     
   }
 
-  //bias
-  memset(grad_bias, 0, FC*sizeof(float));
-  row_sum(batch*out_w*out_h, FC, delta, grad_bias);
-
-
 
 #ifdef GPU
+
+  row_sum_gpu(batch*out_w*out_h, FC, delta, grad_bias);
+
   for(int i = 0; i < batch; i++)
     col2im_gpu(W,H, C, FW, FH, FC, stride, pad, 
       m_delta + i*im_size, delta_col + i*col_size);
+
   cudaFree(delta_col);
 #else
+
+  row_sum(batch*out_w*out_h, FC, delta, grad_bias);
+
   for(int i = 0; i < batch; i++)
     col2im(W,H, C, FW, FH, FC, stride, pad, 
       m_delta + i*im_size, delta_col + i*col_size);
+
   delete[] delta_col;
 #endif
 

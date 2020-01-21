@@ -45,7 +45,9 @@ void Network::train(float *Y) {
 
   a.iter++;
   for(int i = layers.size() - 1; i >= 0; i--) {
+    //ms_t start = getms();   
     layers[i]->update(a);
+    //cout << "layer: " << i << ", time = " << (getms()-start) << endl;
   }
 } 
 

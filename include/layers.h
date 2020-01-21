@@ -189,6 +189,7 @@ class Relu : public Layer {
     ~Relu();
     void init();
     void forward();
+    void forward_gpu();
     void backward(float *delta);
     void update(update_args a);
     void save(fstream *file);
@@ -220,6 +221,19 @@ class Batchnorm : public Layer {
     void update(update_args a);
     void save(fstream *file);
     static Batchnorm* load(char *buf);
+
+
+    void get_mean();
+    void get_variance();
+    void normalize();
+    void scale_and_shift();
+
+    void get_mean_gpu();
+    void get_variance_gpu();
+    void normalize_gpu();
+    void scale_and_shift_gpu();
+    void backward_gpu(float *delta);
+    
 };
 
 class Dropout : public Layer {
