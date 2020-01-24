@@ -99,7 +99,7 @@ class Convolution : public Layer {
     float *col;
     int FW, FH, FC;
     int stride, pad;
-
+    float *delta_col;
     int W, H, C;
     int out_channel;
     int out_w, out_h;

@@ -1,7 +1,6 @@
 USE_OPENMP = 0
 USE_GPU = 0
 
-NVCC = /usr/local/cuda/bin/nvcc
 
 OUTDIR = objs
 SRCDIR = src
@@ -10,6 +9,13 @@ SAMPLE = samples
 SRC = $(wildcard $(SRCDIR)/*.cc)
 OBJS = $(addsuffix .o, $(basename $(patsubst $(SRCDIR)/%,$(OUTDIR)/%,$(SRC))))
 
+ARCH= -gencode arch=compute_30,code=sm_30 \
+      -gencode arch=compute_35,code=sm_35 \
+      -gencode arch=compute_50,code=[sm_50,compute_50] \
+      -gencode arch=compute_52,code=[sm_52,compute_52]
+
+
+NVCC = /usr/local/cuda/bin/nvcc $(ARCH)
 
 CXXFLAGS = -O3 -std=c++11 -Wno-unused-result
 INCLUDE = -I ./include/

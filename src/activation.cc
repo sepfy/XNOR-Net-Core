@@ -122,25 +122,26 @@ void Relu::init() {
 #ifdef GPU
   output = malloc_gpu(batch*N);
   m_delta = malloc_gpu(batch*N);
+  cut = malloc_gpu(batch*N);
 #else
   output = new float[batch*N];
   m_delta = new float[batch*N];
-#endif
   cut = new float[batch*N];
+#endif
   memset(cut, 0, sizeof(float)*batch*N);
 }
 
 void Relu::forward() {
 
-/*
+
 #ifdef GPU
   forward_gpu();
 #else
-*/
+
   for(int i = 0; i < batch; i++) 
     for(int j = 0; j < N; j++) 
       output[i*N+j] = (input[i*N+j] >= 0 ? input[i*N+j] : 0);
-//#endif
+#endif
 
 }
 

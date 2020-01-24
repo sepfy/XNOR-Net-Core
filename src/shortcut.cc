@@ -13,10 +13,17 @@ Shortcut::~Shortcut() {
 }
 
 void Shortcut::init() {
+
+#ifdef GPU
+  output = malloc_gpu(batch*h*w*c);
+  m_delta = malloc_gpu(batch*h*w*c);
+  identity = activation->output;
+
+#else
   output = new float[batch*h*w*c];
   m_delta = new float[batch*h*w*c];
   identity = activation->output;
-  
+#endif
 }
 
 

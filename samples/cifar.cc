@@ -57,6 +57,169 @@ void CifarXnorNet(Network *network) {
 
 }
 
+void ResNet(Network *network) {
+
+  Convolution *conv1 = new Convolution(32, 32, 3, 3, 3, 64, 1, true);
+  conv1->xnor = false;
+  Batchnorm *bn1 = new Batchnorm(32*32*64);
+  Relu *relu1 = new Relu(32*32*64);
+
+  // Residual Block 1
+  Convolution *conv2 = new Convolution(32, 32, 64, 3, 3, 64, 1, true);
+  conv2->xnor = false;
+  Batchnorm *bn2 = new Batchnorm(32*32*64);
+  Relu *relu2 = new Relu(32*32*64);
+
+  Convolution *conv3 = new Convolution(32, 32, 64, 3, 3, 64, 1, true);
+  conv3->xnor = false;
+  Batchnorm *bn3 = new Batchnorm(32*32*64);
+  Shortcut *shortcut1 = new Shortcut(32, 32, 64, conv1, relu1);
+  Relu *relu3 = new Relu(32*32*64);
+
+
+  // Residual Block 2
+  Convolution *conv4 = new Convolution(32, 32, 64, 3, 3, 64, 1, true);
+  conv4->xnor = false;
+  Batchnorm *bn4 = new Batchnorm(32*32*64);
+  Relu *relu4 = new Relu(32*32*64);
+
+  Convolution *conv5 = new Convolution(32, 32, 64, 3, 3, 64, 1, true);
+  conv5->xnor = false;
+  Batchnorm *bn5 = new Batchnorm(32*32*64);
+  Shortcut *shortcut2 = new Shortcut(32, 32, 64, conv3, relu3);
+  Relu *relu5 = new Relu(32*32*64);
+
+  Pooling *pool1 = new Pooling(32, 32, 64, 2, 2, 64, 2, false);
+
+  // Residual Block 3
+  Convolution *conv6 = new Convolution(16, 16, 64, 3, 3, 128, 1, true);
+  conv6->xnor = false;
+  Batchnorm *bn6 = new Batchnorm(16*16*128);
+  Relu *relu6 = new Relu(16*16*128);
+
+  Convolution *conv7 = new Convolution(16, 16, 128, 3, 3, 128, 1, true);
+  conv7->xnor = false;
+  Batchnorm *bn7 = new Batchnorm(16*16*128);
+  Relu *relu7 = new Relu(16*16*128);
+
+  // Residual Block 4
+  Convolution *conv8 = new Convolution(16, 16, 128, 3, 3, 128, 1, true);
+  conv8->xnor = false;
+  Batchnorm *bn8 = new Batchnorm(16*16*128);
+  Relu *relu8 = new Relu(16*16*128);
+
+  Convolution *conv9 = new Convolution(16, 16, 128, 3, 3, 128, 1, true);
+  conv9->xnor = false;
+  Batchnorm *bn9 = new Batchnorm(16*16*128);
+  Shortcut *shortcut4 = new Shortcut(16, 16, 128, conv7, relu7);
+  Relu *relu9 = new Relu(16*16*128);
+
+  Pooling *pool2 = new Pooling(16, 16, 128, 2, 2, 128, 2, false);
+
+  // Residual Block 5
+  Convolution *conv10 = new Convolution(8, 8, 128, 3, 3, 256, 1, true);
+  conv10->xnor = false;
+  Batchnorm *bn10 = new Batchnorm(8*8*256);
+  Relu *relu10 = new Relu(8*8*256);
+
+  Convolution *conv11 = new Convolution(8, 8, 256, 3, 3, 256, 1, true);
+  conv11->xnor = false;
+  Batchnorm *bn11 = new Batchnorm(8*8*256);
+  Relu *relu11 = new Relu(8*8*256);
+
+  Convolution *conv12 = new Convolution(8, 8, 256, 3, 3, 256, 1, true);
+  conv12->xnor = false;
+  Batchnorm *bn12 = new Batchnorm(8*8*256);
+  Relu *relu12 = new Relu(8*8*256);
+
+  Convolution *conv13 = new Convolution(8, 8, 256, 3, 3, 256, 1, true);
+  conv13->xnor = false;
+  Batchnorm *bn13 = new Batchnorm(8*8*256);
+  Shortcut *shortcut6 = new Shortcut(8, 8, 256, conv11, relu11);
+  Relu *relu13 = new Relu(8*8*256);
+
+  Pooling *pool3 = new Pooling(8, 8, 256, 2, 2, 256, 2, false);
+
+
+  Convolution *conv44 = new Convolution(4, 4, 256, 4, 4, 500, 1, false);
+  conv44->xnor = false;
+  Relu *relu44 = new Relu(500);
+
+
+  Connected *conn4 = new Connected(500, 10);
+  SoftmaxWithCrossEntropy *softmax = new SoftmaxWithCrossEntropy(10);
+
+  
+  network->add(conv1);
+  network->add(bn1);
+  network->add(relu1);
+
+  network->add(conv2);
+  network->add(bn2);
+  network->add(relu2);
+
+  network->add(conv3);
+  network->add(bn3);
+  network->add(shortcut1);
+  network->add(relu3);
+
+  network->add(conv4);
+  network->add(bn4);
+  network->add(relu4);
+
+  network->add(conv5);
+  network->add(bn5);
+  network->add(shortcut2);
+  network->add(relu5);
+
+  network->add(pool1);
+
+
+  network->add(conv6);
+  network->add(bn6);
+  network->add(relu6);
+
+  network->add(conv7);
+  network->add(bn7);
+  network->add(relu7);
+
+  network->add(conv8);
+  network->add(bn8);
+  network->add(relu8);
+
+  network->add(conv9);
+  network->add(bn9);
+  network->add(shortcut4);
+  network->add(relu9);
+
+  network->add(pool2);
+
+  network->add(conv10);
+  network->add(relu10);
+
+  network->add(conv11);
+  network->add(relu11);
+
+  network->add(conv12);
+  network->add(relu12);
+
+  network->add(conv13);
+  network->add(shortcut6);
+  network->add(relu13);
+
+  network->add(pool3);
+
+  network->add(conv44);
+  //network->add(bn44);
+  network->add(relu44);
+
+  network->add(conn4);
+  network->add(softmax);
+
+}
+
+
+
 void CifarNet(Network *network) {
 
   Convolution *conv1 = new Convolution(32, 32, 3, 5, 5, 20, 1, false);
@@ -87,12 +250,12 @@ void CifarNet(Network *network) {
   network->add(pool1);
 
   network->add(conv2);
-  network->add(bn2);
+  //network->add(bn2);
   network->add(relu2);
   network->add(pool2);
 
   network->add(conv3);
-  network->add(bn3);
+  //network->add(bn3);
   network->add(relu3);
 
   network->add(dropout3);
@@ -118,13 +281,19 @@ int main( int argc, char** argv ) {
 
   if(strcmp(argv[1], "train") == 0) {
 
-    CifarXnorNet(&network);
+    //CifarXnorNet(&network);
     //CifarNet(&network);
+    ResNet(&network);
     network.initial(BATCH, LEARNING_RATE);
 
     float *train_data, *train_label;
+#ifdef GPU
+    train_data = malloc_gpu(50000*IM_SIZE);
+    train_label = malloc_gpu(50000*NUM_OF_CLASS);
+#else
     train_data = new float[50000*IM_SIZE];
     train_label = new float[50000*NUM_OF_CLASS];
+#endif
     read_train_data(argv[3], train_data, train_label);
 
     for(int iter = 0; iter < MAX_ITER; iter++) {

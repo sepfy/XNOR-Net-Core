@@ -82,6 +82,7 @@ void Convolution::init() {
   m_bias = malloc_gpu(FC);
   v_bias = malloc_gpu(FC);
 
+  delta_col = malloc_gpu(batch*out_channel*out_w*out_h);
 #else
 
   col = new float[out_w*out_h*out_channel];
@@ -93,6 +94,7 @@ void Convolution::init() {
   grad_bias = new float[FC];
   im = new float[H*W*C];
   m_delta = new float[batch*W*H*C]; 
+  delta_col = new float[batch*out_channel*out_w*out_h];
 
   /* Adam optimizer */
   m_weight = new float[out_channel*FC];
@@ -276,12 +278,10 @@ void Convolution::backward(float *delta) {
   gemm_gpu(TRS_T, TRS_N, 
            out_channel, FC, out_h*out_w*batch, 1.0,
            out_col, delta, grad_weight);
-  float *delta_col = malloc_gpu(batch*out_channel*out_w*out_h);
 #else
   gemm_cpu(TRS_T, TRS_N, 
            out_channel, FC, out_h*out_w*batch, 1.0,
            out_col, delta, grad_weight);
-  float *delta_col = new float[batch*out_channel*out_w*out_h];
 #endif
 
 
@@ -322,7 +322,6 @@ void Convolution::backward(float *delta) {
     col2im_gpu(W,H, C, FW, FH, FC, stride, pad, 
       m_delta + i*im_size, delta_col + i*col_size);
 
-  cudaFree(delta_col);
 #else
 
   row_sum(batch*out_w*out_h, FC, delta, grad_bias);
@@ -331,7 +330,6 @@ void Convolution::backward(float *delta) {
     col2im(W,H, C, FW, FH, FC, stride, pad, 
       m_delta + i*im_size, delta_col + i*col_size);
 
-  delete[] delta_col;
 #endif
 
 }

@@ -62,17 +62,17 @@ void MnistNet(Network *network) {
   SoftmaxWithCrossEntropy *softmax = new SoftmaxWithCrossEntropy(10);
   
   network->add(conv1);
-//  network->add(bn1);
+  network->add(bn1);
   network->add(relu1);
   network->add(pool1);
 
   network->add(conv2);
-//  network->add(bn2);
+  network->add(bn2);
   network->add(relu2);
   network->add(pool2);
 
   network->add(conv3);
-//  network->add(bn3);
+  network->add(bn3);
   network->add(relu3);
 
   network->add(conn1);

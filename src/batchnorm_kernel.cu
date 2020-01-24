@@ -158,7 +158,6 @@ void Batchnorm::backward_gpu(float *delta) {
   ew_mul_kernel<<<N, batch>>>(normal, delta, tmp);
   col_sum(batch, N, tmp, dgamma);
   cudaDeviceSynchronize();
-  cudaFree(tmp);
 
 
 
@@ -185,6 +184,7 @@ void Batchnorm::backward_gpu(float *delta) {
 
   cal_mdelta_kernel<<<N, batch>>>(m_delta, dxc, dmu, (float)batch);
 
+  cudaFree(tmp);
 }
 
 
