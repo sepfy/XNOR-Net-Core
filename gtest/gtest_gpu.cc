@@ -6,6 +6,7 @@
 #include "gpu.h"
 #include "gpu/util_gpu_gtest.h"
 #include "gpu/gemm_gpu_gtest.h"
+#include "gpu/blas_gpu_gtest.h"
 
 using ::testing::ElementsAreArray;
 

@@ -155,6 +155,35 @@ class Convolution : public Layer {
 #endif
 };
 
+
+class AvgPool : public Layer {
+
+  public:
+
+    float *col;
+    int FW, FH, FC;
+    int stride, pad;
+    int W, H, C;
+    int out_channel;
+    int out_w, out_h;
+    float *weight, *bias, *out_col, *im;
+    float *grad_weight;
+    float *delta_col;
+    float *indexes;
+    AvgPool(int _W, int _H, int _C,
+	int _FW, int _FH, int _FC, int _stride, bool _pad);
+    ~AvgPool();
+    void init();
+    void forward();
+    void backward(float *delta);
+    void forward_gpu();
+    void backward_gpu(float *delta);
+    void update(update_args a);
+    void save(fstream *file);
+    static AvgPool* load(char *buf);
+};
+
+
 class Pooling : public Layer {
 
   public:
@@ -168,39 +197,58 @@ class Pooling : public Layer {
     float *weight, *bias, *out_col, *im;
     float *grad_weight;
     float *delta_col;
-    vector<int> max_seq;
+    float *indexes;
     Pooling(int _W, int _H, int _C,
 	int _FW, int _FH, int _FC, int _stride, bool _pad);
     ~Pooling();
     void init();
     void forward();
     void backward(float *delta);
+    void forward_gpu();
+    void backward_gpu(float *delta);
     void update(update_args a);
     void save(fstream *file);
     static Pooling* load(char *buf);
 };
 
+enum ACT{
+  RELU,
+  LEAKY
+};
+
 class Relu : public Layer {
   public:
+    
+    ACT activation;
+    void relu_activate();
+    void leaky_activate();
+    void relu_backward(float *delta);
+    void leaky_backward(float *delta);
+
     int N;
     float *cut;
     vector<int> mask;
-    Relu(int _N);
+    Relu(int _N, ACT act);
     ~Relu();
     void init();
     void forward();
-    void forward_gpu();
     void backward(float *delta);
+    void relu_activate_gpu();
+    void leaky_activate_gpu();
+    void relu_backward_gpu(float *delta);
+    void leaky_backward_gpu(float *delta);
     void update(update_args a);
     void save(fstream *file);
     static Relu* load(char *buf);
 };
 
+
+
 class Batchnorm : public Layer {
   public:
     int N;
     float iter = 0.0;
-    float *mean, *var, *running_mean, *running_var;
+    float *mean, *var, *std, *running_mean, *running_var;
     float *normal;
     float epsilon = 1.0e-7;
     float *gamma, *beta, *dgamma, *dbeta;
@@ -210,6 +258,7 @@ class Batchnorm : public Layer {
     float *dvar;
     float *dstd;
     float *dmu;
+    float *xc;
     float momentum = 0.9;
     float beta1 = 0.9;
     float beta2 = 0.999;

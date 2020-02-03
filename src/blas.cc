@@ -17,7 +17,7 @@ void add(int N, int M, float *A, float *B, float *C) {
 
 
 void col_sum(int N, int M, float *A, float *B) {
-  memset(B, 0, N*sizeof(float));
+  memset(B, 0, M*sizeof(float));
   for(int i = 0; i < N; i++)
     for(int j = 0; j < M; j++)
       B[i] += A[i*M+j];
@@ -25,7 +25,7 @@ void col_sum(int N, int M, float *A, float *B) {
 
 
 void row_sum(int N, int M, float *A, float *B) {
-  memset(B, 0, M*sizeof(float));
+  memset(B, 0, N*sizeof(float));
   for(int j = 0; j < M; j++)
     for(int i = 0; i < N; i++)
       B[j] += A[i*M+j];

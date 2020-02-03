@@ -109,8 +109,9 @@ SoftmaxWithCrossEntropy* SoftmaxWithCrossEntropy::load(char *buf) {
 
 
 
-Relu::Relu(int _N) {
+Relu::Relu(int _N, ACT act) {
   N = _N;
+  activation = act;
 }
 
 Relu::~Relu() {
@@ -135,21 +136,71 @@ void Relu::forward() {
 
 
 #ifdef GPU
-  forward_gpu();
+   switch(activation) {
+    case RELU:
+      relu_activate_gpu();
+    case LEAKY:
+      leaky_activate_gpu();
+  }
 #else
 
-  for(int i = 0; i < batch; i++) 
-    for(int j = 0; j < N; j++) 
-      output[i*N+j] = (input[i*N+j] >= 0 ? input[i*N+j] : 0);
+  switch(activation) {
+    case RELU:
+      relu_activate();
+    case LEAKY:
+      leaky_activate();
+  }
 #endif
 
 }
 
-void Relu::backward(float *delta) {
+void Relu::relu_activate() {
 
   for(int i = 0; i < batch; i++) 
     for(int j = 0; j < N; j++) 
-      m_delta[i*N+j] = (cut[i*N+j]+delta[i*N+j])*(input[i*N+j] >= 0);
+      output[i*N+j] = (input[i*N+j] >= 0 ? input[i*N+j] : 0);
+}
+
+void Relu::leaky_activate() {
+
+  for(int i = 0; i < batch; i++) 
+    for(int j = 0; j < N; j++) 
+      output[i*N+j] = (input[i*N+j] >= 0 ? input[i*N+j] : 0.1*input[i*N+j]);
+}
+
+void Relu::backward(float *delta) {
+
+#ifdef GPU
+  switch(activation) {
+    case RELU:
+      relu_backward_gpu(delta);
+    case LEAKY:
+      leaky_backward_gpu(delta);
+  }
+
+#else
+
+  switch(activation) {
+    case RELU:
+      relu_backward(delta);
+    case LEAKY:
+      leaky_backward(delta);
+  }
+
+#endif
+}
+
+
+void Relu::relu_backward(float *delta) {
+  for(int i = 0; i < batch; i++) 
+    for(int j = 0; j < N; j++) 
+      m_delta[i*N+j] = (cut[i*N+j] + delta[i*N+j])*(input[i*N+j] >= 0);
+}
+
+void Relu::leaky_backward(float *delta) {
+  for(int i = 0; i < batch; i++) 
+    for(int j = 0; j < N; j++) 
+      m_delta[i*N+j] = (cut[i*N+j] + delta[i*N+j])*(input[i*N+j] >= 0 ? 1.0 : 0.1);
 }
 
 void Relu::update(update_args a) {
@@ -157,17 +208,24 @@ void Relu::update(update_args a) {
 
 void Relu::save(fstream *file) {
   char buf[64] = {0};
-  sprintf(buf, "Relu,%d", N);
+  sprintf(buf, "Relu,%d,%d", N, activation);
   //cout << buf << endl;
   file->write(buf, sizeof(buf));
 }
 
 Relu* Relu::load(char *buf) {
 
-  int para = 0;
+  int para[2] = {0};
   char *token;
-  token = strtok(NULL, ",");
-  para = atoi(token);
-  Relu *relu = new Relu(para);
+  int idx = 0;
+  while (buf) {
+    token = strtok(NULL, ",");
+    para[idx] = atoi(token);
+    idx++;
+    if(idx > 2)
+      break;
+  }
+
+  Relu *relu = new Relu(para[0], (ACT)para[1]);
   return relu;
 }

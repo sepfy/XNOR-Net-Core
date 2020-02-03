@@ -13,13 +13,17 @@ void Batchnorm::init() {
 
 #ifdef GPU
   mean = malloc_gpu(N);
+
+  std = malloc_gpu(N);
   var  = malloc_gpu(N);
+
   running_mean = malloc_gpu(N);
   running_var  = malloc_gpu(N);
   normal = malloc_gpu(batch*N);
   output = malloc_gpu(batch*N);
   m_delta = malloc_gpu(batch*N);
 
+  xc = malloc_gpu(batch*N);
   dxn = malloc_gpu(batch*N);
   dxc = malloc_gpu(batch*N);
   dvar = malloc_gpu(N);
@@ -116,11 +120,7 @@ void Batchnorm::scale_and_shift() {
 void Batchnorm::forward() {
 
 
-//    ms_t s = getms();
-//cout << (getms() -s) << endl;
-
   if(train_flag) {
-
 #ifdef GPU
     get_mean_gpu();
     get_variance_gpu();
@@ -130,7 +130,6 @@ void Batchnorm::forward() {
     get_variance();
     normalize();
 #endif
-
   }
   else {
     for(int i = 0; i < batch; i++)

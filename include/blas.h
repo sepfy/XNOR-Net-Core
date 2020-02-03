@@ -16,5 +16,6 @@ float accuracy(int batch, int N, float *A, float *B);
 
 #ifdef GPU
 void row_sum_gpu(int N, int M, float *A, float *B);
+void col_sum_gpu(int N, int M, float *A, float *B);
 
 #endif

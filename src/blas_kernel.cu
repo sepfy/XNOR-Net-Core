@@ -24,4 +24,21 @@ void row_sum_gpu(int N, int M, float *A, float *B) {
 
 }
 
+void col_sum_gpu(int N, int M, float *A, float *B) {
+
+  memset(B, 0, N*sizeof(float));
+  float alpha = 1.0;
+  float beta = 0.0;
+  float *e = malloc_gpu(N);
+  for(int i = 0; i < N; i++)
+    e[i] = 1.0;
+  cublasSgemv(gpu_handle(), CUBLAS_OP_T, M, N, &alpha, A, M, e, 1, &beta, B, 1);
+  cudaDeviceSynchronize();
+/*
+  for(int i = 0; i < N; i++)
+    for(int j = 0; j < M; j++)
+      B[i] += A[i*M+j];
+*/
+}
+
 
