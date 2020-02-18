@@ -45,4 +45,18 @@ float* malloc_gpu(size_t n) {
   check_error(status);
   return x_gpu;
 }
+
+void random_normal_gpu(int n, float *gpu_x) {
+
+  curandGenerator_t gen;
+  curandCreateGenerator(&gen, CURAND_RNG_PSEUDO_DEFAULT);
+
+  curandSetPseudoRandomGeneratorSeed(gen, 1234ULL);
+  curandGenerateUniform(gen, gpu_x, n);
+}
+
+void memset_gpu(size_t n, float *gpu_x) {
+  cudaMemset(gpu_x, 0, sizeof(float)*n);
+}
+
 #endif

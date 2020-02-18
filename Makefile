@@ -1,5 +1,5 @@
 USE_OPENMP = 0
-USE_GPU = 0
+USE_GPU = 1
 
 
 OUTDIR = objs
@@ -30,7 +30,7 @@ endif
 
 ifeq ($(USE_GPU), 1) 
   MACRO += -D GPU
-  LIBS += -L /usr/local/cuda/lib64 -lcublas -lcudart
+  LIBS += -L /usr/local/cuda/lib64 -lcublas -lcudart -lcurand
   INCLUDE += -I /usr/local/cuda/include/
   CUDA_SRC = $(wildcard $(SRCDIR)/*.cu)
   OBJS += $(addsuffix .o, $(basename $(patsubst $(SRCDIR)/%,$(OUTDIR)/%,$(CUDA_SRC))))
