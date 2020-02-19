@@ -86,8 +86,10 @@ void Connected::backward(float *delta) {
 void Connected::update(update_args a) {
 
 #if GPU
-  adam_gpu(N*M, weight, grad_weight, m_weight, v_weight, a);
-  adam_gpu(M, bias, grad_bias, m_bias, v_bias, a);
+  //adam_gpu(N*M, weight, grad_weight, m_weight, v_weight, a);
+  //adam_gpu(M, bias, grad_bias, m_bias, v_bias, a);
+  momentum_gpu(N*M, weight, grad_weight, v_weight, a);
+  momentum_gpu(M, bias, grad_bias, v_bias, a);
 #else
   adam_cpu(N*M, weight, grad_weight, m_weight, v_weight, a);
   adam_cpu(M, bias, grad_bias, m_bias, v_bias, a);

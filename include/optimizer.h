@@ -8,6 +8,7 @@ typedef struct UPDATE_ARGS {
   float lr = 1.0e-3;
   int iter = 0;
   float m_lr;
+  float momentum = 0.9;
 
 } update_args;
 
@@ -15,5 +16,6 @@ void adam_cpu(int n, float *x, float *grad_x, float *m_x, float *v_x, update_arg
 
 #ifdef GPU
 void adam_gpu(int n, float *x, float *grad_x, float *m_x, float *v_x, update_args a);
+void momentum_gpu(int n, float *x, float *grad_x, float *v_x, update_args a);
 #endif
 

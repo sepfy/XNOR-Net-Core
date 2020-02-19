@@ -337,8 +337,10 @@ void Convolution::backward(float *delta) {
 void Convolution::update(update_args a) {
 
 #ifdef GPU
-  adam_gpu(out_channel*FC, weight, grad_weight, m_weight, v_weight, a);
-  adam_gpu(FC, bias, grad_bias, m_bias, v_bias, a);
+  //adam_gpu(out_channel*FC, weight, grad_weight, m_weight, v_weight, a);
+  //adam_gpu(FC, bias, grad_bias, m_bias, v_bias, a);
+  momentum_gpu(out_channel*FC, weight, grad_weight, v_weight, a);
+  momentum_gpu(FC, bias, grad_bias, v_bias, a);
 #else
   adam_cpu(out_channel*FC, weight, grad_weight, m_weight, v_weight, a);
   adam_cpu(FC, bias, grad_bias, m_bias, v_bias, a);
