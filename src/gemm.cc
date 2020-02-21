@@ -244,7 +244,6 @@ void gemm_gpu(TRS TRS_A, TRS TRS_B,
 
   float beta = 0.0;
 
-
   if(!TRS_A && !TRS_B)
     cublasSgemm(gpu_handle(),
               CUBLAS_OP_N, CUBLAS_OP_N,
@@ -259,7 +258,8 @@ void gemm_gpu(TRS TRS_A, TRS TRS_B,
               CUBLAS_OP_T, CUBLAS_OP_N,
 	      N, M, P, &alpha, B, P, A, P, &beta, C, N);
 
-  cudaDeviceSynchronize();
+  check_error(cudaGetLastError());
+  //cudaDeviceSynchronize();
 }
 
 #endif

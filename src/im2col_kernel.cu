@@ -1,8 +1,5 @@
 #include "layers.h"
-
-#ifdef GPU
 #include "gpu.h"
-#endif
 
 __global__ void im2col_gpu_kernel(int W, int H, int C, int FW, int FH, int FC,
             int stride, int pad, float *im, float *col) {
@@ -102,5 +99,7 @@ void col2im_gpu(int W, int H, int C, int FW, int FH, int FC,
   int out_h = (H + 2*pad - FH)/stride + 1;
   dim3 d = {(unsigned int)out_w, (unsigned int)out_h, 1};
   im2col_gpu_kernel<<<out_col, d>>>(W, H, C, FW, FH, FC, stride, pad, im ,col);
-  cudaDeviceSynchronize();
+  check_error(cudaGetLastError());
+
+  //cudaDeviceSynchronize();
 }

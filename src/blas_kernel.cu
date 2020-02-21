@@ -12,7 +12,7 @@ __global__ void row_sum_gpu_kernel(float *A, float *B) {
     for(int i = 0; i < N; i++)
       B[j] += A[i*M+j];
 }
-*/
+
 
 
 void row_sum_gpu(int N, int M, float *A, float *B) {
@@ -22,6 +22,26 @@ void row_sum_gpu(int N, int M, float *A, float *B) {
   //row_sum_gpu_kernel<<<N, M>>>(n, x, grad_x, m_x, v_x, a.beta1, a.beta2, m_lr, a.epsilon);
   cudaDeviceSynchronize();
 
+}
+*/
+
+__global__ void row_sum_gpu_kernel(float *A, float *B, int N, int M) {
+    
+  int index = blockIdx.x*blockDim.x + threadIdx.x;
+  if(index > M)
+    return;
+  int i = 0;
+  for(i = 0; i < M; i++)
+    B[index] += A[index*M + i];
+}
+
+
+void row_sum_gpu(int N, int M, float *A, float *B) {
+
+    size_t BLOCK = 512;
+    int grid = (M-1)/BLOCK + 1;
+    row_sum_gpu_kernel<<<grid, BLOCK>>>(A, B, N, M);
+    check_error(cudaGetLastError());
 }
 
 void col_sum_gpu(int N, int M, float *A, float *B) {
@@ -39,6 +59,23 @@ void col_sum_gpu(int N, int M, float *A, float *B) {
     for(int j = 0; j < M; j++)
       B[i] += A[i*M+j];
 */
+}
+
+
+__global__ void bias_add_kernel1(float *output, float *bias,
+                         int batch, int size, int channel) {
+
+    int i = threadIdx.x;
+    int b = blockIdx.x;
+    for(int j = 0; j < channel; j++)
+      output[b*size*channel+i*channel+j] += bias[j];
+
+}
+
+// TODO: Integrate the bias add of convolution and connected.
+void bias_add_gpu(float *output, float *bias, int batch, int size, int c) {
+
+  bias_add_kernel1<<<batch, size>>>(output, bias, batch, size, c);
 }
 
 

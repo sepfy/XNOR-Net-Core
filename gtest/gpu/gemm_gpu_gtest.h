@@ -3,30 +3,24 @@ using ::testing::ElementsAreArray;
  
 TEST(BLAS, GEMM_GPU) {
 
-  int M = 5;
-  int P = 3;
-  int N = 5;
+  int M = 50176;
+  int N = 20;
+  int P = 75;
+
+
+
   float *A = malloc_gpu(M*P);
   float *B = malloc_gpu(P*N);
   float *C = malloc_gpu(M*N);
   float alpha = 1.0;
+  gemm_gpu(TRS_N, TRS_N, 50176, 20, 75, alpha, A, B, C);
 
-  for(int i = 0; i < M*P; i++)
-    A[i] = 1.0;
-
-  for(int i = 0; i < P*N; i++)
-    B[i] = 1.0;
-
-  for(int i = 0; i < M*N; i++)
-    C[i] = 1.0;
-
-  ms_t s = getms();
-  gemm_gpu(TRS_N, TRS_N, M, N, P, alpha, A, B, C);
-  printf("gemm time = %lld\n", getms() - s);
+  float *D = new float[M*N];
+  gpu_pull_array(C, D, M*N);
 
   long long tmp = 0;
   for(int i = 0; i < M*N; i++)
-    tmp += (long)C[i];
+    tmp += (long)0.0;
 
   long long solution = (long long)M*P*N;
   EXPECT_EQ(tmp, solution);

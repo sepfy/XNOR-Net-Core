@@ -83,6 +83,16 @@ void Convolution::init() {
   v_bias = malloc_gpu(FC);
 
   delta_col = malloc_gpu(batch*out_channel*out_w*out_h);
+
+  random_normal_gpu(out_channel*FC, weight);
+  random_normal_gpu(FC, bias);
+/*
+  memset_gpu(out_channel*FC*sizeof(float), m_weight);
+  memset_gpu(out_channel*FC*sizeof(float), v_weight);
+  memset_gpu(FC*sizeof(float), m_bias);  
+  memset_gpu(FC*sizeof(float), v_bias);  
+*/
+
 #else
 
   col = new float[out_w*out_h*out_channel];
@@ -102,15 +112,17 @@ void Convolution::init() {
   m_bias = new float[FC];
   v_bias = new float[FC];
 
-#endif
-
   random_normal(out_channel*FC, weight);
   random_normal(FC, bias);
-
   memset(m_weight, 0, out_channel*FC*sizeof(float));
   memset(v_weight, 0, out_channel*FC*sizeof(float));
   memset(m_bias, 0 , FC*sizeof(float));  
   memset(v_bias, 0 , FC*sizeof(float));  
+
+
+#endif
+
+
 
 #ifdef XNOR_NET
   binary_weight = new float[out_channel*FC];
@@ -337,10 +349,10 @@ void Convolution::backward(float *delta) {
 void Convolution::update(update_args a) {
 
 #ifdef GPU
-  //adam_gpu(out_channel*FC, weight, grad_weight, m_weight, v_weight, a);
-  //adam_gpu(FC, bias, grad_bias, m_bias, v_bias, a);
-  momentum_gpu(out_channel*FC, weight, grad_weight, v_weight, a);
-  momentum_gpu(FC, bias, grad_bias, v_bias, a);
+  adam_gpu(out_channel*FC, weight, grad_weight, m_weight, v_weight, a);
+  adam_gpu(FC, bias, grad_bias, m_bias, v_bias, a);
+  //momentum_gpu(out_channel*FC, weight, grad_weight, v_weight, a);
+  //momentum_gpu(FC, bias, grad_bias, v_bias, a);
 #else
   adam_cpu(out_channel*FC, weight, grad_weight, m_weight, v_weight, a);
   adam_cpu(FC, bias, grad_bias, m_bias, v_bias, a);

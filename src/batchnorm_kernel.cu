@@ -4,11 +4,12 @@
 
 void Batchnorm::get_mean_gpu() {
 
-  memset(mean, 0, N*sizeof(float));
+  cudaMemset(mean, 0, sizeof(float)*N);
+  check_error(cudaGetLastError());
   float alpha = 1/(float)batch;
   for(int i = 0; i < batch; i++)
     cublasSaxpy(gpu_handle(), N, &alpha, input + i*N, 1, mean, 1);
-  cudaDeviceSynchronize();
+  check_error(cudaGetLastError());
 
 }
 
@@ -21,12 +22,14 @@ __global__ void calc_xc(float *input, float *mean, float *xc) {
 
 void Batchnorm::get_variance_gpu() {
 
-  memset(var, 0, N*sizeof(float));
+  cudaMemset(var, 0, sizeof(float)*N);
+  check_error(cudaGetLastError());
   calc_xc<<<N, batch>>>(input, mean, xc);
   float alpha = 1/(float)batch;
   for(int i = 0; i < batch; i++)
     cublasSaxpy(gpu_handle(), N, &alpha, xc + i*N, 1, var, 1);
-  cudaDeviceSynchronize();
+  check_error(cudaGetLastError());
+  //cudaDeviceSynchronize();
 
 }
 
@@ -50,8 +53,10 @@ void Batchnorm::normalize_gpu() {
   int grid = (N-1)/256 + 1;
   normalize_gpu_kernel<<<N, batch>>>(normal, input, mean, var, epsilon);
   get_running_variable<<<grid, 256>>>(momentum, running_mean, mean);
+  check_error(cudaGetLastError());
   get_running_variable<<<grid, 256>>>(momentum, running_var, var);
-  cudaDeviceSynchronize();
+  check_error(cudaGetLastError());
+//  cudaDeviceSynchronize();
 
 }
 
@@ -69,7 +74,8 @@ __global__ void scale_and_shift_gpu_kernel(float *output, float *normal, float *
 void Batchnorm::scale_and_shift_gpu() {
 
   scale_and_shift_gpu_kernel<<<N, batch>>>(output, normal, gamma, beta);
-  cudaDeviceSynchronize();
+  check_error(cudaGetLastError());
+//  cudaDeviceSynchronize();
 
 }
 
@@ -115,13 +121,16 @@ __global__ void cal_mdelta_kernel(float *m_delta, float *dxc, float *dmu, float 
 
 void col_sum_gpu3(int N, int M, float *A, float *B) {
 
-  memset(B, 0, M*sizeof(float));
+  //memset(B, 0, M*sizeof(float));
+  cudaMemset(B, 0, sizeof(float)*M);
+  check_error(cudaGetLastError());
   float alpha = 1.0;
   float beta = 0.0;
   float *e = malloc_gpu(N);
-  for(int i = 0; i < N; i++)
-    e[i] = 1.0;
+  cudaMemset(e, 1.0, sizeof(float)*N);
+  check_error(cudaGetLastError());
   cublasSgemv(gpu_handle(), CUBLAS_OP_T, M, N, &alpha, A, M, e, 1, &beta, B, 1);
+  check_error(cudaGetLastError());
   cudaFree(e);
 }
 
@@ -152,7 +161,8 @@ void Batchnorm::backward_gpu(float *delta) {
   cal_mdelta_kernel<<<N, batch>>>(m_delta, dxc, dmu, (float)batch);
 
   cudaFree(tmp);
-  cudaDeviceSynchronize();
+  check_error(cudaGetLastError());
+  //cudaDeviceSynchronize();
 }
 
 

@@ -85,6 +85,7 @@ class SoftmaxWithCrossEntropy : public Layer {
     ~SoftmaxWithCrossEntropy();
     void init();
     void forward();
+    void forward_gpu();
     void backward(float *delta);
     void update(update_args a);
     void save(fstream *file);

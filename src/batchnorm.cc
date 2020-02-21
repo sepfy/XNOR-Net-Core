@@ -39,6 +39,11 @@ void Batchnorm::init() {
   v_gamma = malloc_gpu(N);
   v_beta = malloc_gpu(N);
 
+  // TODO: Add cuda memeset to gpu.h
+  cudaMemset(gamma, 1.0, sizeof(float)*N);
+  check_error(cudaGetLastError());
+
+
 #else
   mean = new float[N];
   var  = new float[N];
@@ -62,7 +67,6 @@ void Batchnorm::init() {
   m_beta = new float[N];
   v_gamma = new float[N];
   v_beta = new float[N];
-#endif
 
   for(int i = 0; i < N; i++) {
     gamma[i] = 1.0;
@@ -76,6 +80,10 @@ void Batchnorm::init() {
     running_mean[i] = 0.0;
     running_var[i] = 0.0;
   }
+
+
+#endif
+
 
 }
 
@@ -118,7 +126,6 @@ void Batchnorm::scale_and_shift() {
 }
 
 void Batchnorm::forward() {
-
 
   if(train_flag) {
 #ifdef GPU
@@ -224,10 +231,10 @@ void Batchnorm::update(update_args a) {
 
 
 #ifdef GPU
-  //adam_gpu(N, gamma, dgamma, m_gamma, v_gamma, a);
-  //adam_gpu(N, beta, dbeta, m_beta, v_beta, a);
-  momentum_gpu(N, gamma, dgamma, v_gamma, a);
-  momentum_gpu(N, beta, dbeta, v_beta, a);
+  adam_gpu(N, gamma, dgamma, m_gamma, v_gamma, a);
+  adam_gpu(N, beta, dbeta, m_beta, v_beta, a);
+  //momentum_gpu(N, gamma, dgamma, v_gamma, a);
+  //momentum_gpu(N, beta, dbeta, v_beta, a);
 #else
   adam_cpu(N, gamma, dgamma, m_gamma, v_gamma, a);
   adam_cpu(N, beta, dbeta, m_beta, v_beta, a);

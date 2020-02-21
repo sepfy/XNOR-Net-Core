@@ -95,6 +95,6 @@ void random_normal(int size, float *mat) {
     mat[i] = distribution(generator);
 
 //  for(int i = 0; i < size; i++)
-//    mat[i] = (float)rand()/(RAND_MAX + 1.0);
+//    mat[i] = 0.1*i;//(float)rand()/(RAND_MAX + 1.0);
 
 }

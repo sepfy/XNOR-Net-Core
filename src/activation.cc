@@ -56,14 +56,10 @@ SoftmaxWithCrossEntropy::~SoftmaxWithCrossEntropy() {
 
 void SoftmaxWithCrossEntropy::forward() {
 
+#ifdef GPU
+  forward_gpu();
+#else
 
-/*
-	  float check = 0.0;
-  for(int j = 0; j < N; j++)
-    check += input[j];
-  cout << check << endl;
-  getchar();
-*/
   for(int i = 0; i < batch; i++) {
     float tmp = 0;
     float max = 0;
@@ -78,13 +74,28 @@ void SoftmaxWithCrossEntropy::forward() {
     for(int j = 0; j < N; j++) 
       output[i*N+j] /= tmp;
   }
-
+#endif
 
 }
 
 void SoftmaxWithCrossEntropy::backward(float *delta) {
+
+#ifdef GPU
+  float alpha = 1.0/(float)batch;
+  size_t size = sizeof(float)*batch*N;
+  cudaError_t status = cudaMemset(m_delta, 0, size);
+  check_error(status);
+
+  cublasSaxpy(gpu_handle(), batch*N, &alpha, output, 1, m_delta, 1);    
+  check_error(cudaGetLastError());
+
+  alpha = -1.0/(float)batch;
+  cublasSaxpy(gpu_handle(), batch*N, &alpha, delta, 1, m_delta, 1);    
+  check_error(cudaGetLastError());
+#else
   mat_minus(batch, N, output, delta, m_delta);  
   mat_scalar(batch, N, m_delta, 1.0/(float)batch, m_delta);
+#endif
 }
 
 void SoftmaxWithCrossEntropy::update(update_args a) {
@@ -121,15 +132,19 @@ Relu::~Relu() {
 void Relu::init() {
 
 #ifdef GPU
+	
   output = malloc_gpu(batch*N);
+  
   m_delta = malloc_gpu(batch*N);
   cut = malloc_gpu(batch*N);
+  memset_gpu(batch*N, cut);
+   
 #else
   output = new float[batch*N];
   m_delta = new float[batch*N];
   cut = new float[batch*N];
-#endif
   memset(cut, 0, sizeof(float)*batch*N);
+#endif
 }
 
 void Relu::forward() {

@@ -2,7 +2,7 @@
 
 #define LEARNING_RATE 1.0e-3
 #define BATCH 100
-#define MAX_ITER 3000
+#define MAX_ITER 300000
 
 void MnistXnorNet(Network *network) {
 
@@ -67,12 +67,12 @@ void MnistNet(Network *network) {
   network->add(pool1);
 
   network->add(conv2);
-  network->add(bn2);
+//  network->add(bn2);
   network->add(relu2);
   network->add(pool2);
 
   network->add(conv3);
-  network->add(bn3);
+//  network->add(bn3);
   network->add(relu3);
 
   network->add(conn1);
@@ -103,8 +103,21 @@ int main( int argc, char** argv ) {
     MnistNet(&network);
     network.initial(BATCH, LEARNING_RATE);
 
-    float *train_data = read_train_data(argv[3]);
-    float *train_label = read_train_label(argv[3]);
+
+#ifdef GPU
+    float *train_data_tmp = read_train_data(argv[3]);
+    float *train_label_tmp = read_train_label(argv[3]);
+    float *train_data = malloc_gpu(60000*IM_SIZE);
+    float *train_label = malloc_gpu(60000*10);
+    gpu_push_array(train_data, train_data_tmp, 60000*IM_SIZE);
+    gpu_push_array(train_label, train_label_tmp, 60000*10);
+    
+    delete []train_data_tmp;
+    delete []train_label_tmp;
+#else 
+    float *train_data_tmp = read_train_data(argv[3]);
+    float *train_label_tmp = read_train_label(argv[3]);
+#endif
 
     ms_t start = getms();
     for(int iter = 0; iter < MAX_ITER; iter++) {
@@ -112,17 +125,17 @@ int main( int argc, char** argv ) {
       int step = (iter*BATCH)%60000;
       float *batch_xs = train_data + step*IM_SIZE;
       float *batch_ys = train_label + step*CLASSES;
-
       float *output = network.inference(batch_xs);
-      network.train(batch_ys);
- 
-      float acc = accuracy(BATCH, CLASSES, output, batch_ys);
 
-      if(iter%10 == 0) {
-        cout << "iter = " << iter << ", time = " 
-  	   << (getms() - start) << "ms, accuracy = " << acc << endl;
+      float loss = cross_entropy(BATCH, 10, output, batch_ys);
+      network.train(batch_ys);
+      if(iter%1 == 0) {
+        cout << "iter = " << iter << ", time = " << (getms() - start) << "ms, loss = "
+         << loss << endl;
         start = getms();
       }
+
+ 
     }
 
     network.save(argv[2]);

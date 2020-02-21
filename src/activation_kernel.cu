@@ -1,8 +1,5 @@
 #include "layers.h"
-
-#ifdef GPU
 #include "gpu.h"
-#endif
 
 __global__ void relu_activate_gpu_kernel(float *input, float *output, int size) {
 
@@ -70,5 +67,29 @@ void Relu::leaky_backward_gpu(float *delta) {
   int grid = batch*((N-1)/256 + 1);
   leaky_backward_gpu_kernel<<<grid, 256>>>(m_delta, delta, input, cut, batch*N);
   cudaDeviceSynchronize();
+}
+
+__global__ void softmax_kernel(float *input, float *output, int N) {
+
+    int i = threadIdx.x;
+    float tmp = 0;
+    float max = 0;
+    for(int j = 0; j < N; j++)
+      if(input[i*N+j] > max)
+        max = input[i*N+j];
+
+    for(int j = 0; j < N; j++) {
+      output[i*N+j] = exp(input[i*N+j] - max);
+      tmp += output[i*N+j];
+    }
+    for(int j = 0; j < N; j++)
+      output[i*N+j] /= tmp;
+
+}
+
+void SoftmaxWithCrossEntropy::forward_gpu() {
+
+  softmax_kernel<<<1, batch>>>(input, output, N);
+  check_error(cudaGetLastError());
 }
 

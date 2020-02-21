@@ -27,6 +27,15 @@ void Connected::init() {
   v_weight = malloc_gpu(N*M);
   m_bias = malloc_gpu(M);
   v_bias = malloc_gpu(M);
+
+  random_normal_gpu(N*M, weight);
+  random_normal_gpu(M, bias);
+/*
+  memset_gpu(N*M*sizeof(float), m_weight);
+  memset_gpu(N*M*sizeof(float), v_weight);
+  memset_gpu(M*sizeof(float), m_bias);
+  memset_gpu(M*sizeof(float), v_bias);
+*/
 #else
   weight = new float[N*M];
   bias   = new float[M];
@@ -39,7 +48,6 @@ void Connected::init() {
   v_weight = new float[N*M];
   m_bias = new float[M];
   v_bias = new float[M];
-#endif
 
   random_normal(N*M, weight);
   random_normal(M, bias);
@@ -48,6 +56,9 @@ void Connected::init() {
   memset(v_weight, 0, N*M*sizeof(float));
   memset(m_bias, 0, M*sizeof(float));
   memset(v_bias, 0, M*sizeof(float));
+
+
+#endif
 
 }
 
@@ -60,13 +71,15 @@ void Connected::bias_add() {
 
 void Connected::forward() {  
 
+
+
 #ifdef GPU
   gemm_gpu(TRS_N, TRS_N, batch, M, N, 1, input, weight, output);
+  bias_add_gpu(output, bias, batch, 1, M);
 #else
   gemm_cpu(TRS_N, TRS_N, batch, M, N, 1, input, weight, output);
-#endif
-
   bias_add();
+#endif
 }
 
 void Connected::backward(float *delta) {
@@ -74,22 +87,23 @@ void Connected::backward(float *delta) {
 #ifdef GPU
   gemm_gpu(TRS_N, TRS_T, batch, N, M, 1.0, delta, weight, m_delta);
   gemm_gpu(TRS_T, TRS_N, N, M, batch, 1.0, input, delta, grad_weight);
+  row_sum_gpu(batch, M, delta, grad_bias);
 #else
   gemm_cpu(TRS_N, TRS_T, batch, N, M, 1.0, delta, weight, m_delta);
   gemm_cpu(TRS_T, TRS_N, N, M, batch, 1.0, input, delta, grad_weight);
+  row_sum(batch, M, delta, grad_bias);
 #endif
 
-  row_sum(batch, M, delta, grad_bias);
 
 }
 
 void Connected::update(update_args a) {
 
 #if GPU
-  //adam_gpu(N*M, weight, grad_weight, m_weight, v_weight, a);
-  //adam_gpu(M, bias, grad_bias, m_bias, v_bias, a);
-  momentum_gpu(N*M, weight, grad_weight, v_weight, a);
-  momentum_gpu(M, bias, grad_bias, v_bias, a);
+  adam_gpu(N*M, weight, grad_weight, m_weight, v_weight, a);
+  adam_gpu(M, bias, grad_bias, m_bias, v_bias, a);
+  //momentum_gpu(N*M, weight, grad_weight, v_weight, a);
+  //momentum_gpu(M, bias, grad_bias, v_bias, a);
 #else
   adam_cpu(N*M, weight, grad_weight, m_weight, v_weight, a);
   adam_cpu(M, bias, grad_bias, m_bias, v_bias, a);

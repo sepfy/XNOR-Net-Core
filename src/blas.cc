@@ -1,6 +1,9 @@
 #include <iostream>
 #include <stdlib.h>
 #include <string.h>
+#ifdef GPU
+#include "gpu.h"
+#endif
 #include "blas.h"
 
 using namespace std;
@@ -55,7 +58,14 @@ void mat_scalar(int N, int M, float *mat1, float scalar, float* mat_out) {
      mat_out[i] = mat1[i]*scalar; 
 }
 
-float cross_entropy(int batch, int N, float *output, float *target) {
+float cross_entropy(int batch, int N, float *output_gpu, float *target_gpu) {
+
+#ifdef GPU
+  float *output = new float[batch*N];
+  float *target = new float[batch*N];
+
+  gpu_pull_array(output_gpu, output, batch*N);
+  gpu_pull_array(target_gpu, target, batch*N);
 
   float tmp = 0;
   for(int i = 0; i < batch; i++) {
@@ -67,7 +77,17 @@ float cross_entropy(int batch, int N, float *output, float *target) {
     }
   }
   tmp = tmp/(float)batch;
+
+  delete []output;
+  delete []target;
+
   return tmp;
+#else
+  //TODO: Support CPU !!!
+  float tmp = 0;
+  return tmp;
+#endif
+
 }
 
 float L1_norm(int N, int M, float *A) {
