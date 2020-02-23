@@ -1,12 +1,10 @@
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
-#include "gemm.h"
-#include "blas.h"
-#include "utils.h"
-#include "gpu.h"
-#include "gpu/util_gpu_gtest.h"
-#include "gpu/gemm_gpu_gtest.h"
-#include "gpu/blas_gpu_gtest.h"
+#include "layers.h"
+//#include "gpu/util_gpu_gtest.h"
+//#include "gpu/gemm_gpu_gtest.h"
+//#include "gpu/blas_gpu_gtest.h"
+#include "gpu/batchnorm_gpu_gtest.h"
 
 using ::testing::ElementsAreArray;
 

@@ -67,10 +67,17 @@ void random_normal_gpu(int n, float *gpu_x) {
   delete []tmp;
 }
 
-void memset_gpu(size_t n, float *gpu_x) {
-  cudaMemset(gpu_x, 0, sizeof(float)*n);
+void memset_gpu(float *gpu_x, float val, size_t n) {
+
+  float *x = new float[n];
+  for(int i = 0; i < n; i++)
+    x[i] = val;
+  gpu_push_array(gpu_x, x, n);
   check_error(cudaGetLastError());
+  delete []x;
 }
+
+
 
 void gpu_push_array(float *x_gpu, float *x, size_t n)
 {

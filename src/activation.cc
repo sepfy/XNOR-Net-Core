@@ -134,10 +134,8 @@ void Relu::init() {
 #ifdef GPU
 	
   output = malloc_gpu(batch*N);
-  
   m_delta = malloc_gpu(batch*N);
   cut = malloc_gpu(batch*N);
-  memset_gpu(batch*N, cut);
    
 #else
   output = new float[batch*N];

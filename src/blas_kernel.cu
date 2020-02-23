@@ -31,6 +31,7 @@ __global__ void row_sum_gpu_kernel(float *A, float *B, int N, int M) {
   if(index > M)
     return;
   int i = 0;
+  B[index] = 0.0;
   for(i = 0; i < M; i++)
     B[index] += A[index*M + i];
 }
@@ -44,6 +45,48 @@ void row_sum_gpu(int N, int M, float *A, float *B) {
     check_error(cudaGetLastError());
 }
 
+
+__global__ void col_sum_gpu_kernel(float *A, float *B, int N, int M) {
+   
+  int index = blockIdx.x*blockDim.x + threadIdx.x;
+  if(index > N)
+    return;
+  int i = 0;
+  B[index] = 0.0;
+  for(i = 0; i < N; i++)
+    B[index] += A[i*M + index];
+/* 
+  int index = blockIdx.x*blockDim.x + threadIdx.x;
+  if(index > M)
+    return;
+  int i = 0;
+  for(i = 0; i < M; i++)
+    B[index] += A[index*M + i];
+*/
+}
+
+
+void col_sum_gpu(int N, int M, float *A, float *B) {
+
+/*
+  size_t BLOCK = 512;
+  int grid = (N-1)/BLOCK + 1;
+  col_sum_gpu_kernel<<<grid, BLOCK>>>(A, B, N, M);
+  check_error(cudaGetLastError());
+*/
+  cudaMemset(B, 0, sizeof(float)*M);
+  check_error(cudaGetLastError());
+  float alpha = 1.0;
+  float beta = 0.0;
+  float *e = malloc_gpu(N);
+  cudaMemset(e, 1.0, sizeof(float)*N);
+  check_error(cudaGetLastError());
+  cublasSgemv(gpu_handle(), CUBLAS_OP_T, M, N, &alpha, A, M, e, 1, &beta, B, 1);
+  check_error(cudaGetLastError());
+  cudaFree(e);
+}
+
+/*
 void col_sum_gpu(int N, int M, float *A, float *B) {
 
   memset(B, 0, N*sizeof(float));
@@ -54,13 +97,8 @@ void col_sum_gpu(int N, int M, float *A, float *B) {
     e[i] = 1.0;
   cublasSgemv(gpu_handle(), CUBLAS_OP_T, M, N, &alpha, A, M, e, 1, &beta, B, 1);
   cudaDeviceSynchronize();
-/*
-  for(int i = 0; i < N; i++)
-    for(int j = 0; j < M; j++)
-      B[i] += A[i*M+j];
-*/
 }
-
+*/
 
 __global__ void bias_add_kernel1(float *output, float *bias,
                          int batch, int size, int channel) {

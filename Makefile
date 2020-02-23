@@ -1,5 +1,5 @@
 USE_OPENMP = 0
-USE_GPU = 0
+USE_GPU = 1
 
 
 OUTDIR = objs
@@ -64,7 +64,7 @@ $(OUTDIR)/%.o: $(SRCDIR)/%.cc
 	$(CXX) $(CXXFLAGS) $(MACRO) $(INCLUDE) $(LIBS) -c $< -o $@ 
 
 $(OUTDIR)/%.o: $(SRCDIR)/%.cu 
-	$(NVCC) $(INCLUDE) -c $< -o $@ 
+	$(NVCC) $(MACRO) $(INCLUDE) -c $< -o $@ 
 
 $(OUTDIR):
 	mkdir -p $(OUTDIR)
