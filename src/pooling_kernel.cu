@@ -1,10 +1,5 @@
 #include "layers.h"
 
-#ifdef GPU
-#include "gpu.h"
-#endif
-
-
 __global__ void maxpool_forward_gpu_kernel(float *output, float *input, float *indexes, int H, int W, int C, int FH, int FW, int FC, int out_h, int out_w, int stride) {
 
   int b = blockIdx.x;

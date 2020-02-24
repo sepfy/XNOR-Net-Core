@@ -23,6 +23,8 @@ class Layer {
     float *input;
     float *output;
     float *m_delta;
+    size_t shared_size = 0;
+    float *shared;
     virtual void forward() = 0;
     virtual void backward(float* delta) = 0;
     virtual void update(update_args a) = 0;

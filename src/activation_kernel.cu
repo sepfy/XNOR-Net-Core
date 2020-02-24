@@ -1,5 +1,4 @@
 #include "layers.h"
-#include "gpu.h"
 
 __global__ void relu_activate_gpu_kernel(float *input, float *output, int size) {
 

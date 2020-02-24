@@ -1,8 +1,5 @@
 #include "layers.h"
 
-#ifdef GPU
-#include "gpu.h"
-#endif
 
 using namespace std;
 
@@ -36,6 +33,7 @@ Convolution::Convolution(int _W, int _H, int _C,
   weight_size = out_channel*FC;
   bias_size = FC;
   input_size = batch*im_size;
+
 }
 
 Convolution::~Convolution() {
@@ -43,15 +41,14 @@ Convolution::~Convolution() {
 #ifdef GPU
 
 #else
-  delete []col;
   delete []output;
-  delete []out_col;
   delete []weight;
   delete []grad_weight;
-  delete [] grad_bias;
-  delete []im;
+  delete []grad_bias;
   delete []m_delta;
 
+  //delete []im;
+  //delete []out_col;
   /* Adam optimizer */
   delete []m_weight;
   delete []v_weight;
@@ -66,15 +63,17 @@ void Convolution::init() {
 
 #ifdef GPU
 
-  col = malloc_gpu(out_w*out_h*out_channel);
   output = malloc_gpu(batch*out_w*out_h*FC);
-  out_col = malloc_gpu(out_w*out_h*out_channel*batch);
+
   weight = malloc_gpu(out_channel*FC);
   grad_weight = malloc_gpu(out_channel*FC);
   bias = malloc_gpu(FC);
   grad_bias = malloc_gpu(FC);
-  im = malloc_gpu(H*W*C);
+
   m_delta = malloc_gpu(batch*W*H*C); 
+
+  //out_col = malloc_gpu(out_w*out_h*out_channel*batch);
+  //delta_col = malloc_gpu(out_channel*out_w*out_h);
 
   // Adam optimizer
   m_weight = malloc_gpu(out_channel*FC);
@@ -82,10 +81,18 @@ void Convolution::init() {
   m_bias = malloc_gpu(FC);
   v_bias = malloc_gpu(FC);
 
-  delta_col = malloc_gpu(batch*out_channel*out_w*out_h);
+  size_t umem = batch*out_w*out_h*FC
+	      + 4*out_channel*FC
+              + 4*FC
+	      + batch*W*H*C;
+   
+  cout << "Convolution layers: Memory Size = " << umem*sizeof(float)/(1024*1024) << endl;
+
 
   random_normal_gpu(out_channel*FC, weight);
   random_normal_gpu(FC, bias);
+
+  
 /*
   memset_gpu(out_channel*FC*sizeof(float), m_weight);
   memset_gpu(out_channel*FC*sizeof(float), v_weight);
@@ -145,6 +152,9 @@ void Convolution::init() {
 
 #endif
 
+
+
+  shared_size = out_w*out_h*out_channel*batch;
 }
 
 #ifdef XNOR_NET
@@ -242,13 +252,29 @@ void Convolution::forward_xnor() {
 void Convolution::forward_full() {
 
 #ifdef GPU
+/*
+  for(int i = 0; i < batch; i++) {
+    im2col_gpu(W, H, C, FW, FH, FC, stride, pad, 
+      input + i*im_size, out_col);
+    gemm_gpu(TRS_N, TRS_N, out_h*out_w, FC, out_channel, 1, out_col, weight, output+i*out_w*out_h*FC);
+  }
+*/
+  for(int i = 0; i < batch; i++)
+    im2col_gpu(W, H, C, FW, FH, FC, stride, pad, 
+      input + i*im_size, shared+i*col_size);
 
+  gemm_gpu(TRS_N, TRS_N, batch*out_h*out_w, FC, out_channel, 1, shared, weight, output);
+
+/*
+#if 1
+  //Need GPU memory too much
   for(int i = 0; i < batch; i++)
     im2col_gpu(W, H, C, FW, FH, FC, stride, pad, 
       input + i*im_size, out_col+i*col_size);
 
   gemm_gpu(TRS_N, TRS_N, batch*out_h*out_w, FC, out_channel, 1, out_col, weight, output);
-
+#endif
+*/
 #else
 
   for(int i = 0; i < batch; i++)
@@ -287,15 +313,32 @@ void Convolution::bias_add() {
 void Convolution::backward(float *delta) {
 
 #ifdef GPU
+
+  for(int i = 0; i < batch; i++)
+    im2col_gpu(W, H, C, FW, FH, FC, stride, pad,
+      input + i*im_size, shared+i*col_size);
+    
   gemm_gpu(TRS_T, TRS_N, 
            out_channel, FC, out_h*out_w*batch, 1.0,
-           out_col, delta, grad_weight);
+           shared, delta, grad_weight);
+
+
+  row_sum_gpu(batch*out_w*out_h, FC, delta, grad_bias);
+
+
+  gemm_gpu(TRS_N, TRS_T,
+       out_w*out_h, out_channel, FC, 1.0,
+       delta, weight, shared);
+
+  for(int i = 0; i < batch; i++) {
+    col2im_gpu(W,H, C, FW, FH, FC, stride, pad, 
+      m_delta + i*im_size, shared  + i*col_size);
+  }
+
 #else
   gemm_cpu(TRS_T, TRS_N, 
            out_channel, FC, out_h*out_w*batch, 1.0,
            out_col, delta, grad_weight);
-#endif
-
 
   if(xnor) {
 
@@ -312,29 +355,10 @@ void Convolution::backward(float *delta) {
 
   }
   else {
-
-#ifdef GPU
-    gemm_gpu(TRS_N, TRS_T,
-           batch*out_w*out_h, out_channel, FC, 1.0,
-           delta, weight, delta_col);
-#else
     gemm_cpu(TRS_N, TRS_T,
            batch*out_w*out_h, out_channel, FC, 1.0,
            delta, weight, delta_col);
-#endif
-    
   }
-
-
-#ifdef GPU
-
-  row_sum_gpu(batch*out_w*out_h, FC, delta, grad_bias);
-
-  for(int i = 0; i < batch; i++)
-    col2im_gpu(W,H, C, FW, FH, FC, stride, pad, 
-      m_delta + i*im_size, delta_col + i*col_size);
-
-#else
 
   row_sum(batch*out_w*out_h, FC, delta, grad_bias);
 

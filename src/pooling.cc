@@ -34,13 +34,11 @@ Pooling::~Pooling() {
 void Pooling::init() {
 
 #ifdef GPU
-  col = malloc_gpu(out_w*out_h*out_channel);
+
   output = malloc_gpu(batch*out_w*out_h*FC);
-  out_col = malloc_gpu(out_w*out_h*out_channel*batch);
-  im = malloc_gpu(H*W*C);
   m_delta = malloc_gpu(batch*H*W*C);
-  delta_col = malloc_gpu(batch*out_channel*out_w*out_h);
   indexes = malloc_gpu(batch*out_w*out_h*FC);
+
 #else
   col = new float[out_w*out_h*out_channel];
   output = new float[batch*out_w*out_h*FC];
@@ -51,6 +49,7 @@ void Pooling::init() {
   indexes = new float[batch*out_w*out_h*FC];
 #endif
 
+  cout << "Max Pooling layer: memory = " << (batch*out_w*out_h*FC*3)/(1024*1024) << endl;
 }
 
 

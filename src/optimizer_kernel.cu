@@ -1,10 +1,5 @@
 #include "layers.h"
 
-#ifdef GPU
-#include "gpu.h"
-#endif
-
-
 __global__ void adam_gpu_kernel(int n, float *x, float *grad_x, float *m_x, float *v_x, 
 		float beta1, float beta2, float m_lr, float epsilon) {
 

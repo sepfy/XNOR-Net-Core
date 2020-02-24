@@ -1,10 +1,5 @@
 #include "layers.h"
 
-#ifdef GPU
-#include "gpu.h"
-#endif
-
-
 __global__ void avgpool_forward_gpu_kernel(float *output, float *input, int H, int W, int C) {
 
   int b = blockIdx.x;

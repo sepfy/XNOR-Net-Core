@@ -94,4 +94,9 @@ void gpu_pull_array(float *x_gpu, float *x, size_t n)
     check_error(status);
 }
 
+int default_grid(int N) {
+  int GRID = (N-1)/BLOCK + 1;
+  return GRID;
+}
+
 #endif

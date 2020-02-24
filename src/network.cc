@@ -10,10 +10,21 @@ void Network::add(Layer* layer) {
 
 void Network::initial(int batch, float _lr) {
   a.lr = _lr;
+  size_t max = 0;
   for(int i = 0; i < layers.size(); i++) {
     layers[i]->batch = batch;
     layers[i]->init();
+    //cout << layers[i]->shared_size << endl;
+    if(layers[i]->shared_size > max)
+      max = layers[i]->shared_size;
   }
+
+  cout << max/(1024*1024) << endl;
+
+  // Create shared 
+  float *shared = malloc_gpu(max);
+  for(int i = 0; i < layers.size(); i++)
+    layers[i]->shared = shared;
 
   for(int i = 1; i < layers.size(); i++) {
     layers[i]->input = layers[i-1]->output;

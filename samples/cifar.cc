@@ -12,7 +12,7 @@ using namespace std;
 
 
 #define LEARNING_RATE 1.0e-1
-#define BATCH 14
+#define BATCH 32
 #define MAX_ITER 80000
 
 void CifarXnorNet(Network *network) {
@@ -118,47 +118,34 @@ void CifarDarkNet(Network *network) {
   SoftmaxWithCrossEntropy *softmax = new SoftmaxWithCrossEntropy(10);
 
   network->add(conv1);
-  network->add(bn1);
   network->add(relu1);
-
   network->add(conv2);
-  network->add(bn2);
   network->add(relu2);
-
   network->add(conv3);
-  network->add(bn3);
   network->add(relu3);
-
   network->add(pool1);
-
   network->add(conv4);
-  network->add(bn4);
   network->add(relu4);
-
   network->add(conv5);
-  network->add(bn5);
   network->add(relu5);
-
   network->add(conv6);
-  network->add(bn6);
   network->add(relu6);
-
   network->add(pool2);
 
   network->add(conv7);
-  network->add(bn7);
+  //network->add(bn7);
   network->add(relu7);
 
   network->add(conv8);
-  network->add(bn8);
+  //network->add(bn8);
   network->add(relu8);
 
   network->add(conv9);
-  network->add(bn9);
+  //network->add(bn9);
   network->add(relu9);
 
   network->add(conv10);
-  network->add(bn10);
+  //network->add(bn10);
   network->add(relu10);
 
   network->add(avgpool1);
@@ -463,6 +450,7 @@ int main( int argc, char** argv ) {
     network.initial(BATCH, LEARNING_RATE);
     float *train_data, *train_label;
 
+    /*
 #ifdef GPU
     float *train_data_tmp = new float[50000*IM_SIZE];
     float *train_label_tmp = new float[50000*NUM_OF_CLASS];
@@ -470,27 +458,39 @@ int main( int argc, char** argv ) {
 
     train_data = malloc_gpu(50000*IM_SIZE);
     train_label = malloc_gpu(50000*NUM_OF_CLASS);
-    gpu_push_array(train_data, train_data_tmp, 50000*IM_SIZE);
-    gpu_push_array(train_label, train_label_tmp, 50000*NUM_OF_CLASS);
 
     delete []train_data_tmp;
     delete []train_label_tmp;
 
 #else
+    */
     train_data = new float[50000*IM_SIZE];
     train_label = new float[50000*NUM_OF_CLASS];
     read_train_data(argv[3], train_data, train_label);
-#endif
+//#endif
+/*
+float *A;
+float *B;
+float *C;
+A= malloc_gpu(2048);
+B= malloc_gpu(512);
+C= malloc_gpu(2304);
+
+gemm_gpu(TRS_N, TRS_N, 2408, 512, 2304, 1, A, B, C);
+*/
 
 
-
+    float *batch_xs = malloc_gpu(BATCH*IM_SIZE);
+    float *batch_ys = malloc_gpu(BATCH*NUM_OF_CLASS);
     for(int iter = 0; iter < MAX_ITER; iter++) {
 
       ms_t start = getms();
       int step = (iter*BATCH)%50000;
-      float *batch_xs = train_data + step*IM_SIZE;
-      float *batch_ys = train_label + step*NUM_OF_CLASS;
+      //float *batch_xs = train_data + step*IM_SIZE;
+      //float *batch_ys = train_label + step*NUM_OF_CLASS;
 
+      gpu_push_array(batch_xs, train_data + step*IM_SIZE, BATCH*IM_SIZE);
+      gpu_push_array(batch_ys, train_label + step*NUM_OF_CLASS, BATCH*NUM_OF_CLASS);
       float *output = network.inference(batch_xs);
       network.train(batch_ys);
 //      float acc = accuracy(BATCH, NUM_OF_CLASS, output, batch_ys); 

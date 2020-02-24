@@ -62,17 +62,17 @@ void MnistNet(Network *network) {
   SoftmaxWithCrossEntropy *softmax = new SoftmaxWithCrossEntropy(10);
   
   network->add(conv1);
-  network->add(bn1);
+  //network->add(bn1);
   network->add(relu1);
   network->add(pool1);
 
   network->add(conv2);
-  network->add(bn2);
+  //network->add(bn2);
   network->add(relu2);
   network->add(pool2);
 
   network->add(conv3);
-  network->add(bn3);
+  //network->add(bn3);
   network->add(relu3);
 
   network->add(conn1);
@@ -128,7 +128,7 @@ int main( int argc, char** argv ) {
       float *output = network.inference(batch_xs);
 
       network.train(batch_ys);
-      if(iter%100 == 0) {
+      if(iter%10 == 0) {
         float loss = cross_entropy(BATCH, 10, output, batch_ys);
         cout << "iter = " << iter << ", time = " << (getms() - start) << "ms, loss = "
          << loss << endl;

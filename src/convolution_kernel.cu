@@ -1,9 +1,5 @@
 #include "layers.h"
 
-#ifdef GPU
-#include "gpu.h"
-#endif
-
 __global__ void bias_add_kernel(float *output, float *bias,
                          int batch, int im_size, int channel) {
 

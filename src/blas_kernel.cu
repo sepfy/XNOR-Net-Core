@@ -1,5 +1,4 @@
 #include "layers.h"
-#include "gpu.h"
 
 /*
 __global__ void row_sum_gpu_kernel(float *A, float *B) {
@@ -39,7 +38,6 @@ __global__ void row_sum_gpu_kernel(float *A, float *B, int N, int M) {
 
 void row_sum_gpu(int N, int M, float *A, float *B) {
 
-    size_t BLOCK = 512;
     int grid = (M-1)/BLOCK + 1;
     row_sum_gpu_kernel<<<grid, BLOCK>>>(A, B, N, M);
     check_error(cudaGetLastError());
@@ -69,7 +67,6 @@ __global__ void col_sum_gpu_kernel(float *A, float *B, int N, int M) {
 void col_sum_gpu(int N, int M, float *A, float *B) {
 
 /*
-  size_t BLOCK = 512;
   int grid = (N-1)/BLOCK + 1;
   col_sum_gpu_kernel<<<grid, BLOCK>>>(A, B, N, M);
   check_error(cudaGetLastError());
@@ -116,4 +113,17 @@ void bias_add_gpu(float *output, float *bias, int batch, int size, int c) {
   bias_add_kernel1<<<batch, size>>>(output, bias, batch, size, c);
 }
 
+__global__ void elementwise_mul_gpu_kernel(float *A, float *B, float *C, int N) {
+
+  int index = gridDim.x*threadIdx.x + blockIdx.x;
+  if(index > N) return;
+  C[index] = A[index] + B[index];
+}
+
+void elementwise_mul_gpu(float *A, float *B, float *C, int N) {
+
+  elementwise_mul_gpu_kernel<<<default_grid(N),BLOCK>>>(A, B, C, N);
+  check_error(cudaGetLastError());
+
+}
 

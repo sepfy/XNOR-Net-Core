@@ -1,9 +1,5 @@
 #include "layers.h"
 
-#ifdef GPU
-#include "gpu.h"
-#endif
-
 Connected::Connected(int _n, int _m) {
   N = _n;
   M = _m;
@@ -16,12 +12,16 @@ Connected::~Connected() {
 void Connected::init() {
 
 #ifdef GPU
+
+  output = malloc_gpu(batch*M);
+      
   weight = malloc_gpu(N*M);
   bias   = malloc_gpu(M);
-  output = malloc_gpu(batch*M);
   grad_weight = malloc_gpu(N*M);
   grad_bias = malloc_gpu(M);
+
   m_delta = malloc_gpu(batch*N);
+
   // Adam optimizer
   m_weight = malloc_gpu(N*M);
   v_weight = malloc_gpu(N*M);
@@ -30,12 +30,7 @@ void Connected::init() {
 
   random_normal_gpu(N*M, weight);
   random_normal_gpu(M, bias);
-/*
-  memset_gpu(N*M*sizeof(float), m_weight);
-  memset_gpu(N*M*sizeof(float), v_weight);
-  memset_gpu(M*sizeof(float), m_bias);
-  memset_gpu(M*sizeof(float), v_bias);
-*/
+
 #else
   weight = new float[N*M];
   bias   = new float[M];
@@ -100,10 +95,10 @@ void Connected::backward(float *delta) {
 void Connected::update(update_args a) {
 
 #if GPU
-  //adam_gpu(N*M, weight, grad_weight, m_weight, v_weight, a);
-  //adam_gpu(M, bias, grad_bias, m_bias, v_bias, a);
-  momentum_gpu(N*M, weight, grad_weight, v_weight, a);
-  momentum_gpu(M, bias, grad_bias, v_bias, a);
+  adam_gpu(N*M, weight, grad_weight, m_weight, v_weight, a);
+  adam_gpu(M, bias, grad_bias, m_bias, v_bias, a);
+  //momentum_gpu(N*M, weight, grad_weight, v_weight, a);
+  //momentum_gpu(M, bias, grad_bias, v_bias, a);
 #else
   adam_cpu(N*M, weight, grad_weight, m_weight, v_weight, a);
   adam_cpu(M, bias, grad_bias, m_bias, v_bias, a);

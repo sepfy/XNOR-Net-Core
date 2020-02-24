@@ -143,6 +143,8 @@ void Relu::init() {
   cut = new float[batch*N];
   memset(cut, 0, sizeof(float)*batch*N);
 #endif
+
+  cout << "Activation layers: memory = " << 3*batch*N/(1024*1024) << endl;
 }
 
 void Relu::forward() {

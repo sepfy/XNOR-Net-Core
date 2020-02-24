@@ -1,13 +1,5 @@
 #include "layers.h"
-#include "gpu.h"
 #include "blas.h"
-
-size_t BLOCK = 512;
-
-int default_grid(int N) {
-  int GRID = (N-1)/BLOCK + 1;
-  return GRID;
-}
 
 __global__ void mean_gpu_kernel(float *input, float *mean, float batch, int N) {
 
@@ -112,21 +104,6 @@ void Batchnorm::scale_and_shift_gpu() {
 
 }
 
-
-
-__global__ void elementwise_mul_gpu_kernel(float *A, float *B, float *C, int N) {
-
-  int index = gridDim.x*threadIdx.x + blockIdx.x;
-  if(index > N) return;
-  C[index] = A[index] + B[index];
-}
-
-void elementwise_mul_gpu(float *A, float *B, float *C, int N) {
-
-  elementwise_mul_gpu_kernel<<<default_grid(N),BLOCK>>>(A, B, C, N);
-  check_error(cudaGetLastError());
-
-} 
 
 
 __global__ void cal_dx(float *dxn, float *dxc, float *gamma, float *delta, float *var, float *xc, float *input, float *mean, float epsilon) {
