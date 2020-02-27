@@ -125,9 +125,6 @@ __global__ void cal_dvar_kernel(float *dvar, float *dstd, float *var, float epsi
 }
 
 
-
-
-
 __global__ void cal_mdelta_kernel(float *m_delta, float *dxc, float *dmu, float batch) {
 
 

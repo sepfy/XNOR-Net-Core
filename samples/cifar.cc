@@ -12,7 +12,7 @@ using namespace std;
 
 
 #define LEARNING_RATE 1.0e-1
-#define BATCH 32
+#define BATCH 64
 #define MAX_ITER 80000
 
 void CifarXnorNet(Network *network) {
@@ -118,34 +118,47 @@ void CifarDarkNet(Network *network) {
   SoftmaxWithCrossEntropy *softmax = new SoftmaxWithCrossEntropy(10);
 
   network->add(conv1);
+  network->add(bn1);
   network->add(relu1);
+
   network->add(conv2);
+  network->add(bn2);
   network->add(relu2);
+
   network->add(conv3);
+  network->add(bn3);
   network->add(relu3);
+
   network->add(pool1);
+
   network->add(conv4);
+  network->add(bn4);
   network->add(relu4);
+
   network->add(conv5);
+  network->add(bn5);
   network->add(relu5);
+
   network->add(conv6);
+  network->add(bn6);
   network->add(relu6);
+
   network->add(pool2);
 
   network->add(conv7);
-  //network->add(bn7);
+  network->add(bn7);
   network->add(relu7);
 
   network->add(conv8);
-  //network->add(bn8);
+  network->add(bn8);
   network->add(relu8);
 
   network->add(conv9);
-  //network->add(bn9);
+  network->add(bn9);
   network->add(relu9);
 
   network->add(conv10);
-  //network->add(bn10);
+  network->add(bn10);
   network->add(relu10);
 
   network->add(avgpool1);

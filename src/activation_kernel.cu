@@ -13,7 +13,7 @@ void Relu::relu_activate_gpu() {
   int grid = batch*((N-1)/256 + 1);
     
   relu_activate_gpu_kernel<<<grid, 256>>>(input, output, batch*N);
-  cudaDeviceSynchronize();
+  check_error(cudaGetLastError());
 }
 
 
@@ -31,7 +31,7 @@ void Relu::relu_backward_gpu(float *delta) {
 
   int grid = batch*((N-1)/256 + 1);
   relu_backward_gpu_kernel<<<grid, 256>>>(m_delta, delta, input, cut, batch*N);
-  cudaDeviceSynchronize();
+  check_error(cudaGetLastError());
 }
 
 
@@ -47,7 +47,7 @@ void Relu::leaky_activate_gpu() {
 
   int grid = batch*((N-1)/256 + 1);
   leaky_activate_gpu_kernel<<<grid, 256>>>(input, output, batch*N);
-  cudaDeviceSynchronize();
+  check_error(cudaGetLastError());
 }
 
 
@@ -65,7 +65,7 @@ void Relu::leaky_backward_gpu(float *delta) {
 
   int grid = batch*((N-1)/256 + 1);
   leaky_backward_gpu_kernel<<<grid, 256>>>(m_delta, delta, input, cut, batch*N);
-  cudaDeviceSynchronize();
+  check_error(cudaGetLastError());
 }
 
 __global__ void softmax_kernel(float *input, float *output, int N) {

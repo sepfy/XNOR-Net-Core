@@ -1,7 +1,7 @@
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
 #include "layers.h"
-//#include "gpu/util_gpu_gtest.h"
+#include "gpu/util_gpu_gtest.h"
 //#include "gpu/gemm_gpu_gtest.h"
 //#include "gpu/blas_gpu_gtest.h"
 #include "gpu/batchnorm_gpu_gtest.h"

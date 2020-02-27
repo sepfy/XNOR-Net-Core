@@ -22,7 +22,7 @@ __global__ void avgpool_forward_gpu_kernel(float *output, float *input, int H, i
 void AvgPool::forward_gpu() {
 
   avgpool_forward_gpu_kernel<<<batch, C>>>(output, input, H, W, C);
-  cudaDeviceSynchronize();
+  check_error(cudaGetLastError());
 }
 
     
@@ -47,5 +47,5 @@ __global__ void avgpool_backward_gpu_kernel(float *m_delta, float *delta, int H,
 void AvgPool::backward_gpu(float *delta) {
 
   avgpool_backward_gpu_kernel<<<batch, C>>>(m_delta, delta, H, W, C);
-  cudaDeviceSynchronize();
+  check_error(cudaGetLastError());
 }

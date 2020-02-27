@@ -111,6 +111,7 @@ __global__ void bias_add_kernel1(float *output, float *bias,
 void bias_add_gpu(float *output, float *bias, int batch, int size, int c) {
 
   bias_add_kernel1<<<batch, size>>>(output, bias, batch, size, c);
+  check_error(cudaGetLastError());
 }
 
 __global__ void elementwise_mul_gpu_kernel(float *A, float *B, float *C, int N) {

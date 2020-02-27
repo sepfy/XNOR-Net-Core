@@ -17,7 +17,7 @@ void adam_gpu(int n, float *x, float *grad_x, float *m_x, float *v_x, update_arg
   float m_lr = a.lr * pow(1.0 - pow(a.beta2, a.iter), 0.5) / (1.0 - pow(a.beta1, a.iter));
   unsigned int grid = n/512+1;
   adam_gpu_kernel<<<grid, 512>>>(n, x, grad_x, m_x, v_x, a.beta1, a.beta2, m_lr, a.epsilon);
-  cudaDeviceSynchronize();
+  check_error(cudaGetLastError());;
 
 }
 
@@ -38,7 +38,6 @@ void momentum_gpu(int n, float *x, float *grad_x, float *v_x, update_args a) {
   
   unsigned int grid = n/512+1;
   momentum_gpu_kernel<<<grid, 512>>>(n, x, grad_x, v_x, a.lr, a.momentum);
-  cudaDeviceSynchronize();
-
+  check_error(cudaGetLastError());
 }
 

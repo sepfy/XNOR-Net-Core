@@ -14,7 +14,7 @@ void Convolution::bias_add_gpu() {
 
   int size = out_w*out_h;
   bias_add_kernel<<<batch, size>>>(output, bias, batch, size, FC);
-  cudaDeviceSynchronize();
+  check_error(cudaGetLastError());
 }
 
 
