@@ -11,8 +11,8 @@
 using namespace std;
 
 
-#define LEARNING_RATE 1.0e-1
-#define BATCH 64
+#define LEARNING_RATE 1.0e-3
+#define BATCH 50
 #define MAX_ITER 80000
 
 void CifarXnorNet(Network *network) {
@@ -396,46 +396,52 @@ void ResNet(Network *network) {
 
 void CifarNet(Network *network) {
 
-  Convolution *conv1 = new Convolution(32, 32, 3, 5, 5, 20, 1, false);
+  Convolution *conv1 = new Convolution(32, 32, 3, 3, 3, 128, 1, true);
   conv1->xnor = false;
-  Batchnorm *bn1 = new Batchnorm(28*28*20);
-  Relu *relu1 = new Relu(28*28*20, LEAKY);
-  Pooling *pool1 = new Pooling(28, 28, 20, 2, 2, 20, 2, false);
+  Batchnorm *bn1 = new Batchnorm(32*32*128);
+  Relu *relu1 = new Relu(32*32*128, RELU);
+  Pooling *pool1 = new Pooling(32, 32, 128, 2, 2, 128, 2, false);
 
-  Convolution *conv2 = new Convolution(14, 14, 20, 5, 5, 50, 1, false);
+  Convolution *conv2 = new Convolution(16, 16, 128, 3, 3, 256, 1, true);
   conv2->xnor = false;
-  Batchnorm *bn2 = new Batchnorm(10*10*50);
-  Relu *relu2 = new Relu(10*10*50, LEAKY);
-  Pooling *pool2 = new Pooling(10, 10, 50, 2, 2, 50, 2, false);
+  Batchnorm *bn2 = new Batchnorm(16*16*256);
+  Relu *relu2 = new Relu(16*16*256, RELU);
+  Pooling *pool2 = new Pooling(16, 16, 256, 2, 2, 256, 2, false);
 
-  Convolution *conv3 = new Convolution(5, 5, 50, 5, 5, 500, 1, false);
+  Convolution *conv3 = new Convolution(8, 8, 256, 3, 3, 512, 1, true);
   conv3->xnor = false;
-  Batchnorm *bn3 = new Batchnorm(500);
-  Relu *relu3 = new Relu(500, LEAKY);
-  Dropout *dropout3 = new Dropout(500, 0.5);
+  Batchnorm *bn3 = new Batchnorm(8*8*512);
+  Relu *relu3 = new Relu(8*8*512, RELU);
+
+  Convolution *conv4 = new Convolution(8, 8, 512, 8, 8, 500, 1, false);
+  conv4->xnor = false;
+  Batchnorm *bn4 = new Batchnorm(500);
+  Relu *relu4 = new Relu(500, RELU);
 
   Connected *conn4 = new Connected(500, 10);
   SoftmaxWithCrossEntropy *softmax = new SoftmaxWithCrossEntropy(10);
 
-  
   network->add(conv1);
-  network->add(bn1);
+  //network->add(bn1);
   network->add(relu1);
-
   network->add(pool1);
 
   network->add(conv2);
-  network->add(bn2);
+  //network->add(bn2);
   network->add(relu2);
   network->add(pool2);
 
   network->add(conv3);
-  network->add(bn3);
+  //network->add(bn3);
   network->add(relu3);
 
-  //network->add(dropout3);
+  network->add(conv4);
+  //network->add(bn4);
+  network->add(relu4);
+
   network->add(conn4);
   network->add(softmax);
+  
 
 }
 
@@ -457,62 +463,49 @@ int main( int argc, char** argv ) {
   if(strcmp(argv[1], "train") == 0) {
 
     //CifarXnorNet(&network);
-    //CifarNet(&network);
-    CifarDarkNet(&network);
+    CifarNet(&network);
+    //CifarDarkNet(&network);
     //ResNet(&network);
     network.initial(BATCH, LEARNING_RATE);
     float *train_data, *train_label;
 
-    /*
-#ifdef GPU
-    float *train_data_tmp = new float[50000*IM_SIZE];
-    float *train_label_tmp = new float[50000*NUM_OF_CLASS];
-    read_train_data(argv[3], train_data_tmp, train_label_tmp);
-
-    train_data = malloc_gpu(50000*IM_SIZE);
-    train_label = malloc_gpu(50000*NUM_OF_CLASS);
-
-    delete []train_data_tmp;
-    delete []train_label_tmp;
-
-#else
-    */
     train_data = new float[50000*IM_SIZE];
     train_label = new float[50000*NUM_OF_CLASS];
     read_train_data(argv[3], train_data, train_label);
-//#endif
-/*
-float *A;
-float *B;
-float *C;
-A= malloc_gpu(2048);
-B= malloc_gpu(512);
-C= malloc_gpu(2304);
 
-gemm_gpu(TRS_N, TRS_N, 2408, 512, 2304, 1, A, B, C);
-*/
-
-
+#ifdef GPU    
     float *batch_xs = malloc_gpu(BATCH*IM_SIZE);
     float *batch_ys = malloc_gpu(BATCH*NUM_OF_CLASS);
+#else
+    float *batch_xs;
+    float *batch_ys;
+#endif
+
     for(int iter = 0; iter < MAX_ITER; iter++) {
 
       ms_t start = getms();
       int step = (iter*BATCH)%50000;
-      //float *batch_xs = train_data + step*IM_SIZE;
-      //float *batch_ys = train_label + step*NUM_OF_CLASS;
 
+#ifdef GPU
       gpu_push_array(batch_xs, train_data + step*IM_SIZE, BATCH*IM_SIZE);
       gpu_push_array(batch_ys, train_label + step*NUM_OF_CLASS, BATCH*NUM_OF_CLASS);
+#else
+      batch_xs = train_data + step*IM_SIZE;
+      batch_ys = train_label + step*NUM_OF_CLASS;
+#endif
+
       float *output = network.inference(batch_xs);
       network.train(batch_ys);
-//      float acc = accuracy(BATCH, NUM_OF_CLASS, output, batch_ys); 
+
+
+      float acc = accuracy(BATCH, NUM_OF_CLASS, output, batch_ys); 
 
       if(iter%1 == 0) {
         float loss = cross_entropy(BATCH, NUM_OF_CLASS, output, batch_ys);
         cout << "iter = " << iter << ", time = " << (getms() - start) << "ms, loss = "
-         << loss << endl;
+         << loss << " (acc = " << acc << ")" << endl;
       }
+
     }
 
     network.save(argv[2]);

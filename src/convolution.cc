@@ -279,9 +279,9 @@ void Convolution::forward_full() {
 
   for(int i = 0; i < batch; i++)
     im2col(W, H, C, FW, FH, FC, stride, pad, 
-      input + i*im_size, out_col+i*col_size);
+      input + i*im_size, shared+i*col_size);
 
-  gemm_cpu(TRS_N, TRS_N, batch*out_h*out_w, FC, out_channel, 1, out_col, weight, output);
+  gemm_cpu(TRS_N, TRS_N, batch*out_h*out_w, FC, out_channel, 1, shared, weight, output);
 
 #endif
 
@@ -336,9 +336,14 @@ void Convolution::backward(float *delta) {
   }
 
 #else
+
+  for(int i = 0; i < batch; i++)
+    im2col(W, H, C, FW, FH, FC, stride, pad,
+      input + i*im_size, shared+i*col_size);
+
   gemm_cpu(TRS_T, TRS_N, 
            out_channel, FC, out_h*out_w*batch, 1.0,
-           out_col, delta, grad_weight);
+           shared, delta, grad_weight);
 
   if(xnor) {
 
@@ -357,14 +362,14 @@ void Convolution::backward(float *delta) {
   else {
     gemm_cpu(TRS_N, TRS_T,
            batch*out_w*out_h, out_channel, FC, 1.0,
-           delta, weight, delta_col);
+           delta, weight, shared);
   }
 
   row_sum(batch*out_w*out_h, FC, delta, grad_bias);
 
   for(int i = 0; i < batch; i++)
     col2im(W,H, C, FW, FH, FC, stride, pad, 
-      m_delta + i*im_size, delta_col + i*col_size);
+      m_delta + i*im_size, shared + i*col_size);
 
 #endif
 

@@ -115,8 +115,8 @@ int main( int argc, char** argv ) {
     delete []train_data_tmp;
     delete []train_label_tmp;
 #else 
-    float *train_data_tmp = read_train_data(argv[3]);
-    float *train_label_tmp = read_train_label(argv[3]);
+    float *train_data = read_train_data(argv[3]);
+    float *train_label = read_train_label(argv[3]);
 #endif
 
     ms_t start = getms();

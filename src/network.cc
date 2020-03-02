@@ -21,8 +21,13 @@ void Network::initial(int batch, float _lr) {
 
   cout << max/(1024*1024) << endl;
 
-  // Create shared 
+  // Create shared
+#ifdef GPU 
   float *shared = malloc_gpu(max);
+#else
+  float *shared = new float[max];
+#endif
+
   for(int i = 0; i < layers.size(); i++)
     layers[i]->shared = shared;
 

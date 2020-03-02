@@ -58,9 +58,10 @@ void mat_scalar(int N, int M, float *mat1, float scalar, float* mat_out) {
      mat_out[i] = mat1[i]*scalar; 
 }
 
-float cross_entropy(int batch, int N, float *output_gpu, float *target_gpu) {
 
 #ifdef GPU
+
+float cross_entropy(int batch, int N, float *output_gpu, float *target_gpu) {
   float *output = new float[batch*N];
   float *target = new float[batch*N];
 
@@ -82,13 +83,26 @@ float cross_entropy(int batch, int N, float *output_gpu, float *target_gpu) {
   delete []target;
 
   return tmp;
+}
+
 #else
-  //TODO: Support CPU !!!
+
+float cross_entropy(int batch, int N, float *output, float *target) {
   float tmp = 0;
+  for(int i = 0; i < batch; i++) {
+    for(int j = 0; j < N; j++) {
+      if(target[i*N+j] == 1)
+	      tmp -= log(output[i*N+j] + 1.0e-6);
+      //tmp -= output[i*N+j]*log(target[i*N+j] + 1.0e-6)
+      //  + (1.0 - output[i*N+j])*log(1.0 - target[i*N+j] + 1.0e-6);
+    }
+  }
+  tmp = tmp/(float)batch;
+
   return tmp;
+}
 #endif
 
-}
 
 float L1_norm(int N, int M, float *A) {
 
@@ -155,6 +169,29 @@ int* argmax(int batch, int N, float *A) {
   return output;
 }
 
+#ifdef GPU
+float accuracy(int batch, int N, float *A_gpu, float *B_gpu) {
+
+  float *A = new float[batch*N];
+  float *B = new float[batch*N];
+
+  gpu_pull_array(A_gpu, A, batch*N);
+  gpu_pull_array(B_gpu, B, batch*N);
+  int *argA = argmax(batch, N, A);
+  int *argB = argmax(batch, N, B);
+
+  float sum = 0;
+  for(int i = 0; i < batch; i++)
+    if(argA[i] == argB[i])
+      sum += 1.0;
+  sum = sum/(float)batch;
+  delete []argA;
+  delete []argB;
+  delete []A;
+  delete []B;
+  return sum;
+}
+#else
 float accuracy(int batch, int N, float *A, float *B) {
 
   int *argA = argmax(batch, N, A);
@@ -169,4 +206,4 @@ float accuracy(int batch, int N, float *A, float *B) {
   delete []argB;
   return sum;
 }
-
+#endif
