@@ -327,11 +327,11 @@ void Convolution::backward(float *delta) {
 
 
   gemm_gpu(TRS_N, TRS_T,
-       out_w*out_h, out_channel, FC, 1.0,
+       batch*out_w*out_h, out_channel, FC, 1.0,
        delta, weight, shared);
 
   for(int i = 0; i < batch; i++) {
-    col2im_gpu(W,H, C, FW, FH, FC, stride, pad, 
+    col2im_gpu(W, H, C, FW, FH, FC, stride, pad, 
       m_delta + i*im_size, shared  + i*col_size);
   }
 
@@ -373,10 +373,10 @@ void Convolution::backward(float *delta) {
 void Convolution::update(update_args a) {
 
 #ifdef GPU
-  //adam_gpu(out_channel*FC, weight, grad_weight, m_weight, v_weight, a);
-  //adam_gpu(FC, bias, grad_bias, m_bias, v_bias, a);
-  momentum_gpu(out_channel*FC, weight, grad_weight, v_weight, a);
-  momentum_gpu(FC, bias, grad_bias, v_bias, a);
+  adam_gpu(out_channel*FC, weight, grad_weight, m_weight, v_weight, a);
+  adam_gpu(FC, bias, grad_bias, m_bias, v_bias, a);
+  //momentum_gpu(out_channel*FC, weight, grad_weight, v_weight, a);
+  //momentum_gpu(FC, bias, grad_bias, v_bias, a);
 #else
   adam_cpu(out_channel*FC, weight, grad_weight, m_weight, v_weight, a);
   adam_cpu(FC, bias, grad_bias, m_bias, v_bias, a);
