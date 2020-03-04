@@ -273,25 +273,15 @@ void ResNet(Network *network) {
   Convolution *conv17 = new Convolution(4, 4, 512, 3, 3, 512, 1, true);
   conv17->xnor = false;
   Batchnorm *bn17 = new Batchnorm(4*4*512);
-  Shortcut *shortcut8 = new Shortcut(4, 4, 512, conv15, relu15);
+  //Shortcut *shortcut8 = new Shortcut(4, 4, 512, conv15, relu15);
   Relu *relu17 = new Relu(4*4*512, LEAKY);
 
-  AvgPool *avgpool1 = new AvgPool(4, 4, 512, 4, 4, 512, 1, false);
-  //Pooling *avgpool1 = new Pooling(4, 4, 512, 2, 2, 512, 2, false);
-  Connected *conn = new Connected(512, 10);
-  //Connected *conn = new Connected(512, 10);
+  Convolution *conv18 = new Convolution(4, 4, 512, 3, 3, 10, 1, true);
+  conv18->xnor = false;
+  Batchnorm *bn18 = new Batchnorm(4*4*10);
+  Relu *relu18 = new Relu(4*4*10, LEAKY);
 
-  //Pooling *pool4 = new Pooling(4, 4, 512, 2, 2, 512, 2, false);
-
-  //Connected *conn5 = new Connected(2*2*512, 500);
-
-
-  //Convolution *conv44 = new Convolution(4, 4, 256, 4, 4, 500, 1, false);
-  //conv44->xnor = false;
-  //Relu *relu44 = new Relu(500, LEAKY);
-
-  //Relu *relu18 = new Relu(500, RELU);
-  //Connected *conn6 = new Connected(500, 10);
+  AvgPool *avgpool1 = new AvgPool(4, 4, 10, 4, 4, 10, 1, false);
   SoftmaxWithCrossEntropy *softmax = new SoftmaxWithCrossEntropy(10);
 
   
@@ -305,7 +295,7 @@ void ResNet(Network *network) {
 
   network->add(conv3);
   network->add(bn3);
-  network->add(shortcut1);
+  //network->add(shortcut1);
   network->add(relu3);
 
   network->add(conv4);
@@ -314,7 +304,7 @@ void ResNet(Network *network) {
 
   network->add(conv5);
   network->add(bn5);
-  network->add(shortcut2);
+  //network->add(shortcut2);
   network->add(relu5);
 
   network->add(pool1);
@@ -334,7 +324,7 @@ void ResNet(Network *network) {
 
   network->add(conv9);
   network->add(bn9);
-  network->add(shortcut4);
+  //network->add(shortcut4);
   network->add(relu9);
 
   network->add(pool2);
@@ -353,7 +343,7 @@ void ResNet(Network *network) {
 
   network->add(conv13);
   network->add(bn13);
-  network->add(shortcut6);
+  //network->add(shortcut6);
   network->add(relu13);
 
   network->add(pool3);
@@ -372,22 +362,13 @@ void ResNet(Network *network) {
 
   network->add(conv17);
   network->add(bn17);
-  network->add(shortcut8);
+  //network->add(shortcut8);
   network->add(relu17);
 
-  //network->add(pool4);
+  network->add(conv18);
+  network->add(bn18);
+  network->add(relu18);
   network->add(avgpool1);
-  network->add(conn);
-
-  //network->add(conn5);
-  //network->add(relu18);
-  //network->add(conn6);
-
-
-  //network->add(conv44);
-  //network->add(bn44);
-  //network->add(relu44);
-  //network->add(conn4);
   network->add(softmax);
 
 }
@@ -399,17 +380,17 @@ void CifarNet(Network *network) {
   Convolution *conv1 = new Convolution(32, 32, 3, 3, 3, 128, 1, true);
   conv1->xnor = false;
   Batchnorm *bn1 = new Batchnorm(32*32*128);
-  Relu *relu1 = new Relu(32*32*128, LEAKY);
+  Relu *relu1 = new Relu(32*32*128, RELU);
 
   Convolution *conv2 = new Convolution(32, 32, 128, 3, 3, 128, 1, true);
   conv2->xnor = false;
   Batchnorm *bn2 = new Batchnorm(32*32*128);
-  Relu *relu2 = new Relu(32*32*128, LEAKY);
+  Relu *relu2 = new Relu(32*32*128, RELU);
 
   Convolution *conv3 = new Convolution(32, 32, 128, 3, 3, 128, 1, true);
   conv3->xnor = false;
   Batchnorm *bn3 = new Batchnorm(32*32*128);
-  Relu *relu3 = new Relu(32*32*128, LEAKY);
+  Relu *relu3 = new Relu(32*32*128, RELU);
 
   Pooling *pool1 = new Pooling(32, 32, 128, 2, 2, 128, 2, false);
 
@@ -418,40 +399,40 @@ void CifarNet(Network *network) {
   Convolution *conv4 = new Convolution(16, 16, 128, 3, 3, 256, 1, true);
   conv4->xnor = false;
   Batchnorm *bn4 = new Batchnorm(16*16*256);
-  Relu *relu4 = new Relu(16*16*256, LEAKY);
+  Relu *relu4 = new Relu(16*16*256, RELU);
 
   Convolution *conv5 = new Convolution(16, 16, 256, 3, 3, 256, 1, true);
   conv5->xnor = false;
   Batchnorm *bn5 = new Batchnorm(16*16*256);
-  Relu *relu5 = new Relu(16*16*256, LEAKY);
+  Relu *relu5 = new Relu(16*16*256, RELU);
 
   Convolution *conv6 = new Convolution(16, 16, 256, 3, 3, 256, 1, true);
   conv6->xnor = false;
   Batchnorm *bn6 = new Batchnorm(16*16*256);
-  Relu *relu6 = new Relu(16*16*256, LEAKY);
+  Relu *relu6 = new Relu(16*16*256, RELU);
 
   Pooling *pool2 = new Pooling(16, 16, 256, 2, 2, 256, 2, false);
 
   Convolution *conv7 = new Convolution(8, 8, 256, 3, 3, 512, 1, true);
   conv7->xnor = false;
   Batchnorm *bn7 = new Batchnorm(8*8*512);
-  Relu *relu7 = new Relu(8*8*512, LEAKY);
+  Relu *relu7 = new Relu(8*8*512, RELU);
 
   Convolution *conv8 = new Convolution(8, 8, 512, 3, 3, 512, 1, true);
   conv8->xnor = false;
   Batchnorm *bn8 = new Batchnorm(8*8*512);
-  Relu *relu8 = new Relu(8*8*512, LEAKY);
+  Relu *relu8 = new Relu(8*8*512, RELU);
 
   Convolution *conv9 = new Convolution(8, 8, 512, 3, 3, 512, 1, true);
   conv9->xnor = false;
   Batchnorm *bn9 = new Batchnorm(8*8*512);
-  Relu *relu9 = new Relu(8*8*512, LEAKY);
+  Relu *relu9 = new Relu(8*8*512, RELU);
 
 
   Convolution *conv10 = new Convolution(8, 8, 512, 3, 3, 10, 1, true);
   conv10->xnor = false;
   Batchnorm *bn10 = new Batchnorm(8*8*10);
-  Relu *relu10 = new Relu(8*8*10, LEAKY);
+  Relu *relu10 = new Relu(8*8*10, RELU);
 
 
   Connected *conn4 = new Connected(8*8*10, 10);
@@ -525,9 +506,9 @@ int main( int argc, char** argv ) {
   if(strcmp(argv[1], "train") == 0) {
 
     //CifarXnorNet(&network);
-    CifarNet(&network);
+    //CifarNet(&network);
     //CifarDarkNet(&network);
-    //ResNet(&network);
+    ResNet(&network);
     network.initial(BATCH, LEARNING_RATE);
     float *train_data, *train_label;
 

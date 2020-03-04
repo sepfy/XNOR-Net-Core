@@ -45,8 +45,7 @@ __global__ void leaky_activate_gpu_kernel(float *input, float *output, int size)
 
 void Relu::leaky_activate_gpu() {
 
-  int grid = batch*((N-1)/256 + 1);
-  leaky_activate_gpu_kernel<<<grid, 256>>>(input, output, batch*N);
+  leaky_activate_gpu_kernel<<<default_grid(batch*N), BLOCK>>>(input, output, batch*N);
   check_error(cudaGetLastError());
 }
 
@@ -63,8 +62,7 @@ __global__ void leaky_backward_gpu_kernel(float *m_delta, float *delta, float *i
 
 void Relu::leaky_backward_gpu(float *delta) {
 
-  int grid = batch*((N-1)/256 + 1);
-  leaky_backward_gpu_kernel<<<grid, 256>>>(m_delta, delta, input, cut, batch*N);
+  leaky_backward_gpu_kernel<<<default_grid(batch*N), BLOCK>>>(m_delta, delta, input, cut, batch*N);
   check_error(cudaGetLastError());
 }
 

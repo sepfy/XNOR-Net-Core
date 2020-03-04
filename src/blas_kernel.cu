@@ -76,9 +76,10 @@ void col_sum_gpu(int N, int M, float *A, float *B) {
   float alpha = 1.0;
   float beta = 0.0;
   float *e = malloc_gpu(N);
-  cudaMemset(e, 1.0, sizeof(float)*N);
+  //cudaMemset(e, 1.0, sizeof(float)*N);
+  memset_gpu(e, 1, N);
   check_error(cudaGetLastError());
-  cublasSgemv(gpu_handle(), CUBLAS_OP_T, M, N, &alpha, A, M, e, 1, &beta, B, 1);
+  cublasSgemv(gpu_handle(), CUBLAS_OP_N, M, N, &alpha, A, M, e, 1, &beta, B, 1);
   check_error(cudaGetLastError());
   cudaFree(e);
 }
@@ -116,7 +117,7 @@ void bias_add_gpu(float *output, float *bias, int batch, int size, int c) {
 
 __global__ void elementwise_mul_gpu_kernel(float *A, float *B, float *C, int N) {
 
-  int index = gridDim.x*threadIdx.x + blockIdx.x;
+  int index = (blockIdx.x)*blockDim.x + threadIdx.x;
   if(index > N) return;
   C[index] = A[index] + B[index];
 }
