@@ -46,7 +46,15 @@ void AvgPool::init() {
   indexes = new float[batch*out_w*out_h*FC];
 #endif
 
-  cout << "Average pooling layer: memory " << (batch*out_w*out_h*FC + batch*H*W*C)/(1024*1024) << endl;
+}
+
+void AvgPool::print() {
+
+  float umem = (float)(batch*out_w*out_h*FC + batch*H*W*C)/(1024*1024);
+  printf("Avg \t %.2f \t %d x %d x %d \t %d x %d x %d \n",
+                  umem, H, W, C, 1, 1, FC);
+
+	  
 }
 
 

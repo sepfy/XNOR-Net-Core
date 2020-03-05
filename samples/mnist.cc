@@ -8,17 +8,17 @@ void MnistXnorNet(Network *network) {
 
   Convolution *conv1 = new Convolution(28, 28, 1, 5, 5, 32, 1, false);
   conv1->xnor = false;
-  Relu *relu1 = new Relu(24*24*32, LEAKY);
+  Activation *relu1 = new Activation(24*24*32, LEAKY);
   Pooling *pool1 = new Pooling(24, 24, 32, 2, 2, 32, 2, false); 
 
   Batchnorm *bn1 = new Batchnorm(12*12*32);
   Convolution *conv2 = new Convolution(12, 12, 32, 5, 5, 64, 1, false);
-  Relu *relu2 = new Relu(8*8*64, LEAKY);
+  Activation *relu2 = new Activation(8*8*64, LEAKY);
   Pooling *pool2 = new Pooling(8, 8, 64, 2, 2, 64, 2, false);
 
   Batchnorm *bn2 = new Batchnorm(4*4*64);
   Convolution *conv3 = new Convolution(4, 4, 64, 4, 4, 512, 1, false);
-  Relu *relu3 = new Relu(512, LEAKY);
+  Activation *relu3 = new Activation(512, LEAKY);
 
   Connected *conn1 = new Connected(512, 10);
   SoftmaxWithCrossEntropy *softmax = new SoftmaxWithCrossEntropy(10);
@@ -44,19 +44,19 @@ void MnistNet(Network *network) {
   Convolution *conv1 = new Convolution(28, 28, 1, 5, 5, 20, 1, false);
   conv1->xnor = false;
   Batchnorm *bn1 = new Batchnorm(24*24*20);
-  Relu *relu1 = new Relu(24*24*20, LEAKY);
+  Activation *relu1 = new Activation(24*24*20, LEAKY);
   Pooling *pool1 = new Pooling(24, 24, 20, 2, 2, 20, 2, false); 
 
   Convolution *conv2 = new Convolution(12, 12, 20, 5, 5, 50, 1, false);
   conv2->xnor = false;
   Batchnorm *bn2 = new Batchnorm(8*8*50);
-  Relu *relu2 = new Relu(8*8*50, LEAKY);
+  Activation *relu2 = new Activation(8*8*50, LEAKY);
   Pooling *pool2 = new Pooling(8, 8, 50, 2, 2, 50, 2, false);
 
   Convolution *conv3 = new Convolution(4, 4, 50, 4, 4, 500, 1, false);
   conv3->xnor = false;
   Batchnorm *bn3 = new Batchnorm(500);
-  Relu *relu3 = new Relu(500, LEAKY);
+  Activation *relu3 = new Activation(500, LEAKY);
  
   Connected *conn1 = new Connected(500, 10);
   SoftmaxWithCrossEntropy *softmax = new SoftmaxWithCrossEntropy(10);

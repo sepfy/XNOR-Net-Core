@@ -81,24 +81,10 @@ void Convolution::init() {
   m_bias = malloc_gpu(FC);
   v_bias = malloc_gpu(FC);
 
-  size_t umem = batch*out_w*out_h*FC
-	      + 4*out_channel*FC
-              + 4*FC
-	      + batch*W*H*C;
-   
-  cout << "Convolution layers: Memory Size = " << umem*sizeof(float)/(1024*1024) << endl;
-
 
   random_normal_gpu(out_channel*FC, weight);
   random_normal_gpu(FC, bias);
 
-  
-/*
-  memset_gpu(out_channel*FC*sizeof(float), m_weight);
-  memset_gpu(out_channel*FC*sizeof(float), v_weight);
-  memset_gpu(FC*sizeof(float), m_bias);  
-  memset_gpu(FC*sizeof(float), v_bias);  
-*/
 
 #else
 
@@ -157,9 +143,21 @@ void Convolution::init() {
   shared_size = out_w*out_h*out_channel*batch;
 }
 
+
+void Convolution::print() {
+
+  float umem = (float)(batch*out_w*out_h*FC
+	      + 4*out_channel*FC
+              + 4*FC
+	      + batch*W*H*C)/(1024*1024);
+   
+  printf("Conv \t %.2f \t %d x %d x %d \t %d x %d x %d \n",  
+		  umem, H, W, C, out_h, out_w, FC);
+
+}
+
 #ifdef XNOR_NET
-void Convolution::swap_weight()
-{
+void Convolution::swap_weight() {
     float *swap = weight;
     weight = binary_weight;
     binary_weight = swap;

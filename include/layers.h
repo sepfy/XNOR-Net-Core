@@ -29,6 +29,7 @@ class Layer {
     virtual void backward(float* delta) = 0;
     virtual void update(update_args a) = 0;
     virtual void init() = 0;
+    virtual void print() = 0;
     virtual void save(fstream *file) = 0;
 };
 
@@ -56,6 +57,7 @@ class Connected : public Layer {
     Connected(int _n, int _m);
     ~Connected();
     void init(); 
+    void print();
     void forward();
     void bias_add();
     void backward(float *delta);
@@ -86,6 +88,7 @@ class SoftmaxWithCrossEntropy : public Layer {
     SoftmaxWithCrossEntropy(int _n);
     ~SoftmaxWithCrossEntropy();
     void init();
+    void print();
     void forward();
     void forward_gpu();
     void backward(float *delta);
@@ -131,6 +134,7 @@ class Convolution : public Layer {
 	int _FW, int _FH, int _FC, int _stride, bool _pad);
     ~Convolution();
     void init();
+    void print();
     
     void bias_add_gpu();
     void bias_add();
@@ -177,6 +181,7 @@ class AvgPool : public Layer {
 	int _FW, int _FH, int _FC, int _stride, bool _pad);
     ~AvgPool();
     void init();
+    void print();
     void forward();
     void backward(float *delta);
     void forward_gpu();
@@ -205,6 +210,7 @@ class Pooling : public Layer {
 	int _FW, int _FH, int _FC, int _stride, bool _pad);
     ~Pooling();
     void init();
+    void print();
     void forward();
     void backward(float *delta);
     void forward_gpu();
@@ -216,10 +222,12 @@ class Pooling : public Layer {
 
 enum ACT{
   RELU,
-  LEAKY
+  LEAKY,
+  SIGMD,
+  NUM_TYPE
 };
 
-class Relu : public Layer {
+class Activation : public Layer {
   public:
     
     ACT activation;
@@ -231,9 +239,10 @@ class Relu : public Layer {
     int N;
     float *cut;
     vector<int> mask;
-    Relu(int _N, ACT act);
-    ~Relu();
+    Activation(int _N, ACT act);
+    ~Activation();
     void init();
+    void print();
     void forward();
     void backward(float *delta);
     void relu_activate_gpu();
@@ -242,7 +251,7 @@ class Relu : public Layer {
     void leaky_backward_gpu(float *delta);
     void update(update_args a);
     void save(fstream *file);
-    static Relu* load(char *buf);
+    static Activation* load(char *buf);
 };
 
 
@@ -268,6 +277,7 @@ class Batchnorm : public Layer {
     Batchnorm(int _N);
     ~Batchnorm();
     void init();
+    void print();
     void forward();
     void backward(float *delta);
     void update(update_args a);
@@ -296,6 +306,7 @@ class Dropout : public Layer {
     Dropout(int _N, float _ratio);
     ~Dropout();
     void init();
+    void print();
     void forward();
     void backward(float *delta);
     void update(update_args a);
@@ -307,14 +318,19 @@ class Dropout : public Layer {
 class Shortcut : public Layer {
   public:
     int w, h, c;
-    Shortcut(int _w, int _h, int _c, Convolution *_conv, Relu *_activation);
+    Shortcut(int _w, int _h, int _c, Convolution *_conv, Activation *_activation);
     ~Shortcut();
     float *identity;
     Convolution *conv;
-    Relu *activation;
+    Activation *activation;
     void init();
+    void print();
     void forward();
     void backward(float *delta);
+#ifdef GPU
+    void forward_gpu();
+    void backward_gpu(float *delta);
+#endif
     void update(update_args a);
     void save(fstream *file);
     static Shortcut* load(char *buf);

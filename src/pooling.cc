@@ -49,9 +49,15 @@ void Pooling::init() {
   indexes = new float[batch*out_w*out_h*FC];
 #endif
 
-  cout << "Max Pooling layer: memory = " << (batch*out_w*out_h*FC*3)/(1024*1024) << endl;
 }
 
+
+void Pooling::print() {
+
+  float umem = (float)(batch*out_w*out_h*FC*3)/(1024*1024);
+  printf("Max \t %.2f \t %d x %d x %d \t %d x %d x %d \n",
+                  umem, H, W, C, out_h, out_w, FC);
+}
 
 void Pooling::forward() {
 

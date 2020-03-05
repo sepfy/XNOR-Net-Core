@@ -1,5 +1,6 @@
 #include "layers.h"
 
+#if 0
 Sigmoid::Sigmoid(int _N) {
   N = _N;
 }
@@ -32,7 +33,7 @@ void Sigmoid::update(update_args a) {
 void Sigmoid::save(fstream *file) {
 
 }
-
+#endif
 
 SoftmaxWithCrossEntropy::SoftmaxWithCrossEntropy(int _n) {
   N = _n;
@@ -53,6 +54,12 @@ void SoftmaxWithCrossEntropy::init() {
 SoftmaxWithCrossEntropy::~SoftmaxWithCrossEntropy() {
 
 }    
+
+void SoftmaxWithCrossEntropy::print() {
+
+  float umem = (float)(2*batch*N)/(1024*1024);
+  printf("Softmax\t %.2f\n", umem);
+}
 
 void SoftmaxWithCrossEntropy::forward() {
 
@@ -120,16 +127,16 @@ SoftmaxWithCrossEntropy* SoftmaxWithCrossEntropy::load(char *buf) {
 
 
 
-Relu::Relu(int _N, ACT act) {
+Activation::Activation(int _N, ACT act) {
   N = _N;
   activation = act;
 }
 
-Relu::~Relu() {
+Activation::~Activation() {
 
 }
 
-void Relu::init() {
+void Activation::init() {
 
 #ifdef GPU
 	
@@ -144,10 +151,17 @@ void Relu::init() {
   memset(cut, 0, sizeof(float)*batch*N);
 #endif
 
-  cout << "Activation layers: memory = " << 3*batch*N/(1024*1024) << endl;
 }
 
-void Relu::forward() {
+string act_table[NUM_TYPE] = {"Relu", "Leaky", "SIGM"};
+
+void Activation::print() {
+  float umem = (float)(3*batch*N)/(1024*1024);
+  printf("%s \t %.2f\n", act_table[activation].c_str(), umem);
+}
+
+
+void Activation::forward() {
 
 
 #ifdef GPU
@@ -169,21 +183,21 @@ void Relu::forward() {
 
 }
 
-void Relu::relu_activate() {
+void Activation::relu_activate() {
 
   for(int i = 0; i < batch; i++) 
     for(int j = 0; j < N; j++) 
       output[i*N+j] = (input[i*N+j] >= 0 ? input[i*N+j] : 0);
 }
 
-void Relu::leaky_activate() {
+void Activation::leaky_activate() {
 
   for(int i = 0; i < batch; i++) 
     for(int j = 0; j < N; j++) 
       output[i*N+j] = (input[i*N+j] >= 0 ? input[i*N+j] : 0.1*input[i*N+j]);
 }
 
-void Relu::backward(float *delta) {
+void Activation::backward(float *delta) {
 
 #ifdef GPU
   switch(activation) {
@@ -206,29 +220,29 @@ void Relu::backward(float *delta) {
 }
 
 
-void Relu::relu_backward(float *delta) {
+void Activation::relu_backward(float *delta) {
   for(int i = 0; i < batch; i++) 
     for(int j = 0; j < N; j++) 
       m_delta[i*N+j] = (cut[i*N+j] + delta[i*N+j])*(input[i*N+j] >= 0);
 }
 
-void Relu::leaky_backward(float *delta) {
+void Activation::leaky_backward(float *delta) {
   for(int i = 0; i < batch; i++) 
     for(int j = 0; j < N; j++) 
       m_delta[i*N+j] = (cut[i*N+j] + delta[i*N+j])*(input[i*N+j] >= 0 ? 1.0 : 0.1);
 }
 
-void Relu::update(update_args a) {
+void Activation::update(update_args a) {
 }
 
-void Relu::save(fstream *file) {
+void Activation::save(fstream *file) {
   char buf[64] = {0};
-  sprintf(buf, "Relu,%d,%d", N, activation);
+  sprintf(buf, "Activation,%d,%d", N, activation);
   //cout << buf << endl;
   file->write(buf, sizeof(buf));
 }
 
-Relu* Relu::load(char *buf) {
+Activation* Activation::load(char *buf) {
 
   int para[2] = {0};
   char *token;
@@ -241,6 +255,6 @@ Relu* Relu::load(char *buf) {
       break;
   }
 
-  Relu *relu = new Relu(para[0], (ACT)para[1]);
-  return relu;
+  Activation *actv = new Activation(para[0], (ACT)para[1]);
+  return actv;
 }

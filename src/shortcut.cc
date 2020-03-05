@@ -1,6 +1,6 @@
 #include "layers.h"
 
-Shortcut::Shortcut(int _w, int _h, int _c, Convolution *_conv, Relu *_activation) {
+Shortcut::Shortcut(int _w, int _h, int _c, Convolution *_conv, Activation *_activation) {
   w = _w;
   h = _h;
   c = _c;
@@ -11,6 +11,8 @@ Shortcut::Shortcut(int _w, int _h, int _c, Convolution *_conv, Relu *_activation
 Shortcut::~Shortcut() {
 
 }
+
+void Shortcut::print() {}
 
 void Shortcut::init() {
 
@@ -31,7 +33,9 @@ void Shortcut::init() {
 void Shortcut::forward() {
 
 
-
+#ifdef GPU
+  forward_gpu();
+#else
   for(int b = 0; b < batch; b++) {
     for(int i = 0; i < h; i++) {
       for(int j = 0; j < w; j++) {
@@ -42,12 +46,15 @@ void Shortcut::forward() {
       }
     }
   }
+#endif
 
 }
 
 void Shortcut::backward(float *delta) {
 
-
+#ifdef GPU
+  backward_gpu(delta);
+#else
   for(int b = 0; b < batch; b++) {
     for(int i = 0; i < h; i++) {
       for(int j = 0; j < w; j++) {
@@ -59,7 +66,7 @@ void Shortcut::backward(float *delta) {
       }
     }
   }
-
+#endif
 }
 
 void Shortcut::update(update_args a) {

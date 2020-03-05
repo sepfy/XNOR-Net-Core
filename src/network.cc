@@ -14,12 +14,15 @@ void Network::initial(int batch, float _lr) {
   for(int i = 0; i < layers.size(); i++) {
     layers[i]->batch = batch;
     layers[i]->init();
+
+    layers[i]->print();
+
     //cout << layers[i]->shared_size << endl;
     if(layers[i]->shared_size > max)
       max = layers[i]->shared_size;
   }
 
-  cout << max/(1024*1024) << endl;
+  //cout << max/(1024*1024) << endl;
 
   // Create shared
 #ifdef GPU 
@@ -149,8 +152,8 @@ void Network::load(char *filename, int batch) {
       this->add(pool);
       //cout << pool->FC << endl;
     }
-    else if(!strcmp(token, "Relu")) {
-      Relu *relu = Relu::load(token);
+    else if(!strcmp(token, "Activation")) {
+      Activation *relu = Activation::load(token);
       relu->batch = batch;
       relu->init(); 
       this->add(relu);

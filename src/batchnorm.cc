@@ -84,6 +84,13 @@ void Batchnorm::init() {
 
 }
 
+void Batchnorm::print() {
+  float umem = (float)(15*N + 6*batch*N)/(1024*1024);
+
+  printf("BN \t %.2f\n", umem);
+
+}
+
 
 void Batchnorm::get_mean() {
 

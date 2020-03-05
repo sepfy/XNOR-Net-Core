@@ -57,6 +57,14 @@ void Connected::init() {
 
 }
 
+void Connected::print() {
+
+  float umem = (float)(4*N*M + 4*M + 2*batch*N)/(1024*1024);
+
+  printf("Conn \t %.2f \t   %d  \t  %d  \n", umem, N, M);
+
+}
+
 void Connected::bias_add() {
 
   for(int i = 0; i < batch; i++)
