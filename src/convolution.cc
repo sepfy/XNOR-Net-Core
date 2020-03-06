@@ -18,8 +18,8 @@ Convolution::Convolution(int _W, int _H, int _C,
   if(_pad == true) {
     //pad = 0.5*((stride - 1)*W - stride + FW);
     pad = 0.5*(FW - 1);
-    out_w = W;
-    out_h = H;
+    out_w = W/stride;
+    out_h = H/stride;
   }
   else {
     pad = 0;

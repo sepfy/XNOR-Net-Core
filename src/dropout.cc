@@ -16,6 +16,10 @@ void Dropout::init() {
   mask = new float[batch*N];
 }
 
+void Dropout::print() {
+
+}
+
 void Dropout::forward() {
 
   if(train_flag) {

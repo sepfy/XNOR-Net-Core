@@ -38,14 +38,10 @@ endif
 
 all: $(OUTDIR) $(LIB) samples
 
-samples: mnist cifar
+samples: mnist cifar resnet
 
-#test: $(LIB)
-#	$(CXX) $(CXXFLAGS) $(INCLUDE) $(LIBS) unittest/conn_test.cc $(LIB) -o unittest/conn_test
-#	$(CXX) $(CXXFLAGS) $(INCLUDE) $(LIBS) unittest/conv_test.cc $(LIB) -o unittest/conv_test
-#	$(CXX) $(CXXFLAGS) $(INCLUDE) $(LIBS) unittest/bn_test.cc $(LIB) -o unittest/bn_test
 
-vgg: $(SAMPLE)/vgg.cc $(LIB)
+resnet: $(SAMPLE)/resnet.cc $(LIB)
 	$(CXX) $(CXXFLAGS) $(MACRO) $(INCLUDE) $^ $(LIBS) $(OPENCV) -o $(SAMPLE)/$@
 
 mnist: $(SAMPLE)/mnist.cc $(LIB) 
