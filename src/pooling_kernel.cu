@@ -1,10 +1,18 @@
 #include "layers.h"
 
-__global__ void maxpool_forward_gpu_kernel(float *output, float *input, float *indexes, int H, int W, int C, int FH, int FW, int FC, int out_h, int out_w, int stride) {
+__global__ void maxpool_forward_gpu_kernel(float *output, float *input, float *indexes, int H, int W, int C, int FH, int FW, int FC, int out_h, int out_w, int stride, int size) {
 
-  int b = blockIdx.x;
-  int i = threadIdx.x;
-  int j = threadIdx.y;
+
+  //int b = blockIdx.x;
+  //int i = threadIdx.x;
+  //int j = threadIdx.y;
+
+  int index = blockIdx.x*blockDim.x + threadIdx.x;
+  if(index > size) return;
+
+  int b = index / (out_w*out_h);
+  int i = index / out_w % out_h;
+  int j = index % out_w;
 
        for(int k = 0; k < FC; k++) {
 
@@ -32,8 +40,9 @@ void Pooling::forward_gpu() {
 
   int out_w = (W + 2*pad - FW)/stride + 1;
   int out_h = (H + 2*pad - FH)/stride + 1;
-  dim3 d = {(unsigned int)out_w, (unsigned int)out_h, 1};
-  maxpool_forward_gpu_kernel<<<batch, d>>>(output, input, indexes, H, W, C, FH, FW, FC, out_w, out_h, stride);
+  //dim3 d = {(unsigned int)out_w, (unsigned int)out_h, 1};
+  int size = out_w*out_h*batch;
+  maxpool_forward_gpu_kernel<<<default_grid(size), BLOCK>>>(output, input, indexes, H, W, C, FH, FW, FC, out_w, out_h, stride, size);
   check_error(cudaGetLastError());
 }
 

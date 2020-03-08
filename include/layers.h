@@ -26,6 +26,7 @@ class Layer {
     size_t shared_size = 0;
     float *shared;
     virtual void forward() = 0;
+    virtual void forward_gpu() = 0;
     virtual void backward(float* delta) = 0;
     virtual void update(update_args a) = 0;
     virtual void init() = 0;
@@ -59,6 +60,7 @@ class Connected : public Layer {
     void init(); 
     void print();
     void forward();
+    void forward_gpu();
     void bias_add();
     void backward(float *delta);
     void update(update_args a);
@@ -66,7 +68,7 @@ class Connected : public Layer {
     static Connected* load(char *buf);
 
 };
-
+/*
 class Sigmoid: public Layer {
 
   public:
@@ -79,7 +81,7 @@ class Sigmoid: public Layer {
     void update(update_args a);
     void save(fstream *file);
 };
-
+*/
 class SoftmaxWithCrossEntropy : public Layer {
 
   public:
@@ -140,6 +142,7 @@ class Convolution : public Layer {
     void bias_add();
     void forward_xnor();
     void forward_full();
+    void forward_gpu();
     float* backward_xnor(float *delta);
     float* backward_full(float *delta);
     void forward();
@@ -244,6 +247,7 @@ class Activation : public Layer {
     void init();
     void print();
     void forward();
+    void forward_gpu();
     void backward(float *delta);
     void relu_activate_gpu();
     void leaky_activate_gpu();
@@ -279,6 +283,7 @@ class Batchnorm : public Layer {
     void init();
     void print();
     void forward();
+    void forward_gpu();
     void backward(float *delta);
     void update(update_args a);
     void save(fstream *file);
@@ -308,6 +313,7 @@ class Dropout : public Layer {
     void init();
     void print();
     void forward();
+    void forward_gpu();
     void backward(float *delta);
     void update(update_args a);
     void save(fstream *file);

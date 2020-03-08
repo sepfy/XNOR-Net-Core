@@ -11,22 +11,21 @@ using namespace std;
 
 
 #define LEARNING_RATE 1.0e-3
-#define BATCH 16
-#define MAX_ITER 500
+#define BATCH 30
+#define MAX_ITER 10000
 
 void Resnet18(Network *network) {
 
-  /*
   Convolution *conv1 = new Convolution(225, 225, 3, 7, 7, 64, 2, true);
   conv1->xnor = false;
   Batchnorm *bn1 = new Batchnorm(112*112*64);
   Activation *actv1 = new Activation(112*112*64, LEAKY);
-*/
+/*
   Convolution *conv1 = new Convolution(112, 112, 3, 3, 3, 64, 1, true);
   conv1->xnor = false;
   Batchnorm *bn1 = new Batchnorm(112*112*64);
   Activation *actv1 = new Activation(112*112*64, LEAKY);
-
+*/
 
   Pooling *pool1 = new Pooling(112, 112, 64, 2, 2, 64, 2, false);
 
@@ -132,8 +131,8 @@ void Resnet18(Network *network) {
   Activation *actv17 = new Activation(7*7*512, LEAKY);
 
   AvgPool *avgpool1 = new AvgPool(7, 7, 512, 7, 7, 512, 1, false);
-  Connected *conn1 = new Connected(512, 10);
-  SoftmaxWithCrossEntropy *softmax = new SoftmaxWithCrossEntropy(10);
+  Connected *conn1 = new Connected(512, 3);
+  SoftmaxWithCrossEntropy *softmax = new SoftmaxWithCrossEntropy(3);
 
   
   network->add(conv1);
@@ -253,7 +252,6 @@ int main( int argc, char** argv ) {
 
       ms_t start = getms();
       int step = (iter*BATCH)%n;
-    
 #ifdef GPU
       gpu_push_array(batch_xs, inputs + step*IM_SIZE, BATCH*IM_SIZE);
       gpu_push_array(batch_ys, outputs + step*NUM_OF_CLASS, BATCH*NUM_OF_CLASS);

@@ -17,15 +17,16 @@ Convolution::Convolution(int _W, int _H, int _C,
 
   if(_pad == true) {
     //pad = 0.5*((stride - 1)*W - stride + FW);
-    pad = 0.5*(FW - 1);
-    out_w = W/stride;
-    out_h = H/stride;
+    pad = 0.5*(FW - stride);
+    //out_w = W/stride;
+    //out_h = H/stride;
   }
-  else {
+  else 
     pad = 0;
-    out_w = (W - FW)/stride + 1;
-    out_h = (H - FH)/stride + 1;
-  }
+
+  out_w = (W + 2*pad - FW)/stride + 1;
+  out_h = (H + 2*pad - FH)/stride + 1;
+
 
   out_channel = FW*FH*C;
   col_size = out_w*out_h*out_channel;

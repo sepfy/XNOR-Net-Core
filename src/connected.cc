@@ -72,13 +72,15 @@ void Connected::bias_add() {
       output[i*M+j] += bias[j];
 }
 
-void Connected::forward() {  
-
-
-
-#ifdef GPU
+void Connected::forward_gpu() {
   gemm_gpu(TRS_N, TRS_N, batch, M, N, 1, input, weight, output);
   bias_add_gpu(output, bias, batch, 1, M);
+}
+
+void Connected::forward() {  
+
+#ifdef GPU
+  forward_gpu();
 #else
   gemm_cpu(TRS_N, TRS_N, batch, M, N, 1, input, weight, output);
   bias_add();

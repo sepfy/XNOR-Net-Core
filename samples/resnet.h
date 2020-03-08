@@ -13,8 +13,8 @@
 using namespace cv;
 using namespace std;
 
-#define WIDTH 112
-#define HEIGHT 112
+#define WIDTH 225
+#define HEIGHT 225
 #define IM_SIZE WIDTH*HEIGHT*3
 #define NUM_OF_CLASS 3
 
