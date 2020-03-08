@@ -17,13 +17,47 @@ __global__ void bias_add_kernel(float *output, float *bias,
 
 }
 
+#endif
+
+void Convolution::forward_gpu() {
+
+  for(int i = 0; i < batch; i++)
+    im2col_gpu(W, H, C, FW, FH, FC, stride, pad,
+      input + i*im_size, shared+i*col_size);
+
+  gemm_gpu(TRS_N, TRS_N, batch*out_h*out_w, FC, out_channel, 1, shared, weight, output);
+
+}
+
 void Convolution::bias_add_gpu() {
 
   size_t size = out_w*out_h*batch*FC;
   bias_add_kernel<<<default_grid(size), BLOCK>>>(output, bias, out_w, out_h, FC, size);
   check_error(cudaGetLastError());
 }
-#endif
+
+void Convolution::backward_gpu(float *delta) {
+
+  for(int i = 0; i < batch; i++)
+    im2col_gpu(W, H, C, FW, FH, FC, stride, pad,
+      input + i*im_size, shared+i*col_size);
+
+  gemm_gpu(TRS_T, TRS_N,
+           out_channel, FC, out_h*out_w*batch, 1.0,
+           shared, delta, grad_weight);
+  row_sum_gpu(batch*out_w*out_h, FC, delta, grad_bias);
+
+  gemm_gpu(TRS_N, TRS_T,
+       batch*out_w*out_h, out_channel, FC, 1.0,
+       delta, weight, shared);
+
+  for(int i = 0; i < batch; i++) {
+    col2im_gpu(W, H, C, FW, FH, FC, stride, pad,
+      m_delta + i*im_size, shared  + i*col_size);
+  }
+}
+
+
 
 #if 0
 __global__ void bias_add_kernel(float *output, float *bias,

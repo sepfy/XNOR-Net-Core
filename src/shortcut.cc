@@ -32,10 +32,6 @@ void Shortcut::init() {
 
 void Shortcut::forward() {
 
-
-#ifdef GPU
-  forward_gpu();
-#else
   for(int b = 0; b < batch; b++) {
     for(int i = 0; i < h; i++) {
       for(int j = 0; j < w; j++) {
@@ -46,7 +42,6 @@ void Shortcut::forward() {
       }
     }
   }
-#endif
 
 }
 

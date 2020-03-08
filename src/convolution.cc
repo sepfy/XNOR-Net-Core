@@ -250,40 +250,12 @@ void Convolution::forward_xnor() {
 
 void Convolution::forward_full() {
 
-#ifdef GPU
-/*
-  for(int i = 0; i < batch; i++) {
-    im2col_gpu(W, H, C, FW, FH, FC, stride, pad, 
-      input + i*im_size, out_col);
-    gemm_gpu(TRS_N, TRS_N, out_h*out_w, FC, out_channel, 1, out_col, weight, output+i*out_w*out_h*FC);
-  }
-*/
-  for(int i = 0; i < batch; i++)
-    im2col_gpu(W, H, C, FW, FH, FC, stride, pad, 
-      input + i*im_size, shared+i*col_size);
-
-  gemm_gpu(TRS_N, TRS_N, batch*out_h*out_w, FC, out_channel, 1, shared, weight, output);
-
-/*
-#if 1
-  //Need GPU memory too much
-  for(int i = 0; i < batch; i++)
-    im2col_gpu(W, H, C, FW, FH, FC, stride, pad, 
-      input + i*im_size, out_col+i*col_size);
-
-  gemm_gpu(TRS_N, TRS_N, batch*out_h*out_w, FC, out_channel, 1, out_col, weight, output);
-#endif
-*/
-#else
-
   for(int i = 0; i < batch; i++)
     im2col(W, H, C, FW, FH, FC, stride, pad, 
       input + i*im_size, shared+i*col_size);
 
   gemm_cpu(TRS_N, TRS_N, batch*out_h*out_w, FC, out_channel, 1, shared, weight, output);
-
-#endif
-
+  bias_add();
 
 }
 
@@ -294,12 +266,6 @@ void Convolution::forward() {
   else 
     forward_full();
 
-#ifdef GPU
-  bias_add_gpu();
-#else
-  bias_add();
-#endif
-
 }
 
 void Convolution::bias_add() {
@@ -309,32 +275,8 @@ void Convolution::bias_add() {
           output[b*out_w*out_h*FC + i*FC + j] += bias[j];
 }
 
+
 void Convolution::backward(float *delta) {
-
-#ifdef GPU
-
-  for(int i = 0; i < batch; i++)
-    im2col_gpu(W, H, C, FW, FH, FC, stride, pad,
-      input + i*im_size, shared+i*col_size);
-    
-  gemm_gpu(TRS_T, TRS_N, 
-           out_channel, FC, out_h*out_w*batch, 1.0,
-           shared, delta, grad_weight);
-
-
-  row_sum_gpu(batch*out_w*out_h, FC, delta, grad_bias);
-
-
-  gemm_gpu(TRS_N, TRS_T,
-       batch*out_w*out_h, out_channel, FC, 1.0,
-       delta, weight, shared);
-
-  for(int i = 0; i < batch; i++) {
-    col2im_gpu(W, H, C, FW, FH, FC, stride, pad, 
-      m_delta + i*im_size, shared  + i*col_size);
-  }
-
-#else
 
   for(int i = 0; i < batch; i++)
     im2col(W, H, C, FW, FH, FC, stride, pad,
@@ -369,8 +311,6 @@ void Convolution::backward(float *delta) {
   for(int i = 0; i < batch; i++)
     col2im(W,H, C, FW, FH, FC, stride, pad, 
       m_delta + i*im_size, shared + i*col_size);
-
-#endif
 
 }
 

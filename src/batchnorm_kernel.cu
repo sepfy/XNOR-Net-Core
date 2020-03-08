@@ -74,18 +74,24 @@ __global__ void get_running_variable(float momentum, float *running_x, float *x)
 
 void Batchnorm::normalize_gpu() {
 
-  normalize_gpu_kernel<<<N, batch>>>(normal, input, mean, var, epsilon);
-  check_error(cudaGetLastError());
+  if(train_flag) {
 
+    normalize_gpu_kernel<<<N, batch>>>(normal, input, mean, var, epsilon);
+    check_error(cudaGetLastError());
 
-  int grid = (N-1)/256 + 1;
-  get_running_variable<<<grid, 256>>>(momentum, running_mean, mean);
-  check_error(cudaGetLastError());
-  get_running_variable<<<grid, 256>>>(momentum, running_var, var);
-  check_error(cudaGetLastError());
-  cudaDeviceSynchronize();
+    get_running_variable<<<default_grid(N), BLOCK>>>(
+		    momentum, running_mean, mean);
+    check_error(cudaGetLastError());
 
-
+    get_running_variable<<<default_grid(N), BLOCK>>>(
+		    momentum, running_var, var);
+    check_error(cudaGetLastError());
+  }
+  else {
+    normalize_gpu_kernel<<<N, batch>>>(
+		    normal, input, running_mean, running_var, epsilon);
+    check_error(cudaGetLastError());
+  }
 }
 
 __global__ void scale_and_shift_gpu_kernel(float *output, float *normal, float *gamma, float *beta) {
@@ -104,6 +110,13 @@ void Batchnorm::scale_and_shift_gpu() {
 
 }
 
+void Batchnorm::forward_gpu() {
+
+  get_mean_gpu();
+  get_variance_gpu();
+  normalize_gpu();
+  scale_and_shift_gpu();
+}
 
 
 __global__ void cal_dx(float *dxn, float *dxc, float *gamma, float *delta, float *var, float *xc, float *input, float *mean, float epsilon) {

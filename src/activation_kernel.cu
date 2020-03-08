@@ -66,6 +66,27 @@ void Activation::leaky_backward_gpu(float *delta) {
   check_error(cudaGetLastError());
 }
 
+
+void Activation::forward_gpu() {
+
+   switch(activation) {
+    case RELU:
+      relu_activate_gpu();
+    case LEAKY:
+      leaky_activate_gpu();
+  }
+}
+
+void Activation::backward_gpu(float *delta) {
+
+  switch(activation) {
+    case RELU:
+      relu_backward_gpu(delta);
+    case LEAKY:
+      leaky_backward_gpu(delta);
+  }
+}
+
 __global__ void softmax_kernel(float *input, float *output, int N) {
 
     int i = threadIdx.x;
@@ -89,4 +110,19 @@ void SoftmaxWithCrossEntropy::forward_gpu() {
   softmax_kernel<<<1, batch>>>(input, output, N);
   check_error(cudaGetLastError());
 }
+
+void SoftmaxWithCrossEntropy::backward_gpu(float *delta) {
+  float alpha = 1.0/(float)batch;
+  size_t size = sizeof(float)*batch*N;
+  cudaError_t status = cudaMemset(m_delta, 0, size);
+  check_error(status);
+
+  cublasSaxpy(gpu_handle(), batch*N, &alpha, output, 1, m_delta, 1);
+  check_error(cudaGetLastError());
+
+  alpha = -1.0/(float)batch;
+  cublasSaxpy(gpu_handle(), batch*N, &alpha, delta, 1, m_delta, 1);
+  check_error(cudaGetLastError());
+}
+
 

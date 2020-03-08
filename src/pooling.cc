@@ -61,11 +61,6 @@ void Pooling::print() {
 
 void Pooling::forward() {
 
-//ms_t s = getms();
-
-#ifdef GPU
-  forward_gpu();
-#else
   int out_w = (W + 2*pad - FW)/stride + 1;
   int out_h = (H + 2*pad - FH)/stride + 1;
   int offset_w = 0, offset_h = 0;
@@ -95,43 +90,7 @@ void Pooling::forward() {
       }
     }
   }
-/*
-  int col_size = out_w*out_h*out_channel;
-  int im_size = H*W*C;
 
-  for(int i = 0; i < batch; i++)
-    im2col(W, H, C, FW, FH, C, stride, pad,
-           input + i*im_size, out_col + i*col_size);
-  
-  int out_size = out_h*out_w*C;
-  int filter_size = FH*FW;
-  int idx;
-  float max;
-  float max_idx = 0;
-  max_seq.clear();
-
-  for(int i = 0; i < batch; i++) {
-    for(int p = 0; p < out_h; p++)
-      for(int q = 0; q < out_w; q++)
-        for(int o = 0; o < C; o++) {
-          max = -1.0e+6;
-          for(int j = 0; j < filter_size; j++) {
-            idx = i*col_size + p*(out_w*out_channel) + q*out_channel + j*C + o;
-            //cout << out_col[idx] << " ";
-            if(out_col[idx] > max) {
-              //out_w*out_h*out_channel*batch
-              max = out_col[idx];
-              max_idx = idx;
-            }
-          }
-          output[i*out_size+p*(out_w*C)+q*C+o] = max;
-          max_seq.push_back(max_idx);
-        }
-  }  
-*/
-
-#endif
-//cout << getms() - s << endl;
 }
 
 void Pooling::backward(float *delta) {

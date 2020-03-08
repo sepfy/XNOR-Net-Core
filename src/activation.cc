@@ -63,10 +63,6 @@ void SoftmaxWithCrossEntropy::print() {
 
 void SoftmaxWithCrossEntropy::forward() {
 
-#ifdef GPU
-  forward_gpu();
-#else
-
   for(int i = 0; i < batch; i++) {
     float tmp = 0;
     float max = 0;
@@ -81,28 +77,13 @@ void SoftmaxWithCrossEntropy::forward() {
     for(int j = 0; j < N; j++) 
       output[i*N+j] /= tmp;
   }
-#endif
 
 }
 
 void SoftmaxWithCrossEntropy::backward(float *delta) {
 
-#ifdef GPU
-  float alpha = 1.0/(float)batch;
-  size_t size = sizeof(float)*batch*N;
-  cudaError_t status = cudaMemset(m_delta, 0, size);
-  check_error(status);
-
-  cublasSaxpy(gpu_handle(), batch*N, &alpha, output, 1, m_delta, 1);    
-  check_error(cudaGetLastError());
-
-  alpha = -1.0/(float)batch;
-  cublasSaxpy(gpu_handle(), batch*N, &alpha, delta, 1, m_delta, 1);    
-  check_error(cudaGetLastError());
-#else
   mat_minus(batch, N, output, delta, m_delta);  
   mat_scalar(batch, N, m_delta, 1.0/(float)batch, m_delta);
-#endif
 }
 
 void SoftmaxWithCrossEntropy::update(update_args a) {
@@ -163,23 +144,12 @@ void Activation::print() {
 
 void Activation::forward() {
 
-
-#ifdef GPU
-   switch(activation) {
-    case RELU:
-      relu_activate_gpu();
-    case LEAKY:
-      leaky_activate_gpu();
-  }
-#else
-
   switch(activation) {
     case RELU:
       relu_activate();
     case LEAKY:
       leaky_activate();
   }
-#endif
 
 }
 
@@ -199,16 +169,6 @@ void Activation::leaky_activate() {
 
 void Activation::backward(float *delta) {
 
-#ifdef GPU
-  switch(activation) {
-    case RELU:
-      relu_backward_gpu(delta);
-    case LEAKY:
-      leaky_backward_gpu(delta);
-  }
-
-#else
-
   switch(activation) {
     case RELU:
       relu_backward(delta);
@@ -216,7 +176,6 @@ void Activation::backward(float *delta) {
       leaky_backward(delta);
   }
 
-#endif
 }
 
 

@@ -60,11 +60,6 @@ void AvgPool::print() {
 
 void AvgPool::forward() {
 
-//ms_t s = getms();
-
-#ifdef GPU
-  forward_gpu();
-#else
   int out_w = (W + 2*pad - FW)/stride + 1;
   int out_h = (H + 2*pad - FH)/stride + 1;
   int offset_w = 0, offset_h = 0;
@@ -95,8 +90,6 @@ void AvgPool::forward() {
     }
   }
 
-#endif
-//cout << getms() - s << endl;
 }
 
 void AvgPool::backward(float *delta) {

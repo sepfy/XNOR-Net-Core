@@ -26,8 +26,13 @@ class Layer {
     size_t shared_size = 0;
     float *shared;
     virtual void forward() = 0;
-    virtual void forward_gpu() = 0;
     virtual void backward(float* delta) = 0;
+
+#ifdef GPU
+    virtual void forward_gpu() = 0;
+    virtual void backward_gpu(float* delta) = 0;
+#endif
+
     virtual void update(update_args a) = 0;
     virtual void init() = 0;
     virtual void print() = 0;
@@ -60,7 +65,10 @@ class Connected : public Layer {
     void init(); 
     void print();
     void forward();
+#if GPU
     void forward_gpu();
+    void backward_gpu(float* delta);
+#endif
     void bias_add();
     void backward(float *delta);
     void update(update_args a);
@@ -92,9 +100,12 @@ class SoftmaxWithCrossEntropy : public Layer {
     void init();
     void print();
     void forward();
-    void forward_gpu();
     void backward(float *delta);
     void update(update_args a);
+#if GPU
+    void forward_gpu();
+    void backward_gpu(float* delta);
+#endif
     void save(fstream *file);
     static SoftmaxWithCrossEntropy* load(char *buf);
 
@@ -138,11 +149,9 @@ class Convolution : public Layer {
     void init();
     void print();
     
-    void bias_add_gpu();
     void bias_add();
     void forward_xnor();
     void forward_full();
-    void forward_gpu();
     float* backward_xnor(float *delta);
     float* backward_full(float *delta);
     void forward();
@@ -150,6 +159,12 @@ class Convolution : public Layer {
     void update(update_args a);
     void save(fstream *file);
     static Convolution* load(char *buf);
+
+#ifdef GPU
+    void forward_gpu();
+    void backward_gpu(float* delta);
+    void bias_add_gpu();
+#endif
 
 #ifdef XNOR_NET
     float *binary_weight;
@@ -187,11 +202,14 @@ class AvgPool : public Layer {
     void print();
     void forward();
     void backward(float *delta);
-    void forward_gpu();
-    void backward_gpu(float *delta);
     void update(update_args a);
     void save(fstream *file);
     static AvgPool* load(char *buf);
+
+#ifdef GPU
+    void forward_gpu();
+    void backward_gpu(float *delta);
+#endif
 };
 
 
@@ -216,11 +234,16 @@ class Pooling : public Layer {
     void print();
     void forward();
     void backward(float *delta);
-    void forward_gpu();
-    void backward_gpu(float *delta);
+    void update_gpu(update_args a);
     void update(update_args a);
     void save(fstream *file);
     static Pooling* load(char *buf);
+
+#ifdef GPU
+    void forward_gpu();
+    void backward_gpu(float *delta);
+#endif
+
 };
 
 enum ACT{
@@ -247,15 +270,19 @@ class Activation : public Layer {
     void init();
     void print();
     void forward();
-    void forward_gpu();
     void backward(float *delta);
+    void update(update_args a);
+    void save(fstream *file);
+    static Activation* load(char *buf);
+
+#ifdef GPU
+    void backward_gpu(float *delta);
+    void forward_gpu();
     void relu_activate_gpu();
     void leaky_activate_gpu();
     void relu_backward_gpu(float *delta);
     void leaky_backward_gpu(float *delta);
-    void update(update_args a);
-    void save(fstream *file);
-    static Activation* load(char *buf);
+#endif
 };
 
 
@@ -283,7 +310,6 @@ class Batchnorm : public Layer {
     void init();
     void print();
     void forward();
-    void forward_gpu();
     void backward(float *delta);
     void update(update_args a);
     void save(fstream *file);
@@ -299,8 +325,11 @@ class Batchnorm : public Layer {
     void get_variance_gpu();
     void normalize_gpu();
     void scale_and_shift_gpu();
+
+#ifdef GPU
+    void forward_gpu();
     void backward_gpu(float *delta);
-    
+#endif 
 };
 
 class Dropout : public Layer {
@@ -313,11 +342,17 @@ class Dropout : public Layer {
     void init();
     void print();
     void forward();
-    void forward_gpu();
+
     void backward(float *delta);
     void update(update_args a);
     void save(fstream *file);
     static Dropout* load(char *buf);
+
+#ifdef GPU
+    void forward_gpu();
+    void backward_gpu(float *delta);
+#endif
+
 };
 
 
@@ -333,13 +368,16 @@ class Shortcut : public Layer {
     void print();
     void forward();
     void backward(float *delta);
+    void update(update_args a);
+    void save(fstream *file);
+    static Shortcut* load(char *buf);
+
 #ifdef GPU
     void forward_gpu();
     void backward_gpu(float *delta);
 #endif
-    void update(update_args a);
-    void save(fstream *file);
-    static Shortcut* load(char *buf);
+
+
 };
 
 

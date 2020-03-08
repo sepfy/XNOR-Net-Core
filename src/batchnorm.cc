@@ -132,30 +132,18 @@ void Batchnorm::scale_and_shift() {
 void Batchnorm::forward() {
 
   if(train_flag) {
-#ifdef GPU
-    get_mean_gpu();
-    get_variance_gpu();
-    normalize_gpu();
-#else
     get_mean();
     get_variance();
     normalize();
-#endif
   }
   else {
     for(int i = 0; i < batch; i++)
       for(int j = 0; j < N; j++) 
         normal[i*N+j] = (input[i*N+j] - running_mean[j])/pow(running_var[j] + epsilon, 0.5);
       
-
   }
 
-#ifdef GPU
-  scale_and_shift_gpu();
-#else
   scale_and_shift();
-#endif
-
 
 }
 
