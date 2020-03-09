@@ -11,9 +11,18 @@ Dropout::~Dropout() {
 
 
 void Dropout::init() {
+
+#ifdef GPU
+  output = malloc_gpu(batch*N);
+  m_delta = malloc_gpu(batch*N);
+  mask = malloc_gpu(batch*N);
+  prob = malloc_gpu(batch*N);
+#else	
   output = new float[batch*N];
   m_delta = new float[batch*N];
   mask = new float[batch*N];
+#endif
+
 }
 
 void Dropout::print() {

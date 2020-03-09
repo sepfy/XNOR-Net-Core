@@ -2,7 +2,7 @@
 
 #define LEARNING_RATE 1.0e-3
 #define BATCH 100
-#define MAX_ITER 300000
+#define MAX_ITER 20000
 
 void MnistXnorNet(Network *network) {
 
@@ -18,6 +18,7 @@ void MnistXnorNet(Network *network) {
 
   Batchnorm *bn2 = new Batchnorm(4*4*64);
   Convolution *conv3 = new Convolution(4, 4, 64, 4, 4, 512, 1, false);
+  
   Activation *relu3 = new Activation(512, LEAKY);
 
   Connected *conn1 = new Connected(512, 10);
@@ -57,25 +58,27 @@ void MnistNet(Network *network) {
   conv3->xnor = false;
   Batchnorm *bn3 = new Batchnorm(500);
   Activation *relu3 = new Activation(500, LEAKY);
+  Dropout *dropout = new Dropout(500, 0.5);
  
-  Connected *conn1 = new Connected(500, 10);
+  Connected *conn = new Connected(500, 10);
   SoftmaxWithCrossEntropy *softmax = new SoftmaxWithCrossEntropy(10);
   
   network->add(conv1);
-  //network->add(bn1);
+  network->add(bn1);
   network->add(relu1);
   network->add(pool1);
 
   network->add(conv2);
-  //network->add(bn2);
+  network->add(bn2);
   network->add(relu2);
   network->add(pool2);
 
   network->add(conv3);
-  //network->add(bn3);
+  network->add(bn3);
   network->add(relu3);
 
-  network->add(conn1);
+  network->add(dropout);
+  network->add(conn);
   network->add(softmax);
 
 }
@@ -155,10 +158,24 @@ int main( int argc, char** argv ) {
   }
 
 
+#ifdef GPU
 
+  float *test_data_tmp, *test_label_tmp;
+  float *test_data = malloc_gpu(10000*IM_SIZE);
+  float *test_label = malloc_gpu(10000*10);
+  test_data_tmp = read_validate_data(argv[3]);
+  test_label_tmp = read_validate_label(argv[3]);
+  gpu_push_array(test_data, test_data_tmp, 10000*IM_SIZE);
+  gpu_push_array(test_label, test_label_tmp, 10000*10);
+
+  delete []test_data_tmp;
+  delete []test_label_tmp;
+#else
   float *test_data, *test_label;
   test_data = read_validate_data(argv[3]);
   test_label = read_validate_label(argv[3]);
+#endif
+
 
   float total = 0.0;
   int batch_num = 10000/BATCH;
@@ -176,6 +193,7 @@ int main( int argc, char** argv ) {
   }
   cout << "Validate set error = " << (total/batch_num)*100 
        << ", time = " << getms() -start  << endl;
+
 #ifdef GPU
   cudaFree(test_data);
   cudaFree(test_label);

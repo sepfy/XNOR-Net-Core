@@ -94,14 +94,10 @@ void AvgPool::forward() {
 
 void AvgPool::backward(float *delta) {
 
-#ifdef GPU
-  backward_gpu(delta);
-#else
   for(int i = 0; i < out_w*out_h*FC*batch; i++) {
     int j = indexes[i];
     m_delta[j] = delta[i];
   }
-#endif
 
 }
 

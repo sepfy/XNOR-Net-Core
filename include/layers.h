@@ -336,6 +336,7 @@ class Dropout : public Layer {
   public:
     int N;
     float *mask;
+    float *prob;
     float ratio;
     Dropout(int _N, float _ratio);
     ~Dropout();
