@@ -13,7 +13,7 @@ using namespace std;
 
 #define LEARNING_RATE 1.0e-3
 #define BATCH 50
-#define MAX_ITER 10000
+#define MAX_ITER 20000
 
 void CifarXnorNet(Network *network) {
 
@@ -25,36 +25,36 @@ void CifarXnorNet(Network *network) {
 
   Convolution *conv2 = new Convolution(14, 14, 20, 5, 5, 50, 1, false);
   conv2->xnor = false;
-  Batchnorm *bn2 = new Batchnorm(14*14*20);
+  Batchnorm *bn2 = new Batchnorm(10*10*50);
   Activation *actv2 = new Activation(10*10*50, LEAKY);
   Pooling *pool2 = new Pooling(10, 10, 50, 2, 2, 50, 2, false);
 
-  Convolution *conv3 = new Convolution(5, 5, 50, 5, 5, 500, 1, false);
+  Convolution *conv3 = new Convolution(5, 5, 50, 5, 5, 10, 1, false);
   conv3->xnor = false;
-  Batchnorm *bn3 = new Batchnorm(5*5*50);
+  Batchnorm *bn3 = new Batchnorm(500);
   Activation *actv3 = new Activation(500, LEAKY);
   //Dropout *dropout3 = new Dropout(500, 0.5);
 
-  Connected *conn4 = new Connected(500, 10);
+  Connected *conn4 = new Connected(32*32*3, 10);
   SoftmaxWithCrossEntropy *softmax = new SoftmaxWithCrossEntropy(10);
 
   
   network->add(conv1);
-  network->add(bn1);
+  //network->add(bn1);
   network->add(actv1);
   network->add(pool1);
 
-  network->add(bn2);
   network->add(conv2);
+  //network->add(bn2);
   network->add(actv2);
   network->add(pool2);
 
-  network->add(bn3);
   network->add(conv3);
-  network->add(actv3);
+  //network->add(bn3);
+  //network->add(actv3);
 
   //network->add(dropout3);
-  network->add(conn4);
+  //network->add(conn4);
   network->add(softmax);
 
 }
@@ -388,9 +388,9 @@ int main( int argc, char** argv ) {
 
   if(strcmp(argv[1], "train") == 0) {
 
-    CifarXnorNet(&network);
+    //CifarXnorNet(&network);
     //CifarNet(&network);
-    //ResNet(&network);
+    ResNet(&network);
     network.initial(BATCH, LEARNING_RATE);
     float *train_data, *train_label;
 

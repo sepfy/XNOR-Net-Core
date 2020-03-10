@@ -9,6 +9,14 @@ __global__ void dropout_forward_gpu_kernel(float *output, float *input, float *m
 }
 
 
+__global__ void dropout_copy_kernel(float *output, float *input, int size) {
+
+  int index = blockIdx.x*blockDim.x + threadIdx.x;
+  if(index > size) return;
+  output[index] = input[index];
+}
+
+
 void Dropout::forward_gpu() {
 
 
@@ -27,7 +35,8 @@ void Dropout::forward_gpu() {
     delete []prob_tmp;
   }
   else {
-    output = input;
+    int size = batch*N;
+    dropout_copy_kernel<<<default_grid(size), BLOCK>>>(output, input, size);
   }
 
 

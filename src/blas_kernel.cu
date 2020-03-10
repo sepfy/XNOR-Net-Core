@@ -31,15 +31,31 @@ __global__ void row_sum_gpu_kernel(float *A, float *B, int N, int M) {
     return;
   int i = 0;
   B[index] = 0.0;
-  for(i = 0; i < M; i++)
-    B[index] += A[index*M + i];
+  for(i = 0; i < N; i++)
+    B[index] += A[i*M + index];
+
+}
+/*
+void col_sum(int N, int M, float *A, float *B) {
+  memset(B, 0, M*sizeof(float));
+  for(int i = 0; i < N; i++)
+    for(int j = 0; j < M; j++)
+      B[i] += A[i*M+j];
 }
 
 
+void row_sum(int N, int M, float *A, float *B) {
+  memset(B, 0, N*sizeof(float));
+  for(int j = 0; j < M; j++)
+    for(int i = 0; i < N; i++)
+      B[j] += A[i*M+j];
+}
+
+*/
+
 void row_sum_gpu(int N, int M, float *A, float *B) {
 
-    int grid = (M-1)/BLOCK + 1;
-    row_sum_gpu_kernel<<<grid, BLOCK>>>(A, B, N, M);
+    row_sum_gpu_kernel<<<default_grid(N), BLOCK>>>(A, B, N, M);
     check_error(cudaGetLastError());
 }
 
@@ -52,7 +68,7 @@ __global__ void col_sum_gpu_kernel(float *A, float *B, int N, int M) {
   int i = 0;
   B[index] = 0.0;
   for(i = 0; i < N; i++)
-    B[index] += A[i*M + index];
+    B[index] += A[index*M + i];
 /* 
   int index = blockIdx.x*blockDim.x + threadIdx.x;
   if(index > M)

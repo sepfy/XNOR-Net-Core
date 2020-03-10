@@ -94,26 +94,11 @@ void Pooling::forward() {
 }
 
 void Pooling::backward(float *delta) {
-/*
-  int im_size = W*H*C;
-  int col_size = out_w*out_h*out_channel;
 
-#ifdef GPU
-  float *im = malloc_gpu(W*H*C);
-  float *col = malloc_gpu(out_channel*out_w*out_h);
-#else
-  float *im = new float[W*H*C];
-  float *col = new float[out_channel*out_w*out_h];
-#endif
-*/
-#ifdef GPU
-  backward_gpu(delta);
-#else
   for(int i = 0; i < out_w*out_h*FC*batch; i++) {
     int j = indexes[i];
     m_delta[j] = delta[i];
   }
-#endif
   /*
   memset(delta_col, 0.0, batch*out_channel*out_w*out_h); 
   for(int i = 0; i < out_w*out_h*C*batch; i++)

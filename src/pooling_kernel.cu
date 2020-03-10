@@ -46,17 +46,17 @@ void Pooling::forward_gpu() {
   check_error(cudaGetLastError());
 }
 
-__global__ void maxpool_backward_gpu_kernel(float *m_delta, float *delta, float *indexes) {
+__global__ void maxpool_backward_gpu_kernel(float *m_delta, float *delta, float *indexes, int size) {
     
-    int i = blockIdx.x*blockDim.x + threadIdx.x;  
+    int i = blockIdx.x*blockDim.x + threadIdx.x;
+    if(i > size) return;
     int j = indexes[i];
     m_delta[j] = delta[i];
 }
 
 void Pooling::backward_gpu(float *delta) {
 
-  int size = (out_w*out_h*FC*batch-1)/256 + 1;
-
-  maxpool_backward_gpu_kernel<<<size, 256>>>(m_delta, delta, indexes);
+  int size = out_w*out_h*FC*batch;
+  maxpool_backward_gpu_kernel<<<default_grid(size), BLOCK>>>(m_delta, delta, indexes, size);
   check_error(cudaGetLastError());
 }
