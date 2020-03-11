@@ -12,7 +12,7 @@ class Network {
     update_args a;
     Network();
     void add(Layer* layer);
-    void initial(int batch, float _lr);
+    void initial(int batch, float _lr, bool use_adam);
     float* inference(float *input);
     void train(float *Y);
     void save(char *filename);

@@ -104,7 +104,7 @@ int main( int argc, char** argv ) {
 
     //MnistXnorNet(&network);
     MnistNet(&network);
-    network.initial(BATCH, LEARNING_RATE);
+    network.initial(BATCH, LEARNING_RATE, false);
 
 
 #ifdef GPU

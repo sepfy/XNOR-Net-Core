@@ -170,6 +170,12 @@ int* argmax(int batch, int N, float *A) {
 }
 
 #ifdef GPU
+
+float axpy_gpu(int size, float alpha, float *A, float *B) {
+  cublasSaxpy(gpu_handle(), size, &alpha, A, 1, B, 1);
+  check_error(cudaGetLastError());
+}
+
 float accuracy(int batch, int N, float *A_gpu, float *B_gpu) {
 
   float *A = new float[batch*N];

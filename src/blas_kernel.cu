@@ -27,7 +27,7 @@ void row_sum_gpu(int N, int M, float *A, float *B) {
 __global__ void row_sum_gpu_kernel(float *A, float *B, int N, int M) {
     
   int index = blockIdx.x*blockDim.x + threadIdx.x;
-  if(index > M)
+  if(index >= M)
     return;
   int i = 0;
   B[index] = 0.0;
@@ -63,7 +63,7 @@ void row_sum_gpu(int N, int M, float *A, float *B) {
 __global__ void col_sum_gpu_kernel(float *A, float *B, int N, int M) {
    
   int index = blockIdx.x*blockDim.x + threadIdx.x;
-  if(index > N)
+  if(index >= N)
     return;
   int i = 0;
   B[index] = 0.0;

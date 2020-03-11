@@ -9,6 +9,8 @@ typedef struct UPDATE_ARGS {
   int iter = 0;
   float m_lr;
   float momentum = 0.9;
+  bool adam = false;
+  float decay = 0.5;
 
 } update_args;
 

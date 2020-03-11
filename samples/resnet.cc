@@ -233,7 +233,7 @@ int main( int argc, char** argv ) {
 
   Network network;
   Resnet18(&network);
-  network.initial(BATCH, LEARNING_RATE);
+  network.initial(BATCH, LEARNING_RATE, false);
 
   float *inputs, *outputs;
   int n = read_data("FIRE-SMOKE-DATASET/Train/", inputs, outputs);

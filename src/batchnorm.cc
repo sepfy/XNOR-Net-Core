@@ -223,10 +223,16 @@ void Batchnorm::update(update_args a) {
 
 
 #ifdef GPU
-  adam_gpu(N, gamma, dgamma, m_gamma, v_gamma, a);
-  adam_gpu(N, beta, dbeta, m_beta, v_beta, a);
-  //momentum_gpu(N, gamma, dgamma, v_gamma, a);
-  //momentum_gpu(N, beta, dbeta, v_beta, a);
+
+  if(a.adam) {
+    adam_gpu(N, gamma, dgamma, m_gamma, v_gamma, a);
+    adam_gpu(N, beta, dbeta, m_beta, v_beta, a);
+  }
+  else {
+    momentum_gpu(N, gamma, dgamma, v_gamma, a);
+    momentum_gpu(N, beta, dbeta, v_beta, a);
+  }
+
 #else
   adam_cpu(N, gamma, dgamma, m_gamma, v_gamma, a);
   adam_cpu(N, beta, dbeta, m_beta, v_beta, a);

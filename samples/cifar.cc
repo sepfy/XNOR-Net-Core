@@ -11,9 +11,9 @@
 using namespace std;
 
 
-#define LEARNING_RATE 1.0e-3
-#define BATCH 50
-#define MAX_ITER 20000
+#define LEARNING_RATE 1.0e-1
+#define BATCH 100
+#define MAX_ITER 5000
 
 void CifarXnorNet(Network *network) {
 
@@ -29,32 +29,32 @@ void CifarXnorNet(Network *network) {
   Activation *actv2 = new Activation(10*10*50, LEAKY);
   Pooling *pool2 = new Pooling(10, 10, 50, 2, 2, 50, 2, false);
 
-  Convolution *conv3 = new Convolution(5, 5, 50, 5, 5, 10, 1, false);
+  Convolution *conv3 = new Convolution(5, 5, 50, 5, 5, 500, 1, false);
   conv3->xnor = false;
   Batchnorm *bn3 = new Batchnorm(500);
   Activation *actv3 = new Activation(500, LEAKY);
   //Dropout *dropout3 = new Dropout(500, 0.5);
 
-  Connected *conn4 = new Connected(32*32*3, 10);
+  Connected *conn4 = new Connected(500, 10);
   SoftmaxWithCrossEntropy *softmax = new SoftmaxWithCrossEntropy(10);
 
-  
+
   network->add(conv1);
-  //network->add(bn1);
+  network->add(bn1);
   network->add(actv1);
   network->add(pool1);
 
   network->add(conv2);
-  //network->add(bn2);
+  network->add(bn2);
   network->add(actv2);
   network->add(pool2);
 
   network->add(conv3);
-  //network->add(bn3);
-  //network->add(actv3);
+  network->add(bn3);
+  network->add(actv3);
 
   //network->add(dropout3);
-  //network->add(conn4);
+  network->add(conn4);
   network->add(softmax);
 
 }
@@ -292,7 +292,7 @@ void ResNet(Network *network) {
 
   network->add(conv3);
   network->add(bn3);
-  network->add(shortcut1);
+//  network->add(shortcut1);
   network->add(actv3);
 
   network->add(conv4);
@@ -301,7 +301,7 @@ void ResNet(Network *network) {
 
   network->add(conv5);
   network->add(bn5);
-  network->add(shortcut2);
+//  network->add(shortcut2);
   network->add(actv5);
 
   network->add(pool1);
@@ -321,7 +321,7 @@ void ResNet(Network *network) {
 
   network->add(conv9);
   network->add(bn9);
-  network->add(shortcut4);
+//  network->add(shortcut4);
   network->add(actv9);
 
   network->add(pool2);
@@ -340,7 +340,7 @@ void ResNet(Network *network) {
 
   network->add(conv13);
   network->add(bn13);
-  network->add(shortcut6);
+//  network->add(shortcut6);
   network->add(actv13);
 
   network->add(pool3);
@@ -359,7 +359,7 @@ void ResNet(Network *network) {
 
   network->add(conv17);
   network->add(bn17);
-  network->add(shortcut8);
+//  network->add(shortcut8);
   network->add(actv17);
 
   network->add(avgpool);
@@ -388,10 +388,10 @@ int main( int argc, char** argv ) {
 
   if(strcmp(argv[1], "train") == 0) {
 
-    //CifarXnorNet(&network);
+    CifarXnorNet(&network);
     //CifarNet(&network);
-    ResNet(&network);
-    network.initial(BATCH, LEARNING_RATE);
+    //ResNet(&network);
+    network.initial(BATCH, LEARNING_RATE, false);
     float *train_data, *train_label;
 
     train_data = new float[50000*IM_SIZE];
@@ -432,14 +432,10 @@ int main( int argc, char** argv ) {
       }
 
     }
-
     //network.save(argv[2]);
 #ifdef GPU
     cudaFree(batch_xs);
     cudaFree(batch_ys);
-#else
-    delete []batch_xs;
-    delete []batch_ys;
 #endif
     delete []train_data;
     delete []train_label;
@@ -486,7 +482,6 @@ int main( int argc, char** argv ) {
 #endif
 
     float *output = network.inference(batch_xs);
-
     total += accuracy(BATCH, NUM_OF_CLASS, output, batch_ys); 
   }
 
@@ -496,9 +491,6 @@ int main( int argc, char** argv ) {
 #ifdef GPU
     cudaFree(batch_xs);
     cudaFree(batch_ys);
-#else
-    delete []batch_xs;
-    delete []batch_ys;
 #endif
     delete []test_data;
     delete []test_label;
