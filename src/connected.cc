@@ -90,7 +90,7 @@ void Connected::update(update_args a) {
 
 #if GPU
    axpy_gpu(N*M, a.decay, weight, grad_weight);
-   axpy_gpu(M, a.decay, bias, grad_bias);
+   //axpy_gpu(M, a.decay, bias, grad_bias);
 
   if(a.adam) {
     adam_gpu(N*M, weight, grad_weight, m_weight, v_weight, a);
@@ -117,10 +117,21 @@ void Connected::save(fstream *file) {
 
   char buf[64] = {0};
   sprintf(buf, "Connected,%d,%d", N, M);
-  //cout << buf << endl;
   file->write(buf, sizeof(buf));
+  //cout << buf << endl;
+#ifdef GPU
+  float *weight_tmp = new float[N*M];
+  float *bias_tmp = new float[M];
+  gpu_pull_array(weight, weight_tmp, N*M);
+  gpu_pull_array(bias, bias_tmp, M);
+  file->write((char*)weight_tmp, N*M*sizeof(float));
+  file->write((char*)bias_tmp, M*sizeof(float));
+  delete []weight_tmp;
+  delete []bias_tmp;
+#else
   file->write((char*)weight, N*M*sizeof(float));
   file->write((char*)bias, M*sizeof(float));
+#endif
 
 }
 

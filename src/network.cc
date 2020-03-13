@@ -110,12 +110,12 @@ void Network::load(char *filename, int batch) {
     cout << "Open model file " << filename << " failed." << endl;
     exit(-1);
   }
-
   int ii = 0;
   int ret;
   while(true) {
 
     rfile.read(buf, sizeof(buf));
+cout << buf << endl;
     if(rfile.eof())
       break;
     //cout << buf << endl;
@@ -134,11 +134,26 @@ void Network::load(char *filename, int batch) {
         rfile.read((char*)conv->mean, conv->FC*sizeof(float));
       }
       else {
+
+#ifdef GPU
+        float *weight_tmp = new float[conv->weight_size];
+        rfile.read((char*)weight_tmp, conv->weight_size*sizeof(float));
+	gpu_push_array(conv->weight, weight_tmp, conv->weight_size);
+	delete []weight_tmp;
+#else
         rfile.read((char*)conv->weight, conv->weight_size*sizeof(float));
+#endif
+
       }
 
+#ifdef GPU
+      float *bias_tmp = new float[conv->bias_size];
+      rfile.read((char*)bias_tmp, conv->bias_size*sizeof(float));
+      gpu_push_array(conv->bias, bias_tmp, conv->bias_size);
+      delete []bias_tmp;
+#else
       rfile.read((char*)conv->bias, conv->bias_size*sizeof(float));
-
+#endif
 
       this->add(conv); 
       //cout << conv->weight[0] << endl;
@@ -148,9 +163,19 @@ void Network::load(char *filename, int batch) {
       Connected *conn = Connected::load(token);
       conn->batch = batch;
       conn->init();
+
+#ifdef GPU
+      float *weight_tmp = new float[conn->N*conn->M];
+      float *bias_tmp = new float[conn->M];
+      rfile.read((char*)weight_tmp, conn->N*conn->M*sizeof(float));
+      rfile.read((char*)bias_tmp, conn->M*sizeof(float));
+      delete []weight_tmp;
+      delete []bias_tmp;
+#else
       rfile.read((char*)conn->weight, conn->N*conn->M*sizeof(float));
       rfile.read((char*)conn->bias, conn->M*sizeof(float));
       //cout << conn->N << endl;
+#endif
       this->add(conn); 
 
     }
@@ -173,10 +198,25 @@ void Network::load(char *filename, int batch) {
       bn->batch = batch;
       bn->train_flag = false;
       bn->init();
+#ifdef GPU
+      float *mean_tmp = new float[bn->N];
+      float *var_tmp = new float[bn->N];
+      float *gamma_tmp = new float[bn->N];
+      float *beta_tmp = new float[bn->N];
+      rfile.read((char*)mean_tmp, bn->N*sizeof(float));
+      rfile.read((char*)var_tmp, bn->N*sizeof(float));
+      rfile.read((char*)gamma_tmp, bn->N*sizeof(float));
+      rfile.read((char*)beta_tmp, bn->N*sizeof(float));
+      delete []mean_tmp;
+      delete []var_tmp;
+      delete []gamma_tmp;
+      delete []beta_tmp;
+#else
       rfile.read((char*)bn->running_mean, bn->N*sizeof(float));
       rfile.read((char*)bn->running_var, bn->N*sizeof(float));
       rfile.read((char*)bn->gamma, bn->N*sizeof(float));
       rfile.read((char*)bn->beta, bn->N*sizeof(float));
+#endif
       this->add(bn);
       //cout << relu->N << endl;
     }

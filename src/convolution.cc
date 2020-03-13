@@ -318,7 +318,7 @@ void Convolution::update(update_args a) {
 
 #ifdef GPU
   axpy_gpu(out_channel*FC, a.decay, weight, grad_weight);
-  axpy_gpu(FC, a.decay, bias, grad_bias);
+  //axpy_gpu(FC, a.decay, bias, grad_bias);
 
   if(a.adam) {
     adam_gpu(out_channel*FC, weight, grad_weight, m_weight, v_weight, a);
@@ -372,11 +372,28 @@ void Convolution::save(fstream *file) {
     file->write((char*)mean, FC*sizeof(float));
   } 
   else {
+
+#ifdef GPU
+    float *weight_tmp = new float[N*M];
+    gpu_pull_array(weight, weight_tmp, N*M);
+    file->write((char*)weight_tmp, weight_size*sizeof(float));
+    delete []weight_tmp;
+#else
     file->write((char*)weight, weight_size*sizeof(float));
+#endif
+
   }
 
-  file->write((char*)bias, bias_size*sizeof(float));
 
+
+#ifdef GPU
+  float *bias_tmp = new float[M];
+  gpu_pull_array(bias, bias_tmp, M);
+  file->write((char*)bias_tmp, bias_size*sizeof(float));
+  delete []bias_tmp;
+#else  
+  file->write((char*)bias, bias_size*sizeof(float));
+#endif
 
 }
 

@@ -266,10 +266,30 @@ void Batchnorm::save(fstream *file) {
   char buf[64] = {0};
   sprintf(buf, "Batchnorm,%d", N);
   file->write(buf, sizeof(buf));
+
+#ifdef GPU
+  float *mean_tmp = new float[N];
+  float *var_tmp = new float[N];
+  float *gamma_tmp = new float[N];
+  float *beta_tmp = new float[N];
+  gpu_pull_array(running_mean, mean_tmp, N);
+  gpu_pull_array(running_var, var_tmp, N);
+  gpu_pull_array(gamma, gamma_tmp, N);
+  gpu_pull_array(beta, beta_tmp, N);
+  file->write((char*)mean_tmp, N*sizeof(float));
+  file->write((char*)var_tmp, N*sizeof(float));
+  file->write((char*)gamma_tmp, N*sizeof(float));
+  file->write((char*)beta_tmp, N*sizeof(float));
+  delete []mean_tmp;
+  delete []var_tmp;
+  delete []gamma_tmp;
+  delete []beta_tmp;
+#else
   file->write((char*)running_mean, N*sizeof(float));
   file->write((char*)running_var, N*sizeof(float));
   file->write((char*)gamma, N*sizeof(float));
   file->write((char*)beta, N*sizeof(float));
+#endif
 }
 
 Batchnorm* Batchnorm::load(char *buf) {

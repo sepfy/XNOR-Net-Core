@@ -130,7 +130,7 @@ void Pooling::save(fstream *file) {
   char buf[64] = {0};
   sprintf(buf, "Pooling,%d,%d,%d,%d,%d,%d,%d,%d",
     W, H, C, FW, FH, FC, stride, pad);
-  //cout << buf << endl;
+  cout << buf << endl;
   file->write(buf, sizeof(buf));
 }
 
