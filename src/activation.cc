@@ -210,7 +210,7 @@ Activation* Activation::load(char *buf) {
     token = strtok(NULL, ",");
     para[idx] = atoi(token);
     idx++;
-    if(idx > 2)
+    if(idx > 1)
       break;
   }
 

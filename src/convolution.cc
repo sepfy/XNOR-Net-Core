@@ -374,8 +374,8 @@ void Convolution::save(fstream *file) {
   else {
 
 #ifdef GPU
-    float *weight_tmp = new float[N*M];
-    gpu_pull_array(weight, weight_tmp, N*M);
+    float *weight_tmp = new float[weight_size];
+    gpu_pull_array(weight, weight_tmp, weight_size);
     file->write((char*)weight_tmp, weight_size*sizeof(float));
     delete []weight_tmp;
 #else
@@ -387,8 +387,8 @@ void Convolution::save(fstream *file) {
 
 
 #ifdef GPU
-  float *bias_tmp = new float[M];
-  gpu_pull_array(bias, bias_tmp, M);
+  float *bias_tmp = new float[bias_size];
+  gpu_pull_array(bias, bias_tmp, bias_size);
   file->write((char*)bias_tmp, bias_size*sizeof(float));
   delete []bias_tmp;
 #else  

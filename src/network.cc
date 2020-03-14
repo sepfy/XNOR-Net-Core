@@ -11,6 +11,7 @@ void Network::add(Layer* layer) {
 void Network::initial(int batch, float _lr, bool use_adam) {
   a.lr = _lr;
   a.adam = use_adam;
+  a.decay = 0.0;
   size_t max = 0;
   for(int i = 0; i < layers.size(); i++) {
     layers[i]->batch = batch;
@@ -115,7 +116,6 @@ void Network::load(char *filename, int batch) {
   while(true) {
 
     rfile.read(buf, sizeof(buf));
-cout << buf << endl;
     if(rfile.eof())
       break;
     //cout << buf << endl;
@@ -169,6 +169,8 @@ cout << buf << endl;
       float *bias_tmp = new float[conn->M];
       rfile.read((char*)weight_tmp, conn->N*conn->M*sizeof(float));
       rfile.read((char*)bias_tmp, conn->M*sizeof(float));
+      gpu_push_array(conn->weight, weight_tmp, conn->N*conn->M);
+      gpu_push_array(conn->bias, bias_tmp, conn->M);
       delete []weight_tmp;
       delete []bias_tmp;
 #else
@@ -186,11 +188,18 @@ cout << buf << endl;
       this->add(pool);
       //cout << pool->FC << endl;
     }
+    else if(!strcmp(token, "AvgPool")) {
+      AvgPool *avgpool = AvgPool::load(token);
+      avgpool->batch = batch;
+      avgpool->init();
+      this->add(avgpool);
+      //cout << pool->FC << endl;
+    }
     else if(!strcmp(token, "Activation")) {
-      Activation *relu = Activation::load(token);
-      relu->batch = batch;
-      relu->init(); 
-      this->add(relu);
+      Activation *actv = Activation::load(token);
+      actv->batch = batch;
+      actv->init(); 
+      this->add(actv);
       //cout << relu->N << endl;
     }
     else if(!strcmp(token, "Batchnorm")) {
@@ -207,6 +216,10 @@ cout << buf << endl;
       rfile.read((char*)var_tmp, bn->N*sizeof(float));
       rfile.read((char*)gamma_tmp, bn->N*sizeof(float));
       rfile.read((char*)beta_tmp, bn->N*sizeof(float));
+      gpu_push_array(bn->running_mean, mean_tmp, bn->N);
+      gpu_push_array(bn->running_var, var_tmp, bn->N);
+      gpu_push_array(bn->gamma, gamma_tmp, bn->N);
+      gpu_push_array(bn->beta, beta_tmp, bn->N);
       delete []mean_tmp;
       delete []var_tmp;
       delete []gamma_tmp;
@@ -228,11 +241,26 @@ cout << buf << endl;
       //cout << softmax->N << endl;
     }
 
-
   }
+
   for(int i = 1; i < layers.size(); i++) {
     this->layers[i]->input = layers[i-1]->output;
   }
+
+  size_t max = 0;
+  for(int i = 0; i < layers.size(); i++) {
+    layers[i]->print();
+    if(layers[i]->shared_size > max)
+      max = layers[i]->shared_size;
+  }
+#ifdef GPU 
+  float *shared = malloc_gpu(max);
+#else
+  float *shared = new float[max];
+#endif
+
+  for(int i = 0; i < layers.size(); i++)
+    layers[i]->shared = shared;
 
   deploy();
 }
