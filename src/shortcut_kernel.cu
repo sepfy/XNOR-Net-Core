@@ -4,7 +4,7 @@
 __global__ void shortcut_forward_gpu_kernel(float *input, float *output, float *identity, int size) {
 
   int index = blockIdx.x*blockDim.x + threadIdx.x;
-  if( index > size)
+  if( index >= size)
     return;
 
   output[index] = input[index] + identity[index];
@@ -22,7 +22,7 @@ void Shortcut::forward_gpu() {
 __global__ void shortcut_backward_gpu_kernel(float *delta, float *m_delta, float *cut, int size) {
 
   int index = blockIdx.x*blockDim.x + threadIdx.x;
-  if( index > size)
+  if( index >= size)
     return;
 
   m_delta[index] = delta[index];

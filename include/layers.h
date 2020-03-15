@@ -360,7 +360,9 @@ class Dropout : public Layer {
 class Shortcut : public Layer {
   public:
     int w, h, c;
-    Shortcut(int _w, int _h, int _c, Convolution *_conv, Activation *_activation);
+    int conv_idx, actv_idx;
+    Shortcut(int _w, int _h, int _c, int conv_idx, Convolution *_conv,
+	     int actv_idx, Activation *_activation);
     ~Shortcut();
     float *identity;
     Convolution *conv;

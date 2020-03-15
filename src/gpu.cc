@@ -82,6 +82,7 @@ void memset_gpu(float *gpu_x, float val, size_t n) {
 void gpu_push_array(float *x_gpu, float *x, size_t n)
 {
     size_t size = sizeof(float)*n;
+    check_error(cudaGetLastError());
     cudaError_t status = cudaMemcpy(x_gpu, x, size, cudaMemcpyHostToDevice);
     check_error(status);
 }

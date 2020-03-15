@@ -26,7 +26,7 @@ void Dropout::init() {
 }
 
 void Dropout::print() {
-
+  printf("Dropout\n");
 }
 
 void Dropout::forward() {

@@ -1,18 +1,22 @@
 #include "layers.h"
 
-Shortcut::Shortcut(int _w, int _h, int _c, Convolution *_conv, Activation *_activation) {
+Shortcut::Shortcut(int _w, int _h, int _c, 
+	int conv_idx, Convolution *_conv, int actv_idx, Activation *_activation) {
   w = _w;
   h = _h;
   c = _c;
   conv = _conv;
   activation = _activation;
+
+  this->conv_idx = conv_idx;
+  this->actv_idx = actv_idx;
 }
 
 Shortcut::~Shortcut() {
 
 }
 
-void Shortcut::print() {}
+void Shortcut::print() { printf("Shortcut\n"); }
 
 void Shortcut::init() {
 
@@ -47,9 +51,6 @@ void Shortcut::forward() {
 
 void Shortcut::backward(float *delta) {
 
-#ifdef GPU
-  backward_gpu(delta);
-#else
   for(int b = 0; b < batch; b++) {
     for(int i = 0; i < h; i++) {
       for(int j = 0; j < w; j++) {
@@ -61,17 +62,36 @@ void Shortcut::backward(float *delta) {
       }
     }
   }
-#endif
+
 }
 
 void Shortcut::update(update_args a) {
 }
 
 void Shortcut::save(fstream *file) {
+  char buf[64] = {0};
+  sprintf(buf, "Shortcut,%d,%d,%d,%d,%d", w, h, c, conv_idx, actv_idx);
+  //cout << buf << endl;
+  file->write(buf, sizeof(buf));
 }
 
 
 Shortcut* Shortcut::load(char* buf) {
+
+  int para[5] = {0};
+  char *token;
+  int idx = 0;
+  while (buf) {
+    token = strtok(NULL, ",");
+    para[idx] = atoi(token);
+    idx++;
+    if(idx > 4)
+      break;
+  }
+
+  Shortcut *shortcut = new Shortcut(para[0], para[1], para[2], para[3], NULL, para[4], NULL);
+  return shortcut;
+
 
 }
 

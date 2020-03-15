@@ -11,9 +11,9 @@
 using namespace std;
 
 
-#define LEARNING_RATE 1.0e-1
+#define LEARNING_RATE 1.0e-3
 #define BATCH 100
-#define MAX_ITER 5000
+#define MAX_ITER 10000
 
 void CifarXnorNet(Network *network) {
 
@@ -35,10 +35,10 @@ void CifarXnorNet(Network *network) {
   Activation *actv3 = new Activation(500, LEAKY);
   //Dropout *dropout3 = new Dropout(500, 0.5);
 
-  Connected *conn4 = new Connected(500, 10);
+  Connected *conn4 = new Connected(32*32*3, 10);
   SoftmaxWithCrossEntropy *softmax = new SoftmaxWithCrossEntropy(10);
 
-
+/*
   network->add(conv1);
   network->add(bn1);
   network->add(actv1);
@@ -52,7 +52,7 @@ void CifarXnorNet(Network *network) {
   network->add(conv3);
   network->add(bn3);
   network->add(actv3);
-
+*/
   //network->add(dropout3);
   network->add(conn4);
   network->add(softmax);
@@ -74,7 +74,7 @@ void CifarNet(Network *network) {
   Convolution *conv3 = new Convolution(32, 32, 128, 3, 3, 128, 1, true);
   conv3->xnor = false;
   Batchnorm *bn3 = new Batchnorm(32*32*128);
-  Shortcut *shortcut1 = new Shortcut(32, 32, 128, conv1, actv1);
+  Shortcut *shortcut1 = new Shortcut(32, 32, 128, -5, conv1, -3, actv1);
   Activation *actv3 = new Activation(32*32*128, LEAKY);
 
   Pooling *pool1 = new Pooling(32, 32, 128, 2, 2, 128, 2, false);
@@ -184,7 +184,7 @@ void ResNet(Network *network) {
   Convolution *conv3 = new Convolution(32, 32, 64, 3, 3, 64, 1, true);
   conv3->xnor = false;
   Batchnorm *bn3 = new Batchnorm(32*32*64);
-  Shortcut *shortcut1 = new Shortcut(32, 32, 64, conv1, actv1);
+  Shortcut *shortcut1 = new Shortcut(32, 32, 64, -8, conv1, -6, actv1);
   Activation *actv3 = new Activation(32*32*64, LEAKY);
 
 
@@ -197,7 +197,7 @@ void ResNet(Network *network) {
   Convolution *conv5 = new Convolution(32, 32, 64, 3, 3, 64, 1, true);
   conv5->xnor = false;
   Batchnorm *bn5 = new Batchnorm(32*32*64);
-  Shortcut *shortcut2 = new Shortcut(32, 32, 64, conv3, actv3);
+  Shortcut *shortcut2 = new Shortcut(32, 32, 64, -8, conv3, -6, actv3);
   Activation *actv5 = new Activation(32*32*64, LEAKY);
 
   Pooling *pool1 = new Pooling(32, 32, 64, 2, 2, 64, 2, false);
@@ -222,7 +222,7 @@ void ResNet(Network *network) {
   Convolution *conv9 = new Convolution(16, 16, 128, 3, 3, 128, 1, true);
   conv9->xnor = false;
   Batchnorm *bn9 = new Batchnorm(16*16*128);
-  Shortcut *shortcut4 = new Shortcut(16, 16, 128, conv7, actv7);
+  Shortcut *shortcut4 = new Shortcut(16, 16, 128, -8, conv7, -6, actv7);
   Activation *actv9 = new Activation(16*16*128, LEAKY);
 
   Pooling *pool2 = new Pooling(16, 16, 128, 2, 2, 128, 2, false);
@@ -247,7 +247,7 @@ void ResNet(Network *network) {
   Convolution *conv13 = new Convolution(8, 8, 256, 3, 3, 256, 1, true);
   conv13->xnor = false;
   Batchnorm *bn13 = new Batchnorm(8*8*256);
-  Shortcut *shortcut6 = new Shortcut(8, 8, 256, conv11, actv11);
+  Shortcut *shortcut6 = new Shortcut(8, 8, 256, -8, conv11, -6, actv11);
   Activation *actv13 = new Activation(8*8*256, LEAKY);
 
   Pooling *pool3 = new Pooling(8, 8, 256, 2, 2, 256, 2, false);
@@ -273,7 +273,7 @@ void ResNet(Network *network) {
   Convolution *conv17 = new Convolution(4, 4, 512, 3, 3, 512, 1, true);
   conv17->xnor = false;
   Batchnorm *bn17 = new Batchnorm(4*4*512);
-  Shortcut *shortcut8 = new Shortcut(4, 4, 512, conv15, actv15);
+  Shortcut *shortcut8 = new Shortcut(4, 4, 512, -8, conv15, -6, actv15);
   Activation *actv17 = new Activation(4*4*512, LEAKY);
 
 
@@ -292,7 +292,7 @@ void ResNet(Network *network) {
 
   network->add(conv3);
   network->add(bn3);
-//  network->add(shortcut1);
+  network->add(shortcut1);
   network->add(actv3);
 
   network->add(conv4);
@@ -301,7 +301,7 @@ void ResNet(Network *network) {
 
   network->add(conv5);
   network->add(bn5);
-//  network->add(shortcut2);
+  network->add(shortcut2);
   network->add(actv5);
 
   network->add(pool1);
@@ -321,7 +321,7 @@ void ResNet(Network *network) {
 
   network->add(conv9);
   network->add(bn9);
-//  network->add(shortcut4);
+  network->add(shortcut4);
   network->add(actv9);
 
   network->add(pool2);
@@ -340,7 +340,7 @@ void ResNet(Network *network) {
 
   network->add(conv13);
   network->add(bn13);
-//  network->add(shortcut6);
+  network->add(shortcut6);
   network->add(actv13);
 
   network->add(pool3);
@@ -359,7 +359,7 @@ void ResNet(Network *network) {
 
   network->add(conv17);
   network->add(bn17);
-//  network->add(shortcut8);
+  network->add(shortcut8);
   network->add(actv17);
 
   network->add(avgpool);
@@ -388,14 +388,18 @@ int main( int argc, char** argv ) {
 
   if(strcmp(argv[1], "train") == 0) {
 
-    CifarXnorNet(&network);
+    //CifarXnorNet(&network);
     //CifarNet(&network);
-    //ResNet(&network);
+    ResNet(&network);
     network.initial(BATCH, LEARNING_RATE, false);
     float *train_data, *train_label;
 
     train_data = new float[50000*IM_SIZE];
     train_label = new float[50000*NUM_OF_CLASS];
+
+    memset(train_data, 0, 50000*IM_SIZE*sizeof(float));
+    memset(train_label, 0, 50000*NUM_OF_CLASS*sizeof(float));
+
     read_train_data(argv[3], train_data, train_label);
 
 #ifdef GPU    
@@ -432,7 +436,7 @@ int main( int argc, char** argv ) {
       }
 
     }
-    //network.save(argv[2]);
+    network.save(argv[2]);
 #ifdef GPU
     cudaFree(batch_xs);
     cudaFree(batch_ys);
@@ -447,13 +451,16 @@ int main( int argc, char** argv ) {
     help();
   }
 
+  network.deploy();
  
 
 
   float *test_data, *test_label;
 
   test_data = new float[10000*IM_SIZE];
+  memset(test_data, 0, 10000*IM_SIZE*sizeof(float));
   test_label = new float[10000*NUM_OF_CLASS];
+  memset(test_label, 0, 10000*NUM_OF_CLASS*sizeof(float));
   read_test_data(argv[3], test_data, test_label);
 
   int batch_num = 10000/BATCH;
@@ -468,7 +475,6 @@ int main( int argc, char** argv ) {
 
   float total = 0.0;
   ms_t start = getms();
-  network.deploy();
 
   for(int iter = 0; iter < batch_num; iter++) {
     int step = (iter*BATCH)%10000;

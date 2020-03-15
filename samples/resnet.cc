@@ -38,7 +38,7 @@ void Resnet18(Network *network) {
   Convolution *conv3 = new Convolution(56, 56, 64, 3, 3, 64, 1, true);
   conv3->xnor = false;
   Batchnorm *bn3 = new Batchnorm(56*56*64);
-  Shortcut *shortcut1 = new Shortcut(56, 56, 64, conv1, actv1);
+  Shortcut *shortcut1 = new Shortcut(56, 56, 64, -5, conv1, -3, actv1);
   Activation *actv3 = new Activation(56*56*64, LEAKY);
 
 
@@ -51,7 +51,7 @@ void Resnet18(Network *network) {
   Convolution *conv5 = new Convolution(56, 56, 64, 3, 3, 64, 1, true);
   conv5->xnor = false;
   Batchnorm *bn5 = new Batchnorm(56*56*64);
-  Shortcut *shortcut2 = new Shortcut(56, 56, 64, conv3, actv3);
+  Shortcut *shortcut2 = new Shortcut(56, 56, 64, -5, conv3, -3, actv3);
   Activation *actv5 = new Activation(56*56*64, LEAKY);
 
   Pooling *pool2 = new Pooling(56, 56, 64, 2, 2, 64, 2, false);
@@ -76,7 +76,7 @@ void Resnet18(Network *network) {
   Convolution *conv9 = new Convolution(28, 28, 128, 3, 3, 128, 1, true);
   conv9->xnor = false;
   Batchnorm *bn9 = new Batchnorm(28*28*128);
-  Shortcut *shortcut4 = new Shortcut(28, 28, 128, conv7, actv7);
+  Shortcut *shortcut4 = new Shortcut(28, 28, 128, -5, conv7, -3, actv7);
   Activation *actv9 = new Activation(28*28*128, LEAKY);
 
   Pooling *pool3 = new Pooling(28, 28, 128, 2, 2, 128, 2, false);
@@ -101,7 +101,7 @@ void Resnet18(Network *network) {
   Convolution *conv13 = new Convolution(14, 14, 256, 3, 3, 256, 1, true);
   conv13->xnor = false;
   Batchnorm *bn13 = new Batchnorm(14*14*256);
-  Shortcut *shortcut6 = new Shortcut(14, 14, 256, conv11, actv11);
+  Shortcut *shortcut6 = new Shortcut(14, 14, 256, -5, conv11, -3, actv11);
   Activation *actv13 = new Activation(14*14*256, LEAKY);
 
   Pooling *pool4 = new Pooling(14, 14, 256, 2, 2, 256, 2, false);
@@ -127,7 +127,7 @@ void Resnet18(Network *network) {
   Convolution *conv17 = new Convolution(7, 7, 512, 3, 3, 512, 1, true);
   conv17->xnor = false;
   Batchnorm *bn17 = new Batchnorm(7*7*512);
-  Shortcut *shortcut8 = new Shortcut(7, 7, 512, conv15, actv15);
+  Shortcut *shortcut8 = new Shortcut(7, 7, 512, -5, conv15, -3, actv15);
   Activation *actv17 = new Activation(7*7*512, LEAKY);
 
   AvgPool *avgpool1 = new AvgPool(7, 7, 512, 7, 7, 512, 1, false);
