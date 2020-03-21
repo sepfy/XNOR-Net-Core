@@ -10,7 +10,7 @@ typedef struct UPDATE_ARGS {
   float m_lr;
   float momentum = 0.9;
   bool adam = false;
-  float decay = 0.5;
+  float decay = 0.0;
 
 } update_args;
 

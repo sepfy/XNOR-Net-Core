@@ -164,6 +164,8 @@ class Convolution : public Layer {
     void forward_gpu();
     void backward_gpu(float* delta);
     void bias_add_gpu();
+    void binarize_input_gpu();
+    void binarize_weight_gpu();
 #endif
 
 #ifdef XNOR_NET

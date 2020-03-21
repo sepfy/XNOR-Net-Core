@@ -151,8 +151,11 @@ void Convolution::print() {
 	      + 4*out_channel*FC
               + 4*FC
 	      + batch*W*H*C)/(1024*1024);
-   
-  printf("Conv \t %.2f \t %d x %d x %d \t %d x %d x %d \n",  
+  if(xnor)
+    printf("Conv \t %.2f \t %d x %d x %d \t %d x %d x %d \n",  
+		  umem, H, W, C, out_h, out_w, FC);
+  else 
+    printf("Conv \t %.2f \t %d x %d x %d \t %d x %d x %d \n",  
 		  umem, H, W, C, out_h, out_w, FC);
 
 }

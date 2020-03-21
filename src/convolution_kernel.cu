@@ -19,6 +19,60 @@ __global__ void bias_add_kernel(float *output, float *bias,
 
 #endif
 
+__global__ binarize_input_gpu_kernel(float *input, int size) {
+
+  int i = blockDim.x*blockIdx.x + threadIdx.x;
+  if(i >= size) return;
+  input[i] > 0 ? input[i] = 1 : input[i] = -1;
+    
+}
+
+void binarize_input_gpu() {
+/*
+  for(int b = 0; b < batch; b++) {
+    for(int i = 0; i < H; i++) {
+      for(int j = 0; j < W; j++) {
+        int avg_idx = b*H*W + i*W + j;
+        int in_idx = b*im_size + i*W*C + j*C;
+        avg_filter[avg_idx] = 0.0;
+        for(int k = 0; k < C; k++)
+          avg_filter[avg_idx] += fabs(input[in_idx + k]);
+        avg_filter[avg_idx] /= (float)C;
+      }
+    }
+  }
+*/
+  int size = batch*im_size;
+  binarize_input_gpu_kernel<<<default_grid(size), BLOCK>>>(input, size);
+
+}
+__global__ void binarize_weight_gpu_kernel(float *binary_weight, float *weight, int size) {
+
+  int i = blockDim.x*blockIdx.x + threadIdx.x;
+  if(i >= size) return;
+  binary_weight[i] = (weight[i] > 0) ? 1.0 : -1.0;
+
+}
+
+__global__ weight_mean_gpu_kernel(float *mean, float *weight, int n, int c) {
+
+  int i = blockDim.x*blockIdx.x + threadIdx.x;
+  if(i >= n) return;
+  mean[i] = 0.0;
+  for(int j = 0; j < c; j++)
+    mean[i] += fabs(weight[i*c+j]);
+  mean[i] /= (float)c;
+}
+
+void binarize_weight_gpu() {
+
+  weight_mean_gpu_kernel<<<default_grid(FC), BLOCK>>>(mean, weight, FC, out_channel);
+  int size = out_channel*FC;
+  binarize_weight_gpu_kernel<<<default_grid(size), BLOCK>>>(binary_weight, weight, size);
+
+}
+
+
 void Convolution::forward_gpu() {
 
   for(int i = 0; i < batch; i++)
