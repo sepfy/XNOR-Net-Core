@@ -65,16 +65,11 @@ void Convolution::init() {
 #ifdef GPU
 
   output = malloc_gpu(batch*out_w*out_h*FC);
-
   weight = malloc_gpu(out_channel*FC);
   grad_weight = malloc_gpu(out_channel*FC);
   bias = malloc_gpu(FC);
   grad_bias = malloc_gpu(FC);
-
   m_delta = malloc_gpu(batch*W*H*C); 
-
-  //out_col = malloc_gpu(out_w*out_h*out_channel*batch);
-  //delta_col = malloc_gpu(out_channel*out_w*out_h);
 
   // Adam optimizer
   m_weight = malloc_gpu(out_channel*FC);
@@ -82,23 +77,28 @@ void Convolution::init() {
   m_bias = malloc_gpu(FC);
   v_bias = malloc_gpu(FC);
 
+  binary_weight = malloc_gpu(out_channel*FC);
+  avg_filter = malloc_gpu(batch*im_size);
+  avg_col = malloc_gpu(out_w*out_h*FW*FC*batch);
+  k_filter = malloc_gpu(FW*FH);
+  k_output = malloc_gpu(out_w*out_h*batch);
+
+  memset_gpu(k_filter, 1.0/(float)(FW*FH), FW*FH);
+  mean = malloc_gpu(FC);
 
   random_normal_gpu(out_channel*FC, weight);
   random_normal_gpu(FC, bias);
-
 
 #else
 
   col = new float[out_w*out_h*out_channel];
   output = new float[batch*out_w*out_h*FC];
-  out_col = new float[out_w*out_h*out_channel*batch];
   weight = new float[out_channel*FC];
   grad_weight = new float[out_channel*FC];
   bias = new float[FC];
   grad_bias = new float[FC];
   im = new float[H*W*C];
   m_delta = new float[batch*W*H*C]; 
-  delta_col = new float[batch*out_channel*out_w*out_h];
 
   /* Adam optimizer */
   m_weight = new float[out_channel*FC];
@@ -113,12 +113,6 @@ void Convolution::init() {
   memset(m_bias, 0 , FC*sizeof(float));  
   memset(v_bias, 0 , FC*sizeof(float));  
 
-
-#endif
-
-
-
-#ifdef XNOR_NET
   binary_weight = new float[out_channel*FC];
   avg_filter = new float[batch*im_size];
   avg_col = new float[out_w*out_h*FW*FC*batch];
@@ -127,6 +121,7 @@ void Convolution::init() {
   for(int i = 0; i < FW*FH; i++)
     k_filter[i] = 1.0/(float)(FW*FH);
   mean = new float[FC];
+#endif
 
   bitset_outcol = new Bitset[batch*out_h*out_w];
   bitset_weight = new Bitset[FC];
@@ -136,8 +131,6 @@ void Convolution::init() {
 
   for(int i = 0; i < FC; i++)
     bitset_weight[i].init(out_channel);
-
-#endif
 
 
 
@@ -152,7 +145,7 @@ void Convolution::print() {
               + 4*FC
 	      + batch*W*H*C)/(1024*1024);
   if(xnor)
-    printf("Conv \t %.2f \t %d x %d x %d \t %d x %d x %d \n",  
+    printf("ConvX \t %.2f \t %d x %d x %d \t %d x %d x %d \n",  
 		  umem, H, W, C, out_h, out_w, FC);
   else 
     printf("Conv \t %.2f \t %d x %d x %d \t %d x %d x %d \n",  
@@ -160,7 +153,6 @@ void Convolution::print() {
 
 }
 
-#ifdef XNOR_NET
 void Convolution::swap_weight() {
     float *swap = weight;
     weight = binary_weight;
@@ -203,13 +195,12 @@ void Convolution::binarize_input() {
  
 }
 
-#endif
-
 void Convolution::forward_xnor() {
   binarize_input();
   for(int i = 0; i < batch; i++)
-    im2col(W, H, C, FW, FH, FC, stride, pad, 
-      input + i*im_size, out_col+i*col_size);
+    im2col(W, H, C, FW, FH, FC, stride, pad,
+      input + i*im_size, shared+i*col_size);
+
 
   if(!runtime) {
 
@@ -217,13 +208,13 @@ void Convolution::forward_xnor() {
     swap_weight();
     gemm_cpu(TRS_N, TRS_N,
              batch*out_h*out_w, FC, out_channel, 1.0,
-              out_col, weight, output);  
+              shared, weight, output);
   }
   else {
 
     for(int i = 0; i < batch*out_h*out_w; i++) {
       bitset_outcol[i].clean();
-      bitset_outcol[i].set(out_col+i*out_channel);
+      bitset_outcol[i].set(shared+i*out_channel);
     }
 
     bin_gemm(batch*out_h*out_w, FC, out_channel, 1.0, 
@@ -258,7 +249,6 @@ void Convolution::forward_full() {
       input + i*im_size, shared+i*col_size);
 
   gemm_cpu(TRS_N, TRS_N, batch*out_h*out_w, FC, out_channel, 1, shared, weight, output);
-  bias_add();
 
 }
 
@@ -269,6 +259,7 @@ void Convolution::forward() {
   else 
     forward_full();
 
+  bias_add();
 }
 
 void Convolution::bias_add() {
@@ -290,17 +281,17 @@ void Convolution::backward(float *delta) {
            shared, delta, grad_weight);
 
   if(xnor) {
-
+/*
     for(int i = 0; i < out_channel; i++)
       for(int j = 0; j < FC; j++) {
         int idx = i*FC+j;
         grad_weight[idx] = (grad_weight[idx]*(1.0/(float)(out_channel) 
                          + mean[j]*(fabs(weight[idx]) <= 1 ? weight[idx] : 0)))*(1.0 - 1.0/(float)C)*out_channel;
       }
-
+*/
     gemm_cpu(TRS_N, TRS_T,
            batch*out_w*out_h, out_channel, FC, 1.0,
-           delta, weight, delta_col);
+           delta, weight, shared);
 
   }
   else {
@@ -321,7 +312,7 @@ void Convolution::update(update_args a) {
 
 #ifdef GPU
   axpy_gpu(out_channel*FC, a.decay, weight, grad_weight);
-  //axpy_gpu(FC, a.decay, bias, grad_bias);
+  axpy_gpu(FC, a.decay, bias, grad_bias);
 
   if(a.adam) {
     adam_gpu(out_channel*FC, weight, grad_weight, m_weight, v_weight, a);
@@ -358,10 +349,18 @@ void Convolution::save(fstream *file) {
 
   if(xnor) {
     float *BB = new float[FC*out_channel];
+#ifdef GPU
+    float *weight_tmp = new float[weight_size];
+    gpu_pull_array(weight, weight_tmp, weight_size);
+    for(int i = 0; i < FC; i++)
+      for(int j = 0; j < out_channel; j++)
+        BB[i*out_channel+j] = weight_tmp[j*FC+i];
+    delete []weight_tmp;
+#else
     for(int i = 0; i < FC; i++)
       for(int j = 0; j < out_channel; j++)
         BB[i*out_channel+j] = weight[j*FC+i];
-
+#endif
     for(int i = 0; i < FC; i++) {
       bitset_weight[i].set(BB+i*out_channel);
     }
@@ -371,8 +370,14 @@ void Convolution::save(fstream *file) {
       file->write((char*)bitset_weight[i].bits,
                          bitset_weight[i].N*sizeof(BIT_BLK));
     } 
-
+#ifdef GPU
+    float *mean_tmp = new float[FC];
+    gpu_pull_array(mean, mean_tmp, FC);
+    file->write((char*)mean_tmp, FC*sizeof(float));
+    delete []mean_tmp;
+#else
     file->write((char*)mean, FC*sizeof(float));
+#endif
   } 
   else {
 

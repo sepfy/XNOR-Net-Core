@@ -162,6 +162,8 @@ class Convolution : public Layer {
 
 #ifdef GPU
     void forward_gpu();
+    void forward_full_gpu();
+    void forward_xnor_gpu();
     void backward_gpu(float* delta);
     void bias_add_gpu();
     void binarize_input_gpu();
