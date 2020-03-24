@@ -289,6 +289,7 @@ void Convolution::backward(float *delta) {
                          + mean[j]*(fabs(weight[idx]) <= 1 ? weight[idx] : 0)))*(1.0 - 1.0/(float)C)*out_channel;
       }
 */
+    //TODO: binary_weight? or weight
     gemm_cpu(TRS_N, TRS_T,
            batch*out_w*out_h, out_channel, FC, 1.0,
            delta, weight, shared);

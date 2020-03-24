@@ -8,18 +8,18 @@ void MnistXnorNet(Network *network) {
 
   Convolution *conv1 = new Convolution(28, 28, 1, 5, 5, 32, 1, false);
   conv1->xnor = false;
-  Activation *relu1 = new Activation(24*24*32, LEAKY);
+  Activation *relu1 = new Activation(24*24*32, RELU);
   Pooling *pool1 = new Pooling(24, 24, 32, 2, 2, 32, 2, false); 
 
   Batchnorm *bn1 = new Batchnorm(12*12*32);
   Convolution *conv2 = new Convolution(12, 12, 32, 5, 5, 64, 1, false);
-  Activation *relu2 = new Activation(8*8*64, LEAKY);
+  Activation *relu2 = new Activation(8*8*64, RELU);
   Pooling *pool2 = new Pooling(8, 8, 64, 2, 2, 64, 2, false);
 
   Batchnorm *bn2 = new Batchnorm(4*4*64);
   Convolution *conv3 = new Convolution(4, 4, 64, 4, 4, 512, 1, false);
   
-  Activation *relu3 = new Activation(512, LEAKY);
+  Activation *relu3 = new Activation(512, RELU);
 
   Connected *conn1 = new Connected(512, 10);
   SoftmaxWithCrossEntropy *softmax = new SoftmaxWithCrossEntropy(10);
@@ -102,8 +102,8 @@ int main( int argc, char** argv ) {
 
   if(strcmp(argv[1], "train") == 0) {
 
-    //MnistXnorNet(&network);
-    MnistNet(&network);
+    MnistXnorNet(&network);
+    //MnistNet(&network);
     network.initial(BATCH, LEARNING_RATE, true);
 
 
