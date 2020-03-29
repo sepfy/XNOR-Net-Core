@@ -3,27 +3,18 @@
 
 using namespace std;
 
-Convolution::Convolution(int _W, int _H, int _C,
-  int _FW, int _FH, int _FC, int _stride, bool _pad) {
+Convolution::Convolution(int W, int H, int C,
+  int FW, int FH, int FC, int stride, int pad) {
 
-  W = _W;
-  H = _H;
-  C = _C;
-  FW = _FW;
-  FH = _FH;
-  FC = _FC;
-  stride = _stride;
-
-
-  if(_pad == true) {
-    //pad = 0.5*((stride - 1)*W - stride + FW);
-    pad = 0.5*(FW - stride);
-    //out_w = W/stride;
-    //out_h = H/stride;
-  }
-  else 
-    pad = 0;
-
+  this->W = W;
+  this->H = H;
+  this->C = C;
+  this->FW = FW;
+  this->FH = FH;
+  this->FC = FC;
+  this->stride = stride;
+  this->pad = pad;
+  
   out_w = (W + 2*pad - FW)/stride + 1;
   out_h = (H + 2*pad - FH)/stride + 1;
 
@@ -313,7 +304,7 @@ void Convolution::update(update_args a) {
 
 #ifdef GPU
   axpy_gpu(out_channel*FC, a.decay, weight, grad_weight);
-  axpy_gpu(FC, a.decay, bias, grad_bias);
+  //axpy_gpu(FC, a.decay, bias, grad_bias);
 
   if(a.adam) {
     adam_gpu(out_channel*FC, weight, grad_weight, m_weight, v_weight, a);

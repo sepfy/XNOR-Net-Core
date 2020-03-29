@@ -11,6 +11,8 @@ void Network::add(Layer* layer) {
 void Network::initial(int batch, float _lr, bool use_adam) {
   a.lr = _lr;
   a.adam = use_adam;
+  a.decay = 0.01;
+
   size_t max = 0;
   for(int i = 0; i < layers.size(); i++) {
     layers[i]->batch = batch;
@@ -198,7 +200,7 @@ void Network::load(char *filename, int batch) {
       Shortcut *shortcut = Shortcut::load(token);
       shortcut->batch = batch;
       size_t l = layers.size();
-      shortcut->conv = (Convolution*)(layers[l + shortcut->conv_idx]);
+      //shortcut->conv = (Convolution*)(layers[l + shortcut->conv_idx]);
       shortcut->activation = (Activation*)(layers[l + shortcut->actv_idx]);
       shortcut->init();
       this->add(shortcut);

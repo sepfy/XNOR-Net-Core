@@ -143,8 +143,8 @@ class Convolution : public Layer {
     float iter = 0.0;
     float epsilon = 1.0e-7;
 
-    Convolution(int _W, int _H, int _C,
-	int _FW, int _FH, int _FC, int _stride, bool _pad);
+    Convolution(int W, int H, int C,
+	int FW, int FH, int FC, int stride, int pad);
     ~Convolution();
     void init();
     void print();
@@ -363,9 +363,10 @@ class Dropout : public Layer {
 
 class Shortcut : public Layer {
   public:
-    int w, h, c;
+    int ow, oh, oc;
+    int iw, ih, ic;
     int conv_idx, actv_idx;
-    Shortcut(int _w, int _h, int _c, int conv_idx, Convolution *_conv,
+    Shortcut(int iw, int ih, int ic, int ow, int oh, int oc,
 	     int actv_idx, Activation *_activation);
     ~Shortcut();
     float *identity;

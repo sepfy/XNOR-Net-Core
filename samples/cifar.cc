@@ -11,9 +11,9 @@
 using namespace std;
 
 
-#define LEARNING_RATE 1.0e-3
+#define LEARNING_RATE 1.0e-1
 #define BATCH 100
-#define MAX_ITER 10000
+#define MAX_ITER 30000
 
 void CifarXnorNet(Network *network) {
 
@@ -58,7 +58,7 @@ void CifarXnorNet(Network *network) {
   network->add(softmax);
 
 }
-
+/*
 void CifarNet(Network *network) {
 
   Convolution *conv1 = new Convolution(32, 32, 3, 3, 3, 128, 1, true);
@@ -122,7 +122,7 @@ void CifarNet(Network *network) {
   network->add(conv1);
   network->add(bn1);
   network->add(actv1);
-/*
+
   network->add(conv2);
   network->add(bn2);
   network->add(actv2);
@@ -130,13 +130,13 @@ void CifarNet(Network *network) {
   network->add(conv3);
   network->add(bn3);
   network->add(actv3);
-*/
+
   network->add(pool1);
 
   network->add(conv4);
   network->add(bn4);
   network->add(actv4);
-/*
+
   network->add(conv5);
   network->add(bn5);
   network->add(actv5);
@@ -144,13 +144,13 @@ void CifarNet(Network *network) {
   network->add(conv6);
   network->add(bn6);
   network->add(actv6);
-*/
+
   network->add(pool2);
 
   network->add(conv7);
   network->add(bn7);
   network->add(actv7);
-/*
+
   network->add(conv8);
   network->add(bn8);
   network->add(actv8);
@@ -158,7 +158,7 @@ void CifarNet(Network *network) {
   network->add(conv9);
   network->add(bn9);
   network->add(actv9);
-*/
+
   network->add(conv10);
   network->add(bn10);
   network->add(actv10);
@@ -167,113 +167,116 @@ void CifarNet(Network *network) {
   network->add(softmax);
 
 }
-
+*/
 void ResNet(Network *network) {
 
-  Convolution *conv1 = new Convolution(32, 32, 3, 3, 3, 64, 1, true);
+  Convolution *conv1 = new Convolution(32, 32, 3, 3, 3, 64, 1, 1);
   conv1->xnor = false;
   Batchnorm *bn1 = new Batchnorm(32*32*64);
   Activation *actv1 = new Activation(32*32*64, LEAKY);
 
   // Residual Block 1
-  Convolution *conv2 = new Convolution(32, 32, 64, 3, 3, 64, 1, true);
+  Convolution *conv2 = new Convolution(32, 32, 64, 3, 3, 64, 1, 1);
   conv2->xnor = false;
   Batchnorm *bn2 = new Batchnorm(32*32*64);
   Activation *actv2 = new Activation(32*32*64, LEAKY);
 
-  Convolution *conv3 = new Convolution(32, 32, 64, 3, 3, 64, 1, true);
+  Convolution *conv3 = new Convolution(32, 32, 64, 3, 3, 64, 1, 1);
   conv3->xnor = false;
   Batchnorm *bn3 = new Batchnorm(32*32*64);
-  Shortcut *shortcut1 = new Shortcut(32, 32, 64, -8, conv1, -6, actv1);
+  Shortcut *shortcut1 = new Shortcut(32, 32, 64, 32, 32, 64, -6, actv1);
   Activation *actv3 = new Activation(32*32*64, LEAKY);
 
 
   // Residual Block 2
-  Convolution *conv4 = new Convolution(32, 32, 64, 3, 3, 64, 1, true);
+  Convolution *conv4 = new Convolution(32, 32, 64, 3, 3, 64, 1, 1);
   conv4->xnor = false;
   Batchnorm *bn4 = new Batchnorm(32*32*64);
   Activation *actv4 = new Activation(32*32*64, LEAKY);
 
-  Convolution *conv5 = new Convolution(32, 32, 64, 3, 3, 64, 1, true);
+  Convolution *conv5 = new Convolution(32, 32, 64, 3, 3, 64, 1, 1);
   conv5->xnor = false;
   Batchnorm *bn5 = new Batchnorm(32*32*64);
-  Shortcut *shortcut2 = new Shortcut(32, 32, 64, -8, conv3, -6, actv3);
+  Shortcut *shortcut2 = new Shortcut(32, 32, 64, 32, 32, 64, -6, actv3);
   Activation *actv5 = new Activation(32*32*64, LEAKY);
 
-  Pooling *pool1 = new Pooling(32, 32, 64, 2, 2, 64, 2, false);
+  //Pooling *pool1 = new Pooling(32, 32, 64, 2, 2, 64, 2, false);
 
   // Residual Block 3
-  Convolution *conv6 = new Convolution(16, 16, 64, 3, 3, 128, 1, true);
+  Convolution *conv6 = new Convolution(32, 32, 64, 3, 3, 128, 2, 1);
   conv6->xnor = false;
   Batchnorm *bn6 = new Batchnorm(16*16*128);
   Activation *actv6 = new Activation(16*16*128, LEAKY);
 
-  Convolution *conv7 = new Convolution(16, 16, 128, 3, 3, 128, 1, true);
+  Convolution *conv7 = new Convolution(16, 16, 128, 3, 3, 128, 1, 1);
   conv7->xnor = false;
   Batchnorm *bn7 = new Batchnorm(16*16*128);
+  Shortcut *shortcut3 = new Shortcut(32, 32, 64, 16, 16, 128, -6, actv5);
   Activation *actv7 = new Activation(16*16*128, LEAKY);
 
   // Residual Block 4
-  Convolution *conv8 = new Convolution(16, 16, 128, 3, 3, 128, 1, true);
+  Convolution *conv8 = new Convolution(16, 16, 128, 3, 3, 128, 1, 1);
   conv8->xnor = false;
   Batchnorm *bn8 = new Batchnorm(16*16*128);
   Activation *actv8 = new Activation(16*16*128, LEAKY);
 
-  Convolution *conv9 = new Convolution(16, 16, 128, 3, 3, 128, 1, true);
+  Convolution *conv9 = new Convolution(16, 16, 128, 3, 3, 128, 1, 1);
   conv9->xnor = false;
   Batchnorm *bn9 = new Batchnorm(16*16*128);
-  Shortcut *shortcut4 = new Shortcut(16, 16, 128, -8, conv7, -6, actv7);
+  Shortcut *shortcut4 = new Shortcut(16, 16, 128, 16, 16, 128, -6, actv7);
   Activation *actv9 = new Activation(16*16*128, LEAKY);
 
-  Pooling *pool2 = new Pooling(16, 16, 128, 2, 2, 128, 2, false);
+  //Pooling *pool2 = new Pooling(16, 16, 128, 2, 2, 128, 2, false);
 
   // Residual Block 5
-  Convolution *conv10 = new Convolution(8, 8, 128, 3, 3, 256, 1, true);
+  Convolution *conv10 = new Convolution(16, 16, 128, 3, 3, 256, 2, 1);
   conv10->xnor = false;
   Batchnorm *bn10 = new Batchnorm(8*8*256);
   Activation *actv10 = new Activation(8*8*256, LEAKY);
 
-  Convolution *conv11 = new Convolution(8, 8, 256, 3, 3, 256, 1, true);
+  Convolution *conv11 = new Convolution(8, 8, 256, 3, 3, 256, 1, 1);
   conv11->xnor = false;
   Batchnorm *bn11 = new Batchnorm(8*8*256);
+  Shortcut *shortcut5 = new Shortcut(16, 16, 128, 8, 8, 256, -7, actv9);
   Activation *actv11 = new Activation(8*8*256, LEAKY);
 
   // Residual Block 6 
-  Convolution *conv12 = new Convolution(8, 8, 256, 3, 3, 256, 1, true);
+  Convolution *conv12 = new Convolution(8, 8, 256, 3, 3, 256, 1, 1);
   conv12->xnor = false;
   Batchnorm *bn12 = new Batchnorm(8*8*256);
   Activation *actv12 = new Activation(8*8*256, LEAKY);
 
-  Convolution *conv13 = new Convolution(8, 8, 256, 3, 3, 256, 1, true);
+  Convolution *conv13 = new Convolution(8, 8, 256, 3, 3, 256, 1, 1);
   conv13->xnor = false;
   Batchnorm *bn13 = new Batchnorm(8*8*256);
-  Shortcut *shortcut6 = new Shortcut(8, 8, 256, -8, conv11, -6, actv11);
+  Shortcut *shortcut6 = new Shortcut(8, 8, 256, 8, 8, 256, -6, actv11);
   Activation *actv13 = new Activation(8*8*256, LEAKY);
 
-  Pooling *pool3 = new Pooling(8, 8, 256, 2, 2, 256, 2, false);
+  //Pooling *pool3 = new Pooling(8, 8, 256, 2, 2, 256, 2, false);
 
 
   // Residual Block 7
-  Convolution *conv14 = new Convolution(4, 4, 256, 3, 3, 512, 1, true);
+  Convolution *conv14 = new Convolution(8, 8, 256, 3, 3, 512, 2, 1);
   conv14->xnor = false;
   Batchnorm *bn14 = new Batchnorm(4*4*512);
   Activation *actv14 = new Activation(4*4*512, LEAKY);
 
-  Convolution *conv15 = new Convolution(4, 4, 512, 3, 3, 512, 1, true);
+  Convolution *conv15 = new Convolution(4, 4, 512, 3, 3, 512, 1, 1);
   conv15->xnor = false;
   Batchnorm *bn15 = new Batchnorm(4*4*512);
+  Shortcut *shortcut7 = new Shortcut(8, 8, 256, 4, 4, 512, -7, actv13);
   Activation *actv15 = new Activation(4*4*512, LEAKY);
 
   // Residual Block 8
-  Convolution *conv16 = new Convolution(4, 4, 512, 3, 3, 512, 1, true);
+  Convolution *conv16 = new Convolution(4, 4, 512, 3, 3, 512, 1, 1);
   conv16->xnor = false;
   Batchnorm *bn16 = new Batchnorm(4*4*512);
   Activation *actv16 = new Activation(4*4*512, LEAKY);
 
-  Convolution *conv17 = new Convolution(4, 4, 512, 3, 3, 512, 1, true);
+  Convolution *conv17 = new Convolution(4, 4, 512, 3, 3, 512, 1, 1);
   conv17->xnor = false;
   Batchnorm *bn17 = new Batchnorm(4*4*512);
-  Shortcut *shortcut8 = new Shortcut(4, 4, 512, -8, conv15, -6, actv15);
+  Shortcut *shortcut8 = new Shortcut(4, 4, 512, 4, 4, 512, -6, actv15);
   Activation *actv17 = new Activation(4*4*512, LEAKY);
 
 
@@ -304,7 +307,7 @@ void ResNet(Network *network) {
   network->add(shortcut2);
   network->add(actv5);
 
-  network->add(pool1);
+//  network->add(pool1);
 
 
   network->add(conv6);
@@ -313,6 +316,7 @@ void ResNet(Network *network) {
 
   network->add(conv7);
   network->add(bn7);
+  network->add(shortcut3);
   network->add(actv7);
 
   network->add(conv8);
@@ -324,7 +328,7 @@ void ResNet(Network *network) {
   network->add(shortcut4);
   network->add(actv9);
 
-  network->add(pool2);
+ // network->add(pool2);
 
   network->add(conv10);
   network->add(bn10);
@@ -332,6 +336,7 @@ void ResNet(Network *network) {
 
   network->add(conv11);
   network->add(bn11);
+  network->add(shortcut5);
   network->add(actv11);
 
   network->add(conv12);
@@ -343,7 +348,7 @@ void ResNet(Network *network) {
   network->add(shortcut6);
   network->add(actv13);
 
-  network->add(pool3);
+//  network->add(pool3);
 
   network->add(conv14);
   network->add(bn14);
@@ -351,6 +356,7 @@ void ResNet(Network *network) {
 
   network->add(conv15);
   network->add(bn15);
+  network->add(shortcut7);
   network->add(actv15);
 
   network->add(conv16);
@@ -414,7 +420,9 @@ int main( int argc, char** argv ) {
 
       ms_t start = getms();
       int step = (iter*BATCH)%50000;
-
+      if(iter < 5000) network.a.lr = 1.0e-3;
+      else if(iter > 5000 && iter < 10000) network.a.lr = 1.0e-4;
+      else if(iter > 10000) network.a.lr = 1.0e-5;
 #ifdef GPU
       gpu_push_array(batch_xs, train_data + step*IM_SIZE, BATCH*IM_SIZE);
       gpu_push_array(batch_ys, train_label + step*NUM_OF_CLASS, BATCH*NUM_OF_CLASS);
@@ -429,7 +437,7 @@ int main( int argc, char** argv ) {
 
       float acc = accuracy(BATCH, NUM_OF_CLASS, output, batch_ys); 
 
-      if(iter%10 == 0) {
+      if(iter%1 == 0) {
         float loss = cross_entropy(BATCH, NUM_OF_CLASS, output, batch_ys);
         cout << "iter = " << iter << ", time = " << (getms() - start) << "ms, loss = "
          << loss << " (acc = " << acc << ")" << endl;
@@ -452,7 +460,6 @@ int main( int argc, char** argv ) {
   }
 
   network.deploy();
- 
 
 
   float *test_data, *test_label;
@@ -478,7 +485,7 @@ int main( int argc, char** argv ) {
 
   for(int iter = 0; iter < batch_num; iter++) {
     int step = (iter*BATCH)%10000;
-
+    
 #ifdef GPU
       gpu_push_array(batch_xs, test_data + step*IM_SIZE, BATCH*IM_SIZE);
       gpu_push_array(batch_ys, test_label + step*NUM_OF_CLASS, BATCH*NUM_OF_CLASS);

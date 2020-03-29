@@ -89,8 +89,8 @@ void Connected::backward(float *delta) {
 void Connected::update(update_args a) {
 
 #if GPU
-   axpy_gpu(N*M, a.decay, weight, grad_weight);
-   //axpy_gpu(M, a.decay, bias, grad_bias);
+  axpy_gpu(N*M, a.decay, weight, grad_weight);
+  //axpy_gpu(M, a.decay, bias, grad_bias);
 
   if(a.adam) {
     adam_gpu(N*M, weight, grad_weight, m_weight, v_weight, a);
