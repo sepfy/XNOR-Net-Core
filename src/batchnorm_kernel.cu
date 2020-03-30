@@ -4,7 +4,7 @@
 __global__ void mean_gpu_kernel(float *input, float *mean, float batch, int N) {
 
   int index = blockIdx.x*blockDim.x + threadIdx.x;
-  if(index > N)
+  if(index >= N)
     return;
   
   mean[index] = 0.0;
@@ -35,7 +35,7 @@ __global__ void calc_xc(float *input, float *mean, float *xc) {
 __global__ void variance_gpu_kernel(float *input, float *mean, float *var, float batch, int N) {
 
   int index = blockIdx.x*blockDim.x + threadIdx.x;
-  if(index > N)
+  if(index >= N)
     return;
   
   var[index] = 0.0;
@@ -65,9 +65,10 @@ __global__ void normalize_gpu_kernel(float *normal, float *input, float *mean,  
 
 }
 
-__global__ void get_running_variable(float momentum, float *running_x, float *x) {
+__global__ void get_running_variable(float momentum, float *running_x, float *x, int n) {
 
   int j = blockIdx.x*blockDim.x + threadIdx.x;
+  if(j >= n) return;
   running_x[j] = momentum*running_x[j] + (1.0 - momentum)*x[j];
 
 }
@@ -80,11 +81,11 @@ void Batchnorm::normalize_gpu() {
     check_error(cudaGetLastError());
 
     get_running_variable<<<default_grid(N), BLOCK>>>(
-		    momentum, running_mean, mean);
+		    momentum, running_mean, mean, N);
     check_error(cudaGetLastError());
 
     get_running_variable<<<default_grid(N), BLOCK>>>(
-		    momentum, running_var, var);
+		    momentum, running_var, var, N);
     check_error(cudaGetLastError());
   }
   else {

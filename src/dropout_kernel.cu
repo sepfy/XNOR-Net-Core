@@ -3,7 +3,7 @@
 __global__ void dropout_forward_gpu_kernel(float *output, float *input, float *mask, float *prob, int ratio, int size) {
 
   int index = blockIdx.x*blockDim.x + threadIdx.x;
-  if(index > size) return;
+  if(index >= size) return;
   mask[index] = (prob[index] > ratio ? 1.0 : 0.0);
   output[index] = input[index]*mask[index];
 }
@@ -12,7 +12,7 @@ __global__ void dropout_forward_gpu_kernel(float *output, float *input, float *m
 __global__ void dropout_copy_kernel(float *output, float *input, int size) {
 
   int index = blockIdx.x*blockDim.x + threadIdx.x;
-  if(index > size) return;
+  if(index >= size) return;
   output[index] = input[index];
 }
 
@@ -46,7 +46,7 @@ void Dropout::forward_gpu() {
 __global__ void dropout_backward_gpu_kernel(float *m_delta, float *delta, float *mask, int size) {
 
   int index = blockIdx.x*blockDim.x + threadIdx.x;
-  if(index > size) return;
+  if(index >= size) return;
   m_delta[index] = delta[index]*mask[index];
 }
 

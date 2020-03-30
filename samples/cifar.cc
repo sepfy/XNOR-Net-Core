@@ -11,9 +11,9 @@
 using namespace std;
 
 
-#define LEARNING_RATE 1.0e-1
-#define BATCH 100
-#define MAX_ITER 30000
+#define LEARNING_RATE 1.0e-3
+#define BATCH 50
+#define MAX_ITER 20000
 
 void CifarXnorNet(Network *network) {
 
@@ -58,65 +58,70 @@ void CifarXnorNet(Network *network) {
   network->add(softmax);
 
 }
-/*
+
+
 void CifarNet(Network *network) {
 
-  Convolution *conv1 = new Convolution(32, 32, 3, 3, 3, 128, 1, true);
+  Convolution *conv1 = new Convolution(32, 32, 3, 3, 3, 128, 1, 1);
   conv1->xnor = false;
   Batchnorm *bn1 = new Batchnorm(32*32*128);
   Activation *actv1 = new Activation(32*32*128, LEAKY);
 
-  Convolution *conv2 = new Convolution(32, 32, 128, 3, 3, 128, 1, true);
+  Convolution *conv2 = new Convolution(32, 32, 128, 3, 3, 128, 1, 1);
   conv2->xnor = false;
   Batchnorm *bn2 = new Batchnorm(32*32*128);
   Activation *actv2 = new Activation(32*32*128, LEAKY);
 
-  Convolution *conv3 = new Convolution(32, 32, 128, 3, 3, 128, 1, true);
+  Convolution *conv3 = new Convolution(32, 32, 128, 3, 3, 128, 1, 1);
   conv3->xnor = false;
   Batchnorm *bn3 = new Batchnorm(32*32*128);
-  Shortcut *shortcut1 = new Shortcut(32, 32, 128, -5, conv1, -3, actv1);
   Activation *actv3 = new Activation(32*32*128, LEAKY);
 
   Pooling *pool1 = new Pooling(32, 32, 128, 2, 2, 128, 2, false);
+  Dropout *dropout1 = new Dropout(16*16*128, 0.5);
 
-  Convolution *conv4 = new Convolution(16, 16, 128, 3, 3, 256, 1, true);
+  Convolution *conv4 = new Convolution(16, 16, 128, 3, 3, 256, 1, 1);
   conv4->xnor = false;
   Batchnorm *bn4 = new Batchnorm(16*16*256);
   Activation *actv4 = new Activation(16*16*256, LEAKY);
 
-  Convolution *conv5 = new Convolution(16, 16, 256, 3, 3, 256, 1, true);
+  Convolution *conv5 = new Convolution(16, 16, 256, 3, 3, 256, 1, 1);
   conv5->xnor = false;
   Batchnorm *bn5 = new Batchnorm(16*16*256);
   Activation *actv5 = new Activation(16*16*256, LEAKY);
 
-  Convolution *conv6 = new Convolution(16, 16, 256, 3, 3, 256, 1, true);
+  Convolution *conv6 = new Convolution(16, 16, 256, 3, 3, 256, 1, 1);
   conv6->xnor = false;
   Batchnorm *bn6 = new Batchnorm(16*16*256);
   Activation *actv6 = new Activation(16*16*256, LEAKY);
 
   Pooling *pool2 = new Pooling(16, 16, 256, 2, 2, 256, 2, false);
 
-  Convolution *conv7 = new Convolution(8, 8, 256, 3, 3, 512, 1, true);
+  Dropout *dropout2 = new Dropout(8*8*256, 0.5);
+
+  Convolution *conv7 = new Convolution(8, 8, 256, 3, 3, 512, 1, 1);
   conv7->xnor = false;
   Batchnorm *bn7 = new Batchnorm(8*8*512);
   Activation *actv7 = new Activation(8*8*512, LEAKY);
 
-  Convolution *conv8 = new Convolution(8, 8, 512, 3, 3, 512, 1, true);
+  Convolution *conv8 = new Convolution(8, 8, 512, 3, 3, 512, 1, 1);
   conv8->xnor = false;
   Batchnorm *bn8 = new Batchnorm(8*8*512);
   Activation *actv8 = new Activation(8*8*512, LEAKY);
 
-  Convolution *conv9 = new Convolution(8, 8, 512, 3, 3, 512, 1, true);
+  Convolution *conv9 = new Convolution(8, 8, 512, 3, 3, 512, 1, 1);
   conv9->xnor = false;
   Batchnorm *bn9 = new Batchnorm(8*8*512);
   Activation *actv9 = new Activation(8*8*512, LEAKY);
 
-  Convolution *conv10 = new Convolution(8, 8, 512, 3, 3, 10, 1, true);
+  Dropout *dropout3 = new Dropout(8*8*512, 0.5);
+
+  Convolution *conv10 = new Convolution(8, 8, 512, 3, 3, 10, 1, 1);
   conv10->xnor = false;
   Batchnorm *bn10 = new Batchnorm(8*8*10);
   Activation *actv10 = new Activation(8*8*10, LEAKY);
-
   Connected *conn = new Connected(8*8*10, 10);
+  //AvgPool *avgpool = new AvgPool(8, 8, 10, 8, 8, 10, 1, false);
   SoftmaxWithCrossEntropy *softmax = new SoftmaxWithCrossEntropy(10);
 
   network->add(conv1);
@@ -132,6 +137,7 @@ void CifarNet(Network *network) {
   network->add(actv3);
 
   network->add(pool1);
+  network->add(dropout1);
 
   network->add(conv4);
   network->add(bn4);
@@ -146,6 +152,7 @@ void CifarNet(Network *network) {
   network->add(actv6);
 
   network->add(pool2);
+  network->add(dropout2);
 
   network->add(conv7);
   network->add(bn7);
@@ -159,15 +166,17 @@ void CifarNet(Network *network) {
   network->add(bn9);
   network->add(actv9);
 
+  network->add(dropout3);
+
   network->add(conv10);
   network->add(bn10);
   network->add(actv10);
-
+  
+  //network->add(avgpool);
   network->add(conn);
   network->add(softmax);
-
 }
-*/
+
 void ResNet(Network *network) {
 
   Convolution *conv1 = new Convolution(32, 32, 3, 3, 3, 64, 1, 1);
@@ -395,9 +404,9 @@ int main( int argc, char** argv ) {
   if(strcmp(argv[1], "train") == 0) {
 
     //CifarXnorNet(&network);
-    //CifarNet(&network);
-    ResNet(&network);
-    network.initial(BATCH, LEARNING_RATE, false);
+    CifarNet(&network);
+    //ResNet(&network);
+    network.initial(BATCH, LEARNING_RATE, true);
     float *train_data, *train_label;
 
     train_data = new float[50000*IM_SIZE];

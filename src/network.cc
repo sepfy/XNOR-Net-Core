@@ -11,7 +11,7 @@ void Network::add(Layer* layer) {
 void Network::initial(int batch, float _lr, bool use_adam) {
   a.lr = _lr;
   a.adam = use_adam;
-  a.decay = 0.01;
+  //a.decay = 0.01;
 
   size_t max = 0;
   for(int i = 0; i < layers.size(); i++) {
