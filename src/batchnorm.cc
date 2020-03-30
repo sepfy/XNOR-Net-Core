@@ -1,7 +1,7 @@
 #include "layers.h"
 
-Batchnorm::Batchnorm(int _N) {
-  N = _N;
+Batchnorm::Batchnorm(int N) {
+  this->N = N;
 }
 
 Batchnorm::~Batchnorm() {

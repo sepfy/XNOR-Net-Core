@@ -1,7 +1,11 @@
 #include <iostream>
-#include <omp.h>
 #include "gemm.h"
 #include <string.h>
+
+
+#ifdef USE_OPENMP
+#include <omp.h>
+#endif
 
 #ifdef GPU
 #include "gpu.h"

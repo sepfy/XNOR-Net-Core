@@ -1,8 +1,8 @@
 #include "layers.h"
 
-Dropout::Dropout(int _N, float _ratio) {
-  N = _N;
-  ratio = _ratio;
+Dropout::Dropout(int N, float ratio) {
+  this->N = N;
+  this->ratio = ratio;
 }
 
 Dropout::~Dropout() {

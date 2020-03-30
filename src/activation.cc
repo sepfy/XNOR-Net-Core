@@ -35,8 +35,8 @@ void Sigmoid::save(fstream *file) {
 }
 #endif
 
-SoftmaxWithCrossEntropy::SoftmaxWithCrossEntropy(int _n) {
-  N = _n;
+SoftmaxWithCrossEntropy::SoftmaxWithCrossEntropy(int n) {
+  N = n;
 }
 
 void SoftmaxWithCrossEntropy::init() {
@@ -108,8 +108,8 @@ SoftmaxWithCrossEntropy* SoftmaxWithCrossEntropy::load(char *buf) {
 
 
 
-Activation::Activation(int _N, ACT act) {
-  N = _N;
+Activation::Activation(int N, ACT act) {
+  this->N = N;
   activation = act;
 }
 

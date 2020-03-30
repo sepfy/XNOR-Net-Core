@@ -1,23 +1,23 @@
 #include "layers.h"
 
-Pooling::Pooling(int _W, int _H, int _C,
-  int _FW, int _FH, int _FC, int _stride, bool _pad) {
+Pooling::Pooling(int W, int H, int C,
+  int FW, int FH, int FC, int stride, bool pad) {
 
-  W = _W;
-  H = _H;
-  C = _C;
-  FW = _FW;
-  FH = _FH;
-  FC = _FC;
-  stride = _stride;
+  this->W = W;
+  this->H = H;
+  this->C = C;
+  this->FW = FW;
+  this->FH = FH;
+  this->FC = FC;
+  this->stride = stride;
 
-  if(_pad == true) {
-    pad = 0.5*((stride - 1)*W - stride + FW);
+  if(pad == true) {
+    this->pad = 0.5*((stride - 1)*W - stride + FW);
     out_w = W;
     out_h = H;
   }
   else {
-    pad = 0;
+    this->pad = 0;
     out_w = (W - FW)/stride + 1;
     out_h = (H - FH)/stride + 1;
   }

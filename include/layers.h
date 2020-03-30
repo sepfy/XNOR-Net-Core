@@ -60,7 +60,7 @@ class Connected : public Layer {
     float iter = 0.0;
     float epsilon = 1.0e-7;
  
-    Connected(int _n, int _m);
+    Connected(int n, int m);
     ~Connected();
     void init(); 
     void print();
@@ -95,7 +95,7 @@ class SoftmaxWithCrossEntropy : public Layer {
   public:
     int N;
 
-    SoftmaxWithCrossEntropy(int _n);
+    SoftmaxWithCrossEntropy(int n);
     ~SoftmaxWithCrossEntropy();
     void init();
     void print();
@@ -199,8 +199,8 @@ class AvgPool : public Layer {
     float *grad_weight;
     float *delta_col;
     float *indexes;
-    AvgPool(int _W, int _H, int _C,
-	int _FW, int _FH, int _FC, int _stride, bool _pad);
+    AvgPool(int W, int H, int C,
+	int FW, int FH, int FC, int stride, bool pad);
     ~AvgPool();
     void init();
     void print();
@@ -231,8 +231,8 @@ class Pooling : public Layer {
     float *grad_weight;
     float *delta_col;
     float *indexes;
-    Pooling(int _W, int _H, int _C,
-	int _FW, int _FH, int _FC, int _stride, bool _pad);
+    Pooling(int W, int H, int C,
+	int FW, int FH, int FC, int stride, bool pad);
     ~Pooling();
     void init();
     void print();
@@ -269,7 +269,7 @@ class Activation : public Layer {
     int N;
     float *cut;
     vector<int> mask;
-    Activation(int _N, ACT act);
+    Activation(int N, ACT act);
     ~Activation();
     void init();
     void print();
@@ -309,7 +309,7 @@ class Batchnorm : public Layer {
     float momentum = 0.9;
     float beta1 = 0.9;
     float beta2 = 0.999;
-    Batchnorm(int _N);
+    Batchnorm(int N);
     ~Batchnorm();
     void init();
     void print();
@@ -342,7 +342,7 @@ class Dropout : public Layer {
     float *mask;
     float *prob;
     float ratio;
-    Dropout(int _N, float _ratio);
+    Dropout(int N, float ratio);
     ~Dropout();
     void init();
     void print();

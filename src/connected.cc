@@ -1,8 +1,8 @@
 #include "layers.h"
 
-Connected::Connected(int _n, int _m) {
-  N = _n;
-  M = _m;
+Connected::Connected(int n, int m) {
+  N = n;
+  M = m;
 }
 
 Connected::~Connected() {
