@@ -134,7 +134,7 @@ void bias_add_gpu(float *output, float *bias, int batch, int size, int c) {
 __global__ void elementwise_mul_gpu_kernel(float *A, float *B, float *C, int N) {
 
   int index = (blockIdx.x)*blockDim.x + threadIdx.x;
-  if(index > N) return;
+  if(index >= N) return;
   C[index] = A[index] + B[index];
 }
 

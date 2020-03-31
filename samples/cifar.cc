@@ -13,7 +13,7 @@ using namespace std;
 
 #define LEARNING_RATE 1.0e-3
 #define BATCH 50
-#define MAX_ITER 20000
+#define MAX_ITER 10000
 
 void CifarXnorNet(Network *network) {
 
@@ -121,7 +121,7 @@ void CifarNet(Network *network) {
   Batchnorm *bn10 = new Batchnorm(8*8*10);
   Activation *actv10 = new Activation(8*8*10, LEAKY);
   Connected *conn = new Connected(8*8*10, 10);
-  //AvgPool *avgpool = new AvgPool(8, 8, 10, 8, 8, 10, 1, false);
+  AvgPool *avgpool = new AvgPool(8, 8, 10, 8, 8, 10, 1, false);
   SoftmaxWithCrossEntropy *softmax = new SoftmaxWithCrossEntropy(10);
 
   network->add(conv1);
@@ -429,9 +429,6 @@ int main( int argc, char** argv ) {
 
       ms_t start = getms();
       int step = (iter*BATCH)%50000;
-      if(iter < 5000) network.a.lr = 1.0e-3;
-      else if(iter > 5000 && iter < 10000) network.a.lr = 1.0e-4;
-      else if(iter > 10000) network.a.lr = 1.0e-5;
 #ifdef GPU
       gpu_push_array(batch_xs, train_data + step*IM_SIZE, BATCH*IM_SIZE);
       gpu_push_array(batch_ys, train_label + step*NUM_OF_CLASS, BATCH*NUM_OF_CLASS);

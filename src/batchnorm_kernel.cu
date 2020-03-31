@@ -127,14 +127,14 @@ __global__ void cal_dx(float *dxn, float *dxc, float *gamma, float *delta, float
   
   dxn[index] = gamma[j]*delta[index];
   dxc[index] = dxn[index]/pow(var[j] + epsilon, 0.5);
-  //dxn[index] = -1.0*dxn[index]*(input[index] - mean[j])/(var[j] + epsilon);
-  dxn[index] *= -1.0*((pow(input[index] - mean[j], 2.0)))/(var[j] + epsilon);
+  dxn[index] = -1.0*dxn[index]*(input[index] - mean[j])/(var[j] + epsilon);
+  //dxn[index] = -1.0*(dxn[index]*(pow(input[index] - mean[j], 2.0)))/(var[j] + epsilon);
 }
 
-__global__ void cal_dvar_kernel(float *dvar, float *dstd, float *var, float epsilon) {
+__global__ void cal_dvar_kernel(float *dvar, float *dstd, float *var, float epsilon, int N) {
   
   int j = blockIdx.x*blockDim.x + threadIdx.x;
-
+  if(j >= N) return;
   dvar[j] = 0.5*dstd[j]/pow(var[j] + epsilon, 0.5);
 }
 
@@ -149,18 +149,18 @@ __global__ void cal_mdelta_kernel(float *m_delta, float *dxc, float *dmu, float 
 }
 
 
-__global__ void calc_dxc2(float *dxc, float *xc, float *dvar, float batch) {
+__global__ void calc_dxc2(float *dxc, float *input, float *mean, float *dvar, float batch) {
 
   int j = blockIdx.x;
   int index = gridDim.x*threadIdx.x + blockIdx.x;
-  dxc[index] += (2.0/batch)*(xc[index])*dvar[j];
+  dxc[index] += (2.0/batch)*(input[index] - mean[j])*dvar[j];
 }
 
 void Batchnorm::backward_gpu(float *delta) {
 
   col_sum_gpu(batch, N, delta, dbeta);
 
-  elementwise_mul_gpu(normal, delta, normal, N);
+  elementwise_mul_gpu(normal, delta, normal, batch*N);
 
   col_sum_gpu(batch, N, normal, dgamma);
 
@@ -169,10 +169,10 @@ void Batchnorm::backward_gpu(float *delta) {
 
   col_sum_gpu(batch, N, dxn, dstd);
 
-  cal_dvar_kernel<<<default_grid(N),BLOCK>>>(dvar, dstd, var, epsilon);
+  cal_dvar_kernel<<<default_grid(N),BLOCK>>>(dvar, dstd, var, epsilon, N);
   check_error(cudaGetLastError());
 
-  calc_dxc2<<<N, batch>>>(dxc, xc, dvar, (float)batch);
+  calc_dxc2<<<N, batch>>>(dxc, input, mean, dvar, (float)batch);
   check_error(cudaGetLastError());
 
   col_sum_gpu(batch, N, dxc, dmu);
