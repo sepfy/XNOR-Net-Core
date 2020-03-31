@@ -22,7 +22,7 @@ Shortcut::~Shortcut() {
 
 void Shortcut::print() { 
 
-  printf("Shortcut\n"); 
+  printf("Shortcut\t %d x %d x %d \t %d x %d x %d\n", iw, ih, ic, ow, oh, oc); 
 }
 
 void Shortcut::init() {

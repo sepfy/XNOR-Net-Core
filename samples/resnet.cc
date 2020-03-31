@@ -12,7 +12,7 @@ using namespace std;
 
 #define LEARNING_RATE 1.0e-3
 #define BATCH 15
-#define MAX_ITER 10000
+#define MAX_ITER 1000
 
 void Resnet18(Network *network) {
 
@@ -138,7 +138,7 @@ void Resnet18(Network *network) {
 
   network->add(conv5);
   network->add(bn5);
-  //network->add(shortcut5);
+  network->add(shortcut5);
   network->add(actv5);
 
   network->add(conv6);
@@ -156,7 +156,7 @@ void Resnet18(Network *network) {
 
   network->add(conv9);
   network->add(bn9);
-  //network->add(shortcut9);
+  network->add(shortcut9);
   network->add(actv9);
 
 
@@ -175,7 +175,7 @@ void Resnet18(Network *network) {
 
   network->add(conv13);
   network->add(bn13);
-  //network->add(shortcut13);
+  network->add(shortcut13);
   network->add(actv13);
 
   network->add(conv14);
@@ -184,7 +184,7 @@ void Resnet18(Network *network) {
 
   network->add(conv15);
   network->add(bn15);
-  //network->add(shortcut15);
+  network->add(shortcut15);
   network->add(actv15);
 
   network->add(conv16);
@@ -212,22 +212,27 @@ void help() {
 int main( int argc, char** argv ) {
 
   Network network;
-  Resnet18(&network);
-  network.initial(BATCH, LEARNING_RATE, true);
 
-  float *inputs, *outputs;
-  int n = read_data("FIRE-SMOKE-DATASET/Train/", inputs, outputs);
-  cout << "Train set = " << n << endl;
-  //show_image(35, inputs, outputs);
-#ifdef GPU    
-    float *batch_xs = malloc_gpu(BATCH*IM_SIZE);
-    float *batch_ys = malloc_gpu(BATCH*NUM_OF_CLASS);
-#else
+  if(strcmp(argv[1], "train") == 0) {
+
+    Resnet18(&network);
+    network.initial(BATCH, LEARNING_RATE, true);
+
+    float *inputs, *outputs;
+    char train_folder[64] = {0};
+    sprintf(train_folder, "%s/Train", argv[3]);
+    int n = read_data(train_folder, inputs, outputs);
+    cout << "Train set = " << n << endl;
+    //show_image(35, inputs, outputs);
     float *batch_xs;
     float *batch_ys;
+
+#ifdef GPU    
+    batch_xs = malloc_gpu(BATCH*IM_SIZE);
+    batch_ys = malloc_gpu(BATCH*NUM_OF_CLASS);
 #endif
 
-  
+
     for(int iter = 0; iter < MAX_ITER; iter++) {
 
       ms_t start = getms();
@@ -253,17 +258,14 @@ int main( int argc, char** argv ) {
       }
 
     }
-/*
-    //network.save(argv[2]);
+
+    network.save(argv[2]);
 #ifdef GPU
     cudaFree(batch_xs);
     cudaFree(batch_ys);
-#else
-    delete []batch_xs;
-    delete []batch_ys;
 #endif
-    delete []train_data;
-    delete []train_label;
+    delete []inputs;
+    delete []outputs;
   }
   else if(strcmp(argv[1], "deploy") == 0) {
     network.load(argv[2], BATCH);
@@ -277,27 +279,26 @@ int main( int argc, char** argv ) {
 
   float *test_data, *test_label;
 
-  test_data = new float[10000*IM_SIZE];
-  test_label = new float[10000*NUM_OF_CLASS];
-  read_test_data(argv[3], test_data, test_label);
+  char test_folder[64] = {0};
+  sprintf(test_folder, "%s/Test", argv[3]);
+  int n = read_data(test_folder, test_data, test_label);
+  cout << "Test set = " << n << endl;
 
-  int batch_num = 10000/BATCH;
-
-#ifdef GPU
-  float *batch_xs = malloc_gpu(BATCH*IM_SIZE);
-  float *batch_ys = malloc_gpu(BATCH*NUM_OF_CLASS);
-#else
+  int batch_num = n/BATCH;
   float *batch_xs;
   float *batch_ys;
-#endif
 
+#ifdef GPU
+  batch_xs = malloc_gpu(BATCH*IM_SIZE);
+  batch_ys = malloc_gpu(BATCH*NUM_OF_CLASS);
+#endif
 
   float total = 0.0;
   ms_t start = getms();
-  //network.deploy();
+  network.deploy();
 
   for(int iter = 0; iter < batch_num; iter++) {
-    int step = (iter*BATCH)%10000;
+    int step = (iter*BATCH)%n;
 
 #ifdef GPU
       gpu_push_array(batch_xs, test_data + step*IM_SIZE, BATCH*IM_SIZE);
@@ -308,7 +309,6 @@ int main( int argc, char** argv ) {
 #endif
 
     float *output = network.inference(batch_xs);
-
     total += accuracy(BATCH, NUM_OF_CLASS, output, batch_ys); 
   }
 
@@ -316,16 +316,12 @@ int main( int argc, char** argv ) {
        << ", time = " << (getms() - start) << endl;
 
 #ifdef GPU
-    cudaFree(batch_xs);
-    cudaFree(batch_ys);
-#else
-    delete []batch_xs;
-    delete []batch_ys;
+  cudaFree(batch_xs);
+  cudaFree(batch_ys);
 #endif
-    delete []test_data;
-    delete []test_label;
+  delete []test_data;
+  delete []test_label;
 
   return 0;
-*/
 
 }
