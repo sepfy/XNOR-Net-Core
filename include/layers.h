@@ -306,6 +306,7 @@ class Batchnorm : public Layer {
     float *dstd;
     float *dmu;
     float *xc;
+    bool runtime = false;
     float momentum = 0.9;
     float beta1 = 0.9;
     float beta2 = 0.999;

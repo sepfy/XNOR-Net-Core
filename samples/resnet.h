@@ -13,10 +13,22 @@
 using namespace cv;
 using namespace std;
 
-#define WIDTH 225
-#define HEIGHT 225
+#define WIDTH 224
+#define HEIGHT 224
 #define IM_SIZE WIDTH*HEIGHT*3
 #define NUM_OF_CLASS 3
+
+void eval_model(char *filepath, float *input) {
+
+  Mat image = imread(filepath, IMREAD_COLOR);
+  resize(image, image, Size(HEIGHT, WIDTH), 0, 0, INTER_LINEAR);
+  cvtColor(image, image, CV_BGR2RGB);
+  image.convertTo(image, CV_32FC3);
+  image = (image - 127.5)/127.5;
+  memcpy(input, image.data, IM_SIZE*sizeof(float));
+
+}
+
 
 int load_images(char *dir, vector<Mat> *images) {
     

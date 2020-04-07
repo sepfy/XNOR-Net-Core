@@ -44,6 +44,7 @@ void Batchnorm::init() {
 #else
   mean = new float[N];
   var  = new float[N];
+  std = new float[N];
   running_mean = new float[N];
   running_var  = new float[N];
   normal = new float[batch*N];
@@ -135,15 +136,23 @@ void Batchnorm::forward() {
     get_mean();
     get_variance();
     normalize();
+    scale_and_shift();
   }
   else {
-    for(int i = 0; i < batch; i++)
-      for(int j = 0; j < N; j++) 
-        normal[i*N+j] = (input[i*N+j] - running_mean[j])/pow(running_var[j] + epsilon, 0.5);
-      
+
+
+    if(runtime) {
+      for(int j = 0; j < N; j++)
+        output[j] = gamma[j]*(input[j] - running_mean[j])/std[j] + beta[j];
+    }
+    else {
+      for(int i = 0; i < batch; i++)
+        for(int j = 0; j < N; j++)
+          normal[i*N+j] = (input[i*N+j] - running_mean[j])/pow(running_var[j] + epsilon, 0.5);
+      scale_and_shift();
+    }
   }
 
-  scale_and_shift();
 
 }
 

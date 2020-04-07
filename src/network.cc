@@ -240,6 +240,9 @@ void Network::load(char *filename, int batch) {
       rfile.read((char*)bn->running_var, bn->N*sizeof(float));
       rfile.read((char*)bn->gamma, bn->N*sizeof(float));
       rfile.read((char*)bn->beta, bn->N*sizeof(float));
+      for(int i = 0; i < bn->N; i++)
+          bn->std[i] = pow(bn->running_var[i] + bn->epsilon, 0.5);
+      bn->runtime = true;
 #endif
       this->add(bn);
       //cout << relu->N << endl;
