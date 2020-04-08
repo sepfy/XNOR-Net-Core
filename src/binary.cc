@@ -22,16 +22,13 @@ void Bitset::init(int input_size) {
 }
 
 void Bitset::set(float *inputs) {
-  for(int i = 0; i < bitnum; i++) {
-    int bidx = i/BN;
-    int offset = i%BN;
-    if(inputs[i] > 0) {
-      BIT_BLK value = 1;
-      bits[bidx] |= ((BIT_BLK)1 << offset);
-    }
-    else { 
-      BIT_BLK value = 1;
-      bits[bidx] |= ((BIT_BLK)0 << offset);
+
+  for(int i = 0; i < N; i++) {
+    register BIT_BLK *val = bits + i;
+    for(int j = 0; j < BN; j++) {
+      int index = i*BN+j;
+      if(index > bitnum) return;
+      *val |= inputs[index] > 0 ? ((BIT_BLK)1 << j) : ((BIT_BLK)0 << j);
     }
   }
 }

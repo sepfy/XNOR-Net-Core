@@ -181,17 +181,19 @@ void Convolution::binarize_input() {
     }
   }
 
-  for(int i = 0; i < batch*im_size; i++)
-    input[i] > 0 ? input[i] = 1 : input[i] = -1;
+  if(!runtime) {
+    for(int i = 0; i < batch*im_size; i++)
+      input[i] > 0 ? input[i] = 1 : input[i] = -1;
+  }
  
 }
 
 void Convolution::forward_xnor() {
   binarize_input();
+
   for(int i = 0; i < batch; i++)
     im2col(W, H, C, FW, FH, FC, stride, pad,
       input + i*im_size, shared+i*col_size);
-
 
   if(!runtime) {
 
@@ -207,9 +209,10 @@ void Convolution::forward_xnor() {
       bitset_outcol[i].clean();
       bitset_outcol[i].set(shared+i*out_channel);
     }
-
+  //ms_t s = getms();
     bin_gemm(batch*out_h*out_w, FC, out_channel, 1.0, 
       bitset_outcol, bitset_weight, output);
+  //cout << "bin_gemm: " << getms() -s << endl;
   }
 
   // Do K = A (*) k

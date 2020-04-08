@@ -4,6 +4,46 @@
 #include <random>
 using namespace std;
 
+#if 1
+// optimize cache
+void im2col(int W, int H, int C, int FW, int FH, int FC,
+            int stride, int pad, float *im, float *col) {
+
+  int out_w = (W + 2*pad - FW)/stride + 1;
+  int out_h = (H + 2*pad - FH)/stride + 1;
+  int out_col = FH*FW*C;
+  int offset_w, offset_h, c_im;
+  int im_row, im_col;
+
+  for(int i = 0; i < out_h; i++) {
+    int i_stride = i*stride - pad;
+    for(int j = 0; j < out_w; j++) {
+      int j_stride = j*stride - pad;
+      int col_row_idx = (i*out_w + j)*out_col;
+      for(int offset_h = 0; offset_h < FH; offset_h++) {
+        im_row = offset_h + i_stride;
+        for(int offset_w = 0; offset_w < FW; offset_w++) {
+          im_col = offset_w + j_stride;
+          for(int c_im = 0; c_im < C; c_im++) {
+            int col_idx = col_row_idx + offset_h*FW*C+offset_w*C+c_im;
+
+            if(im_row < 0 || im_col < 0 ||
+            im_row >= H || im_col >= W)
+            col[col_idx] = 0.0;
+            else {
+              int im_idx = C*(im_row*W + im_col) + c_im;
+              col[col_idx] = im[im_idx];
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+
+#else
+
 void im2col(int W, int H, int C, int FW, int FH, int FC,
             int stride, int pad, float *im, float *col) {
 
@@ -40,6 +80,8 @@ void im2col(int W, int H, int C, int FW, int FH, int FC,
   }
 
 }
+#endif
+
 
 void col2im(int W, int H, int C, int FW, int FH, int FC,
             int stride, int pad, float *im, float *col) {
