@@ -25,8 +25,9 @@ void Convolution::binarize_input_gpu() {
   int size = batch*H*W; 
   input_mean_gpu_kernel<<<default_grid(size), BLOCK>>>(avg_filter, input, size, C);
   check_error(cudaGetLastError());
-  size = batch*im_size;
-  binarize_input_gpu_kernel<<<default_grid(size), BLOCK>>>(input, size);
+
+  size = batch*out_h*out_w*out_channel;
+  binarize_input_gpu_kernel<<<default_grid(size), BLOCK>>>(shared, size);
   check_error(cudaGetLastError());
 
 }
@@ -77,13 +78,15 @@ __global__ void multi_mean_gpu_kernel(float *output, float *mean, float *k_outpu
 
 void Convolution::forward_xnor_gpu() {
 
-  binarize_input_gpu();
   binarize_weight_gpu();
   swap_weight();
 
   for(int i = 0; i < batch; i++)
     im2col_gpu(W, H, C, FW, FH, FC, stride, pad,
       input + i*im_size, shared+i*col_size);
+
+  binarize_input_gpu();
+  
 
   gemm_gpu(TRS_N, TRS_N, batch*out_h*out_w, FC, out_channel, 1, shared, weight, output);
 

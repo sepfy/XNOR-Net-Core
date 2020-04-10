@@ -182,18 +182,19 @@ void Convolution::binarize_input() {
   }
 
   if(!runtime) {
-    for(int i = 0; i < batch*im_size; i++)
-      input[i] > 0 ? input[i] = 1 : input[i] = -1;
+    for(int i = 0; i < batch*out_w*out_h*out_channel; i++)
+      shared[i] > 0 ? shared[i] = 1 : shared[i] = -1;
   }
  
 }
 
 void Convolution::forward_xnor() {
-  binarize_input();
 
   for(int i = 0; i < batch; i++)
     im2col(W, H, C, FW, FH, FC, stride, pad,
       input + i*im_size, shared+i*col_size);
+
+  binarize_input();
 
   if(!runtime) {
 
@@ -366,11 +367,13 @@ void Convolution::save(fstream *file) {
                          bitset_weight[i].N*sizeof(BIT_BLK));
     } 
 #ifdef GPU
+    binarize_weight_gpu();
     float *mean_tmp = new float[FC];
     gpu_pull_array(mean, mean_tmp, FC);
     file->write((char*)mean_tmp, FC*sizeof(float));
     delete []mean_tmp;
 #else
+    binarize_weight();
     file->write((char*)mean, FC*sizeof(float));
 #endif
   } 

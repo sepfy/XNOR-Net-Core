@@ -142,8 +142,9 @@ void Batchnorm::forward() {
 
 
     if(runtime) {
-      for(int j = 0; j < N; j++)
-        output[j] = gamma[j]*(input[j] - running_mean[j])/std[j] + beta[j];
+      for(int i = 0; i < batch; i++)
+        for(int j = 0; j < N; j++)
+          output[i*N+j] = gamma[j]*(input[i*N+j] - running_mean[j])/std[j] + beta[j];
     }
     else {
       for(int i = 0; i < batch; i++)
