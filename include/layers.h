@@ -13,6 +13,13 @@
 #include "gpu.h"
 #endif
 
+#define GEMMBITSERIAL
+
+#ifdef GEMMBITSERIAL
+#include "gemmbitserial.hpp"
+using namespace gemmbitserial;
+#endif
+
 #define XNOR_NET
 using namespace std;
 
@@ -181,6 +188,11 @@ class Convolution : public Layer {
     void swap_weight();
     float binarize_weight();
     void binarize_input();
+
+#ifdef GEMMBITSERIAL
+    GEMMContext ctx;
+#endif
+
 #endif
 };
 

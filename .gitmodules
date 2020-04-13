@@ -1,0 +1,3 @@
+[submodule "gemmbitserial"]
+	path = gemmbitserial
+	url = https://github.com/sepfy/gemmbitserial.git

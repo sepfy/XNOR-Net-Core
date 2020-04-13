@@ -128,10 +128,16 @@ void Network::load(char *filename, int batch) {
       conv->init();
       conv->runtime = true;
       if(conv->xnor) {
+
+#ifdef GEMMBITSERIAL
+        size_t size = conv->ctx.rhs.nbits*conv->ctx.rhs.wordsPerBitplane()*sizeof(uint64_t);
+	rfile.read((char*)conv->ctx.rhs.data, size);
+#else
         for(int i = 0; i < conv->FC; i++) {
           rfile.read((char*)conv->bitset_weight[i].bits, 
                           conv->bitset_weight[i].N*sizeof(BIT_BLK));
         }
+#endif
         rfile.read((char*)conv->mean, conv->FC*sizeof(float));
       }
       else {

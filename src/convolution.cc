@@ -123,9 +123,12 @@ void Convolution::init() {
   for(int i = 0; i < FC; i++)
     bitset_weight[i].init(out_channel);
 
-
-
   shared_size = out_w*out_h*out_channel*batch;
+
+#ifdef GEMMBITSERIAL
+  ctx = allocGEMMContext(batch*out_h*out_w, out_channel, FC, 1, 1, 1, 1);
+#endif
+
 }
 
 
@@ -205,7 +208,18 @@ void Convolution::forward_xnor() {
               shared, weight, output);
   }
   else {
+#ifdef GEMMBITSERIAL
+    int8_t *m = new int8_t[batch*out_h*out_w*out_channel];
+    for(int i = 0; i < batch*out_h*out_w*out_channel; i++)
+      m[i] = (shared[i] > 0) ? 1 : -1;
+    ctx.lhs.importRegular(m);
+    gemmBitSerial(ctx);
 
+    // Transpose
+    for(int i = 0; i < batch*out_w*out_h; i++)
+      for(int j = 0; j < FC; j++)
+        output[i*FC+j] = ctx.res[j*(batch*out_w*out_h)+i];
+#else
     for(int i = 0; i < batch*out_h*out_w; i++) {
       bitset_outcol[i].clean();
       bitset_outcol[i].set(shared+i*out_channel);
@@ -214,6 +228,7 @@ void Convolution::forward_xnor() {
     bin_gemm(batch*out_h*out_w, FC, out_channel, 1.0, 
       bitset_outcol, bitset_weight, output);
   //cout << "bin_gemm: " << getms() -s << endl;
+#endif
   }
 
   // Do K = A (*) k
@@ -344,6 +359,24 @@ void Convolution::save(fstream *file) {
   file->write(buf, sizeof(buf));
 
   if(xnor) {
+
+#ifdef GEMMBITSERIAL
+
+  int8_t *BB = new int8_t[FC*out_channel];
+#ifdef GPU
+  float *weight_tmp = new float[weight_size];
+  gpu_pull_array(weight, weight_tmp, weight_size);
+  for(int i = 0; i < FC; i++)
+    for(int j = 0; j < out_channel; j++)
+      BB[i*out_channel+j] = (weight_tmp[j*FC+i] > 0) ? 1 : -1;
+  delete []weight_tmp;
+#endif
+  ctx.rhs.importRegular(BB);
+  size_t size = ctx.rhs.nbits*ctx.rhs.wordsPerBitplane()*sizeof(uint64_t);
+  //cout << FC*out_channel << endl;
+  file->write((char*)ctx.rhs.data, size);
+
+#else
     float *BB = new float[FC*out_channel];
 #ifdef GPU
     float *weight_tmp = new float[weight_size];
@@ -366,6 +399,8 @@ void Convolution::save(fstream *file) {
       file->write((char*)bitset_weight[i].bits,
                          bitset_weight[i].N*sizeof(BIT_BLK));
     } 
+#endif
+
 #ifdef GPU
     binarize_weight_gpu();
     float *mean_tmp = new float[FC];
