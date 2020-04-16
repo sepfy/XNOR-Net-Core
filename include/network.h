@@ -9,8 +9,11 @@ class Network {
   public:
     vector<Layer*> layers;
     float lr;
+    float *shared;
+    int8_t *quantized_shared;
     update_args a;
     Network();
+    ~Network();
     void add(Layer* layer);
     void initial(int batch, float _lr, bool use_adam);
     float* inference(float *input);

@@ -32,6 +32,7 @@ class Layer {
     float *m_delta;
     size_t shared_size = 0;
     float *shared;
+    int8_t *quantized_shared;
     virtual void forward() = 0;
     virtual void backward(float* delta) = 0;
 

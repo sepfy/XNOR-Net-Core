@@ -6,6 +6,35 @@ Batchnorm::Batchnorm(int N) {
 
 Batchnorm::~Batchnorm() {
 
+#ifdef GPU
+
+#else
+  delete []std;
+  delete []running_mean;
+  delete []running_var;
+  delete []normal;
+  delete []gamma;
+  delete []beta;
+  delete []output;
+
+  if(train_flag) {
+    delete []mean;
+    delete []var;
+    delete []m_delta;
+    delete []dxn; 
+    delete []dxc; 
+    delete []dvar; 
+    delete []dstd; 
+    delete []dmu; 
+    delete []dgamma; 
+    delete []dbeta; 
+    delete []m_gamma; 
+    delete []m_beta; 
+    delete []v_gamma; 
+    delete []v_beta; 
+  }
+
+#endif
 }
 
 void Batchnorm::init() {
@@ -42,43 +71,46 @@ void Batchnorm::init() {
   memset_gpu(gamma, 1.0, N);
 
 #else
-  mean = new float[N];
-  var  = new float[N];
+
   std = new float[N];
   running_mean = new float[N];
   running_var  = new float[N];
   normal = new float[batch*N];
-  output = new float[batch*N];
-  m_delta = new float[batch*N];
-
-  dxn = new float[batch*N];
-  dxc = new float[batch*N];
-  dvar = new float[N];
-  dstd = new float[N];
-  dmu = new float[N];
-
-  dgamma = new float[N];
-  dbeta = new float[N];
   gamma = new float[N];
   beta = new float[N];
-  m_gamma = new float[N];
-  m_beta = new float[N];
-  v_gamma = new float[N];
-  v_beta = new float[N];
+  output = new float[batch*N];
 
-  for(int i = 0; i < N; i++) {
-    gamma[i] = 1.0;
-    beta[i] = 0.0;
+  if(train_flag) {
+    mean = new float[N];
+    var  = new float[N];
+    m_delta = new float[batch*N];
+    dxn = new float[batch*N];
+    dxc = new float[batch*N];
+    dvar = new float[N];
+    dstd = new float[N];
+    dmu = new float[N];
 
-    m_beta[i] = 0.0;
-    v_beta[i] = 0.0;
-    m_gamma[i] = 0.0;
-    m_gamma[i] = 0.0;
+    dgamma = new float[N];
+    dbeta = new float[N];
+    m_gamma = new float[N];
+    m_beta = new float[N];
+    v_gamma = new float[N];
+    v_beta = new float[N];
 
-    running_mean[i] = 0.0;
-    running_var[i] = 0.0;
+    for(int i = 0; i < N; i++) {
+      gamma[i] = 1.0;
+      beta[i] = 0.0;
+
+      m_beta[i] = 0.0;
+      v_beta[i] = 0.0;
+      m_gamma[i] = 0.0;
+      m_gamma[i] = 0.0;
+
+      running_mean[i] = 0.0;
+      running_var[i] = 0.0;
+    }
+
   }
-
 
 #endif
 

@@ -33,19 +33,27 @@ Convolution::~Convolution() {
 #ifdef GPU
 
 #else
-  delete []output;
-  delete []weight;
-  delete []grad_weight;
-  delete []grad_bias;
-  delete []m_delta;
 
-  //delete []im;
-  //delete []out_col;
-  /* Adam optimizer */
-  delete []m_weight;
-  delete []v_weight;
-  delete []m_bias;
-  delete []v_bias;
+  delete []output;
+  delete []bias;
+  delete []weight;
+  delete []k_output;
+  delete []k_filter;
+  delete []avg_filter;
+  delete []avg_col;
+  delete []mean;
+
+
+  if(train_flag) {
+    delete []binary_weight;
+    delete []grad_weight;
+    delete []grad_bias;
+    delete []m_delta;
+    delete []m_weight;
+    delete []v_weight;
+    delete []m_bias;
+    delete []v_bias;
+  }
 
 #endif
 
@@ -82,28 +90,11 @@ void Convolution::init() {
 
 #else
 
-  col = new float[out_w*out_h*out_channel];
   output = new float[batch*out_w*out_h*FC];
   weight = new float[out_channel*FC];
-  grad_weight = new float[out_channel*FC];
   bias = new float[FC];
-  grad_bias = new float[FC];
-  im = new float[H*W*C];
-  m_delta = new float[batch*W*H*C]; 
 
-  /* Adam optimizer */
-  m_weight = new float[out_channel*FC];
-  v_weight = new float[out_channel*FC];
-  m_bias = new float[FC];
-  v_bias = new float[FC];
-
-  random_normal(out_channel*FC, weight);
-  random_normal(FC, bias);
-  memset(m_weight, 0, out_channel*FC*sizeof(float));
-  memset(v_weight, 0, out_channel*FC*sizeof(float));
-  memset(m_bias, 0 , FC*sizeof(float));  
-  memset(v_bias, 0 , FC*sizeof(float));  
-
+  // XNOR  
   binary_weight = new float[out_channel*FC];
   avg_filter = new float[batch*im_size];
   avg_col = new float[out_w*out_h*FW*FC*batch];
@@ -112,8 +103,32 @@ void Convolution::init() {
   for(int i = 0; i < FW*FH; i++)
     k_filter[i] = 1.0/(float)(FW*FH);
   mean = new float[FC];
+
+  if(train_flag) {
+    grad_weight = new float[out_channel*FC];
+    grad_bias = new float[FC];
+    m_delta = new float[batch*W*H*C]; 
+
+    /* Adam optimizer */
+    m_weight = new float[out_channel*FC];
+    v_weight = new float[out_channel*FC];
+    m_bias = new float[FC];
+    v_bias = new float[FC];
+
+    random_normal(out_channel*FC, weight);
+    random_normal(FC, bias);
+    memset(m_weight, 0, out_channel*FC*sizeof(float));
+    memset(v_weight, 0, out_channel*FC*sizeof(float));
+    memset(m_bias, 0 , FC*sizeof(float));  
+    memset(v_bias, 0 , FC*sizeof(float));  
+  }
 #endif
 
+
+
+#ifdef GEMMBITSERIAL
+  ctx = allocGEMMContext(batch*out_h*out_w, out_channel, FC, 1, 1, 1, 1);
+#else
   bitset_outcol = new Bitset[batch*out_h*out_w];
   bitset_weight = new Bitset[FC];
 
@@ -122,12 +137,9 @@ void Convolution::init() {
 
   for(int i = 0; i < FC; i++)
     bitset_weight[i].init(out_channel);
+#endif
 
   shared_size = out_w*out_h*out_channel*batch;
-
-#ifdef GEMMBITSERIAL
-  ctx = allocGEMMContext(batch*out_h*out_w, out_channel, FC, 1, 1, 1, 1);
-#endif
 
 }
 
@@ -139,10 +151,10 @@ void Convolution::print() {
               + 4*FC
 	      + batch*W*H*C)/(1024*1024);
   if(xnor)
-    printf("ConvX \t %.2f \t %d x %d x %d \t %d x %d x %d \n",  
+    printf("ConvX \t %.2f \t %d x %d x %d \t\t %d x %d x %d \n",  
 		  umem, H, W, C, out_h, out_w, FC);
   else 
-    printf("Conv \t %.2f \t %d x %d x %d \t %d x %d x %d \n",  
+    printf("Conv \t %.2f \t %d x %d x %d \t\t %d x %d x %d \n",  
 		  umem, H, W, C, out_h, out_w, FC);
 
 }
@@ -188,6 +200,10 @@ void Convolution::binarize_input() {
     for(int i = 0; i < batch*out_w*out_h*out_channel; i++)
       shared[i] > 0 ? shared[i] = 1 : shared[i] = -1;
   }
+  else {
+    for(int i = 0; i < batch*out_w*out_h*out_channel; i++)
+      quantized_shared[i] = (shared[i] > 0) ? 1 : -1;
+  }
  
 }
 
@@ -209,16 +225,18 @@ void Convolution::forward_xnor() {
   }
   else {
 #ifdef GEMMBITSERIAL
-    int8_t *m = new int8_t[batch*out_h*out_w*out_channel];
-    for(int i = 0; i < batch*out_h*out_w*out_channel; i++)
-      m[i] = (shared[i] > 0) ? 1 : -1;
-    ctx.lhs.importRegular(m);
+ms_t s = getms();
+    //int8_t *m = new int8_t[batch*out_h*out_w*out_channel];
+    //for(int i = 0; i < batch*out_h*out_w*out_channel; i++)
+    //  m[i] = (shared[i] > 0) ? 1 : -1;
+    ctx.lhs.importRegular(quantized_shared);
     gemmBitSerial(ctx);
 
     // Transpose
     for(int i = 0; i < batch*out_w*out_h; i++)
       for(int j = 0; j < FC; j++)
         output[i*FC+j] = ctx.res[j*(batch*out_w*out_h)+i];
+cout << getms() - s << endl;
 #else
     for(int i = 0; i < batch*out_h*out_w; i++) {
       bitset_outcol[i].clean();

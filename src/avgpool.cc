@@ -32,7 +32,7 @@ void AvgPool::init() {
 void AvgPool::print() {
 
   float umem = (float)(batch*C + batch*H*W*C)/(1024*1024);
-  printf("Avg \t %.2f \t %d x %d x %d \t %d x %d x %d \n",
+  printf("Avg \t %.2f \t %d x %d x %d \t\t %d x %d x %d \n",
                   umem, H, W, C, 1, 1, FC);
 
 	  

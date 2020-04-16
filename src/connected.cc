@@ -61,7 +61,7 @@ void Connected::print() {
 
   float umem = (float)(4*N*M + 4*M + 2*batch*N)/(1024*1024);
 
-  printf("Conn \t %.2f \t   %d  \t  %d  \n", umem, N, M);
+  printf("Conn \t %.2f \t 1 x 1 x %d \t\t 1 x 1 x %d  \n", umem, N, M);
 
 }
 

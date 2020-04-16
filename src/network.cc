@@ -4,6 +4,13 @@ using namespace std;
 Network::Network() {
 }
 
+Network::~Network() {
+
+  delete []shared;
+  if(quantized_shared)
+    delete []quantized_shared;
+}
+
 void Network::add(Layer* layer) {
   layers.push_back(layer); 
 }
@@ -29,9 +36,9 @@ void Network::initial(int batch, float _lr, bool use_adam) {
 
   // Create shared
 #ifdef GPU 
-  float *shared = malloc_gpu(max);
+  shared = malloc_gpu(max);
 #else
-  float *shared = new float[max];
+  shared = new float[max];
 #endif
 
   for(int i = 0; i < layers.size(); i++)
@@ -125,6 +132,7 @@ void Network::load(char *filename, int batch) {
 
       Convolution *conv = Convolution::load(token);
       conv->batch = batch;
+      conv->train_flag = false;
       conv->init();
       conv->runtime = true;
       if(conv->xnor) {
@@ -274,13 +282,16 @@ void Network::load(char *filename, int batch) {
       max = layers[i]->shared_size;
   }
 #ifdef GPU 
-  float *shared = malloc_gpu(max);
+  shared = malloc_gpu(max);
 #else
-  float *shared = new float[max];
+  shared = new float[max];
+  quantized_shared = new int8_t[max];
 #endif
 
-  for(int i = 0; i < layers.size(); i++)
+  for(int i = 0; i < layers.size(); i++) {
     layers[i]->shared = shared;
+    layers[i]->quantized_shared = quantized_shared;
+  }
 
   deploy();
 }
