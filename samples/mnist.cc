@@ -9,12 +9,12 @@ void MnistXnorNet(Network *network) {
   Convolution *conv1 = new Convolution(28, 28, 1, 5, 5, 32, 1, false);
   conv1->xnor = false;
   Activation *relu1 = new Activation(24*24*32, RELU);
-  Pooling *pool1 = new Pooling(24, 24, 32, 2, 2, 32, 2, false); 
+  MaxPool *pool1 = new MaxPool(24, 24, 32, 2, 2, 32, 2, false); 
 
   Batchnorm *bn1 = new Batchnorm(12*12*32);
   Convolution *conv2 = new Convolution(12, 12, 32, 5, 5, 64, 1, false);
   Activation *relu2 = new Activation(8*8*64, RELU);
-  Pooling *pool2 = new Pooling(8, 8, 64, 2, 2, 64, 2, false);
+  MaxPool *pool2 = new MaxPool(8, 8, 64, 2, 2, 64, 2, false);
 
   Batchnorm *bn2 = new Batchnorm(4*4*64);
   Convolution *conv3 = new Convolution(4, 4, 64, 4, 4, 512, 1, false);
@@ -46,13 +46,13 @@ void MnistNet(Network *network) {
   conv1->xnor = false;
   Batchnorm *bn1 = new Batchnorm(24*24*20);
   Activation *relu1 = new Activation(24*24*20, RELU);
-  Pooling *pool1 = new Pooling(24, 24, 20, 2, 2, 20, 2, false); 
+  MaxPool *pool1 = new MaxPool(24, 24, 20, 2, 2, 20, 2, false); 
 
   Convolution *conv2 = new Convolution(12, 12, 20, 5, 5, 50, 1, false);
   conv2->xnor = false;
   Batchnorm *bn2 = new Batchnorm(8*8*50);
   Activation *relu2 = new Activation(8*8*50, RELU);
-  Pooling *pool2 = new Pooling(8, 8, 50, 2, 2, 50, 2, false);
+  MaxPool *pool2 = new MaxPool(8, 8, 50, 2, 2, 50, 2, false);
 
   Convolution *conv3 = new Convolution(4, 4, 50, 4, 4, 500, 1, false);
   conv3->xnor = false;

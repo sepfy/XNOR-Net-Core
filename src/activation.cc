@@ -19,6 +19,12 @@ void SoftmaxWithCrossEntropy::init() {
 
 SoftmaxWithCrossEntropy::~SoftmaxWithCrossEntropy() {
 
+#ifdef GPU
+#else
+  delete []output;
+  delete []m_delta;
+#endif
+
 }    
 
 void SoftmaxWithCrossEntropy::print() {
@@ -81,21 +87,31 @@ Activation::Activation(int N, ACT act) {
 
 Activation::~Activation() {
 
+#ifdef GPU
+#else
+  delete []output;
+  if(train_flag) {
+    delete []m_delta;
+    delete []m_delta;
+  }
+#endif
+
+
 }
 
 void Activation::init() {
 
 #ifdef GPU
-	
   output = malloc_gpu(batch*N);
   m_delta = malloc_gpu(batch*N);
   cut = malloc_gpu(batch*N);
-   
 #else
   output = new float[batch*N];
-  m_delta = new float[batch*N];
-  cut = new float[batch*N];
-  memset(cut, 0, sizeof(float)*batch*N);
+  if(train_flag) {
+    m_delta = new float[batch*N];
+    cut = new float[batch*N];
+    memset(cut, 0, sizeof(float)*batch*N);
+  }
 #endif
 
 }

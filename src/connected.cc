@@ -35,23 +35,25 @@ void Connected::init() {
   weight = new float[N*M];
   bias   = new float[M];
   output = new float[batch*M];
-  grad_weight = new float[N*M];
-  grad_bias = new float[M];
-  m_delta = new float[batch*N];
-  // Adam optimizer 
-  m_weight = new float[N*M];
-  v_weight = new float[N*M];
-  m_bias = new float[M];
-  v_bias = new float[M];
 
-  random_normal(N*M, weight);
-  random_normal(M, bias);
+  if(train_flag) {
+    grad_weight = new float[N*M];
+    grad_bias = new float[M];
+    m_delta = new float[batch*N];
+    // Adam optimizer 
+    m_weight = new float[N*M];
+    v_weight = new float[N*M];
+    m_bias = new float[M];
+    v_bias = new float[M];
 
-  memset(m_weight, 0, N*M*sizeof(float));
-  memset(v_weight, 0, N*M*sizeof(float));
-  memset(m_bias, 0, M*sizeof(float));
-  memset(v_bias, 0, M*sizeof(float));
+    random_normal(N*M, weight);
+    random_normal(M, bias);
 
+    memset(m_weight, 0, N*M*sizeof(float));
+    memset(v_weight, 0, N*M*sizeof(float));
+    memset(m_bias, 0, M*sizeof(float));
+    memset(v_bias, 0, M*sizeof(float));
+  }
 
 #endif
 

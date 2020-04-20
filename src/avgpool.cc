@@ -24,7 +24,8 @@ void AvgPool::init() {
   m_delta = malloc_gpu(batch*H*W*C);
 #else
   output = new float[batch*C];
-  m_delta = new float[batch*H*W*C];
+  if(train_flag)
+    m_delta = new float[batch*H*W*C];
 #endif
 
 }

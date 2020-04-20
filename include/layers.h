@@ -29,7 +29,7 @@ using namespace std;
 class Layer {
   public:
     int batch;
-    bool train_flag = true;
+    bool train_flag = false;
     float *input;
     float *output;
     float *m_delta;
@@ -220,7 +220,7 @@ class AvgPool : public Layer {
 };
 
 
-class Pooling : public Layer {
+class MaxPool : public Layer {
 
   public:
 
@@ -234,9 +234,9 @@ class Pooling : public Layer {
     float *grad_weight;
     float *delta_col;
     float *indexes;
-    Pooling(int W, int H, int C,
+    MaxPool(int W, int H, int C,
 	int FW, int FH, int FC, int stride, bool pad);
-    ~Pooling();
+    ~MaxPool();
     void init();
     void print();
     void forward();
@@ -244,7 +244,7 @@ class Pooling : public Layer {
     void update_gpu(update_args a);
     void update(update_args a);
     void save(fstream *file);
-    static Pooling* load(char *buf);
+    static MaxPool* load(char *buf);
 
 #ifdef GPU
     void forward_gpu();

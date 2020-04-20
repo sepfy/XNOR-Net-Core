@@ -21,13 +21,13 @@ void CifarXnorNet(Network *network) {
   conv1->xnor = false;
   Batchnorm *bn1 = new Batchnorm(28*28*20);
   Activation *actv1 = new Activation(28*28*20, LEAKY);
-  Pooling *pool1 = new Pooling(28, 28, 20, 2, 2, 20, 2, false);
+  MaxPool *pool1 = new MaxPool(28, 28, 20, 2, 2, 20, 2, false);
 
   Convolution *conv2 = new Convolution(14, 14, 20, 5, 5, 50, 1, false);
   conv2->xnor = false;
   Batchnorm *bn2 = new Batchnorm(10*10*50);
   Activation *actv2 = new Activation(10*10*50, LEAKY);
-  Pooling *pool2 = new Pooling(10, 10, 50, 2, 2, 50, 2, false);
+  MaxPool *pool2 = new MaxPool(10, 10, 50, 2, 2, 50, 2, false);
 
   Convolution *conv3 = new Convolution(5, 5, 50, 5, 5, 500, 1, false);
   conv3->xnor = false;
@@ -77,7 +77,7 @@ void CifarNet(Network *network) {
   Batchnorm *bn3 = new Batchnorm(32*32*128);
   Activation *actv3 = new Activation(32*32*128, LEAKY);
 
-  Pooling *pool1 = new Pooling(32, 32, 128, 2, 2, 128, 2, false);
+  MaxPool *pool1 = new MaxPool(32, 32, 128, 2, 2, 128, 2, false);
   Dropout *dropout1 = new Dropout(16*16*128, 0.5);
 
   Convolution *conv4 = new Convolution(16, 16, 128, 3, 3, 256, 1, 1);
@@ -95,7 +95,7 @@ void CifarNet(Network *network) {
   Batchnorm *bn6 = new Batchnorm(16*16*256);
   Activation *actv6 = new Activation(16*16*256, LEAKY);
 
-  Pooling *pool2 = new Pooling(16, 16, 256, 2, 2, 256, 2, false);
+  MaxPool *pool2 = new MaxPool(16, 16, 256, 2, 2, 256, 2, false);
 
   Dropout *dropout2 = new Dropout(8*8*256, 0.5);
 
@@ -209,7 +209,7 @@ void ResNet(Network *network) {
   Shortcut *shortcut2 = new Shortcut(32, 32, 64, 32, 32, 64, -6, actv3);
   Activation *actv5 = new Activation(32*32*64, LEAKY);
 
-  //Pooling *pool1 = new Pooling(32, 32, 64, 2, 2, 64, 2, false);
+  //MaxPool *pool1 = new MaxPool(32, 32, 64, 2, 2, 64, 2, false);
 
   // Residual Block 3
   Convolution *conv6 = new Convolution(32, 32, 64, 3, 3, 128, 2, 1);
@@ -235,7 +235,7 @@ void ResNet(Network *network) {
   Shortcut *shortcut4 = new Shortcut(16, 16, 128, 16, 16, 128, -6, actv7);
   Activation *actv9 = new Activation(16*16*128, LEAKY);
 
-  //Pooling *pool2 = new Pooling(16, 16, 128, 2, 2, 128, 2, false);
+  //MaxPool *pool2 = new MaxPool(16, 16, 128, 2, 2, 128, 2, false);
 
   // Residual Block 5
   Convolution *conv10 = new Convolution(16, 16, 128, 3, 3, 256, 2, 1);
@@ -261,7 +261,7 @@ void ResNet(Network *network) {
   Shortcut *shortcut6 = new Shortcut(8, 8, 256, 8, 8, 256, -6, actv11);
   Activation *actv13 = new Activation(8*8*256, LEAKY);
 
-  //Pooling *pool3 = new Pooling(8, 8, 256, 2, 2, 256, 2, false);
+  //MaxPool *pool3 = new MaxPool(8, 8, 256, 2, 2, 256, 2, false);
 
 
   // Residual Block 7

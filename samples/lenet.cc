@@ -19,13 +19,13 @@ void LeNet(Network *network) {
   conv1->xnor = false;
   Batchnorm *bn1 = new Batchnorm(28*28*20);
   Relu *relu1 = new Relu(28*28*20);
-  Pooling *pool1 = new Pooling(28, 28, 20, 2, 2, 20, 2, false);
+  MaxPool *pool1 = new MaxPool(28, 28, 20, 2, 2, 20, 2, false);
 
   Convolution *conv2 = new Convolution(14, 14, 20, 5, 5, 50, 1, false);
   conv2->xnor = false;
   Batchnorm *bn2 = new Batchnorm(10*10*50);
   Relu *relu2 = new Relu(10*10*50);
-  Pooling *pool2 = new Pooling(10, 10, 50, 2, 2, 50, 2, false);
+  MaxPool *pool2 = new MaxPool(10, 10, 50, 2, 2, 50, 2, false);
 
   Convolution *conv3 = new Convolution(5, 5, 50, 5, 5, 500, 1, false);
   conv3->xnor = false;

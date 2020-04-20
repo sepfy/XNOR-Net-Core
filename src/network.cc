@@ -2,6 +2,8 @@
 using namespace std; 
 
 Network::Network() {
+
+
 }
 
 Network::~Network() {
@@ -9,6 +11,7 @@ Network::~Network() {
   delete []shared;
   if(quantized_shared)
     delete []quantized_shared;
+
 }
 
 void Network::add(Layer* layer) {
@@ -22,6 +25,7 @@ void Network::initial(int batch, float _lr, bool use_adam) {
 
   size_t max = 0;
   for(int i = 0; i < layers.size(); i++) {
+    layers[i]->train_flag = true;
     layers[i]->batch = batch;
     layers[i]->init();
 
@@ -197,7 +201,7 @@ void Network::load(char *filename, int batch) {
 
     }
     else if(!strcmp(token, "Pooling")) {
-      Pooling *pool = Pooling::load(token);
+      MaxPool *pool = MaxPool::load(token);
       pool->batch = batch;
       pool->init();
       this->add(pool);
@@ -292,7 +296,7 @@ void Network::load(char *filename, int batch) {
     layers[i]->shared = shared;
     layers[i]->quantized_shared = quantized_shared;
   }
-
+  rfile.close();
   deploy();
 }
 

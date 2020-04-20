@@ -1,6 +1,6 @@
 #include "layers.h"
 
-Pooling::Pooling(int W, int H, int C,
+MaxPool::MaxPool(int W, int H, int C,
   int FW, int FH, int FC, int stride, bool pad) {
 
   this->W = W;
@@ -27,11 +27,11 @@ Pooling::Pooling(int W, int H, int C,
   out_channel = FW*FH*C;
 }
 
-Pooling::~Pooling() {
+MaxPool::~MaxPool() {
 
 }
 
-void Pooling::init() {
+void MaxPool::init() {
 
 #ifdef GPU
 
@@ -40,26 +40,24 @@ void Pooling::init() {
   indexes = malloc_gpu(batch*out_w*out_h*FC);
 
 #else
-  col = new float[out_w*out_h*out_channel];
   output = new float[batch*out_w*out_h*FC];
-  out_col = new float[out_w*out_h*out_channel*batch];
-  im = new float[H*W*C];
-  m_delta = new float[batch*H*W*C];
-  delta_col = new float[batch*out_channel*out_w*out_h];
-  indexes = new float[batch*out_w*out_h*FC];
+  if(train_flag) {
+    indexes = new float[batch*out_w*out_h*FC];
+    m_delta = new float[batch*H*W*C];
+  }
 #endif
 
 }
 
 
-void Pooling::print() {
+void MaxPool::print() {
 
   float umem = (float)(batch*out_w*out_h*FC*3)/(1024*1024);
   printf("Max \t %.2f \t %d x %d x %d \t %d x %d x %d \n",
                   umem, H, W, C, out_h, out_w, FC);
 }
 
-void Pooling::forward() {
+void MaxPool::forward() {
 
   int out_w = (W + 2*pad - FW)/stride + 1;
   int out_h = (H + 2*pad - FH)/stride + 1;
@@ -85,7 +83,8 @@ void Pooling::forward() {
 
           int out_idx = b*out_h*out_w*FC + i*out_w*FC + j*FC + k;
           output[out_idx] = max;
-          indexes[out_idx] = max_idx;
+	  if(train_flag)
+            indexes[out_idx] = max_idx;
 	}
       }
     }
@@ -93,7 +92,7 @@ void Pooling::forward() {
 
 }
 
-void Pooling::backward(float *delta) {
+void MaxPool::backward(float *delta) {
 
   for(int i = 0; i < out_w*out_h*FC*batch; i++) {
     int j = indexes[i];
@@ -123,10 +122,10 @@ void Pooling::backward(float *delta) {
   */  
 }
 
-void Pooling::update(update_args a) {
+void MaxPool::update(update_args a) {
 }
 
-void Pooling::save(fstream *file) {
+void MaxPool::save(fstream *file) {
   char buf[64] = {0};
   sprintf(buf, "Pooling,%d,%d,%d,%d,%d,%d,%d,%d",
     W, H, C, FW, FH, FC, stride, pad);
@@ -135,7 +134,7 @@ void Pooling::save(fstream *file) {
 }
 
 
-Pooling* Pooling::load(char* buf) {
+MaxPool* MaxPool::load(char* buf) {
 
   int para[8] = {0};
   int idx = 0;
@@ -149,7 +148,7 @@ Pooling* Pooling::load(char* buf) {
       break;
   }
 
-  Pooling *pool = new Pooling(para[0], para[1],
+  MaxPool *pool = new MaxPool(para[0], para[1],
   para[2], para[3], para[4], para[5], para[6], para[7]);
   return pool;
 }

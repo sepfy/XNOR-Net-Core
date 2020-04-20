@@ -75,10 +75,12 @@ void Batchnorm::init() {
   std = new float[N];
   running_mean = new float[N];
   running_var  = new float[N];
-  normal = new float[batch*N];
   gamma = new float[N];
   beta = new float[N];
   output = new float[batch*N];
+
+  if(!runtime)
+    normal = new float[batch*N];
 
   if(train_flag) {
     mean = new float[N];
