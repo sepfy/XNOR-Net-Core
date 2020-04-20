@@ -1,39 +1,5 @@
 #include "layers.h"
 
-#if 0
-Sigmoid::Sigmoid(int _N) {
-  N = _N;
-}
-
-Sigmoid::~Sigmoid() {
-
-}
-
-void Sigmoid::init() {
-  output = new float[batch*N];
-  m_delta = new float[batch*N];
-}
-
-void Sigmoid::forward() {
-  for(int i = 0; i < batch; i++) 
-    for(int j = 0; j < N; j++) 
-      output[i*N+j] = 1.0/(1.0 + exp(-1.0*(input[i*N+j])));
-}
-
-void Sigmoid::backward(float *delta) {
-  for(int i = 0; i < batch; i++) 
-    for(int j = 0; j < N; j++) 
-      m_delta[i*N+j] = delta[i*N+j]*(1.0 - output[i*N+j])*output[i*N+j];
-}
-
-void Sigmoid::update(update_args a) {
-
-}
-
-void Sigmoid::save(fstream *file) {
-
-}
-#endif
 
 SoftmaxWithCrossEntropy::SoftmaxWithCrossEntropy(int n) {
   N = n;
@@ -147,48 +113,72 @@ void Activation::forward() {
   switch(activation) {
     case RELU:
       relu_activate();
+      break;
     case LEAKY:
       leaky_activate();
+      break;
+    case SIGMD:
+      sigmoid_activate();
+      break;
   }
 
 }
 
 void Activation::relu_activate() {
 
-  for(int i = 0; i < batch; i++) 
-    for(int j = 0; j < N; j++) 
+  for(int i = 0; i < batch; i++)
+    for(int j = 0; j < N; j++)
       output[i*N+j] = (input[i*N+j] >= 0 ? input[i*N+j] : 0);
 }
 
 void Activation::leaky_activate() {
 
-  for(int i = 0; i < batch; i++) 
-    for(int j = 0; j < N; j++) 
+  for(int i = 0; i < batch; i++)
+    for(int j = 0; j < N; j++)
       output[i*N+j] = (input[i*N+j] >= 0 ? input[i*N+j] : 0.1*input[i*N+j]);
 }
+
+void Activation::sigmoid_activate() {
+
+  for(int i = 0; i < batch; i++)
+    for(int j = 0; j < N; j++)
+      output[i*N+j] = 1.0/(1.0 + exp(-1.0*(input[i*N+j])));
+}
+
 
 void Activation::backward(float *delta) {
 
   switch(activation) {
     case RELU:
       relu_backward(delta);
+      break;
     case LEAKY:
       leaky_backward(delta);
+      break;
+    case SIGMD:
+      sigmoid_backward(delta);
+      break;
   }
 
 }
 
 
 void Activation::relu_backward(float *delta) {
-  for(int i = 0; i < batch; i++) 
-    for(int j = 0; j < N; j++) 
+  for(int i = 0; i < batch; i++)
+    for(int j = 0; j < N; j++)
       m_delta[i*N+j] = (cut[i*N+j] + delta[i*N+j])*(input[i*N+j] >= 0);
 }
 
 void Activation::leaky_backward(float *delta) {
-  for(int i = 0; i < batch; i++) 
-    for(int j = 0; j < N; j++) 
+  for(int i = 0; i < batch; i++)
+    for(int j = 0; j < N; j++)
       m_delta[i*N+j] = (cut[i*N+j] + delta[i*N+j])*(input[i*N+j] >= 0 ? 1.0 : 0.1);
+}
+
+void Activation::sigmoid_backward(float *delta) {
+  for(int i = 0; i < batch; i++)
+    for(int j = 0; j < N; j++)
+      m_delta[i*N+j] = (cut[i*N+j] + delta[i*N+j])*(1.0 - output[i*N+j])*output[i*N+j];
 }
 
 void Activation::update(update_args a) {

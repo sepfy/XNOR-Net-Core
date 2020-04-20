@@ -200,22 +200,22 @@ void Convolution::binarize_input() {
     for(int i = 0; i < batch*out_w*out_h*out_channel; i++)
       shared[i] > 0 ? shared[i] = 1 : shared[i] = -1;
   }
-  else {
+/*  else {
     for(int i = 0; i < batch*out_w*out_h*out_channel; i++)
       quantized_shared[i] = (shared[i] > 0) ? 1 : -1;
   }
- 
+ */
 }
 
 void Convolution::forward_xnor() {
 
-  for(int i = 0; i < batch; i++)
-    im2col(W, H, C, FW, FH, FC, stride, pad,
-      input + i*im_size, shared+i*col_size);
-
-  binarize_input();
-
   if(!runtime) {
+
+    for(int i = 0; i < batch; i++)
+      im2col(W, H, C, FW, FH, FC, stride, pad,
+        input + i*im_size, shared+i*col_size);
+
+    binarize_input();
 
     binarize_weight();
     swap_weight();
@@ -224,11 +224,13 @@ void Convolution::forward_xnor() {
               shared, weight, output);
   }
   else {
+
+    for(int i = 0; i < batch; i++)
+      im2col_xnor(W, H, C, FW, FH, FC, stride, pad,
+        input + i*im_size, quantized_shared+i*col_size);
+
+    binarize_input();
 #ifdef GEMMBITSERIAL
-ms_t s = getms();
-    //int8_t *m = new int8_t[batch*out_h*out_w*out_channel];
-    //for(int i = 0; i < batch*out_h*out_w*out_channel; i++)
-    //  m[i] = (shared[i] > 0) ? 1 : -1;
     ctx.lhs.importRegular(quantized_shared);
     gemmBitSerial(ctx);
 
@@ -236,7 +238,6 @@ ms_t s = getms();
     for(int i = 0; i < batch*out_w*out_h; i++)
       for(int j = 0; j < FC; j++)
         output[i*FC+j] = ctx.res[j*(batch*out_w*out_h)+i];
-cout << getms() - s << endl;
 #else
     for(int i = 0; i < batch*out_h*out_w; i++) {
       bitset_outcol[i].clean();

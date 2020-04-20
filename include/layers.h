@@ -9,18 +9,21 @@
 #include <fstream>
 #include "binary.h"
 #include "optimizer.h"
-#ifdef GPU
-#include "gpu.h"
-#endif
 
 #define GEMMBITSERIAL
+#define XNOR_NET
 
+#ifdef GPU
+#include "gpu.h"
+#else
 #ifdef GEMMBITSERIAL
 #include "gemmbitserial.hpp"
 using namespace gemmbitserial;
 #endif
+#endif
 
-#define XNOR_NET
+
+
 using namespace std;
 
 class Layer {
@@ -84,20 +87,7 @@ class Connected : public Layer {
     static Connected* load(char *buf);
 
 };
-/*
-class Sigmoid: public Layer {
 
-  public:
-    int N;
-    Sigmoid(int _N);
-    ~Sigmoid();
-    void init();
-    void forward();
-    void backward(float *delta);
-    void update(update_args a);
-    void save(fstream *file);
-};
-*/
 class SoftmaxWithCrossEntropy : public Layer {
 
   public:
@@ -276,12 +266,13 @@ class Activation : public Layer {
     ACT activation;
     void relu_activate();
     void leaky_activate();
+    void sigmoid_activate();
     void relu_backward(float *delta);
     void leaky_backward(float *delta);
+    void sigmoid_backward(float *delta);
 
     int N;
     float *cut;
-    vector<int> mask;
     Activation(int N, ACT act);
     ~Activation();
     void init();

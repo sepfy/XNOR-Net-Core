@@ -17,7 +17,7 @@ ARCH= -gencode arch=compute_30,code=sm_30 \
 
 NVCC = /usr/local/cuda/bin/nvcc $(ARCH)
 
-CXXFLAGS = -O3 -std=c++11 -Wno-unused-result
+CXXFLAGS = -O3 -std=c++11 -Wno-unused-result -funroll-all-loops
 INCLUDE = -I ./include/ -I ./gemmbitserial/
 LIBS = -lm
 LIB = libxnnc.a
