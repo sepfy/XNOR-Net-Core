@@ -1,4 +1,4 @@
-#include "layers.h"
+#include "layer/avgpool.h"
 
 AvgPool::AvgPool(int W, int H, int C,
   int FW, int FH, int FC, int stride, bool pad) {
@@ -17,19 +17,6 @@ AvgPool::~AvgPool() {
 
 }
 
-void AvgPool::init() {
-
-#ifdef GPU
-  output = malloc_gpu(batch*C);
-  m_delta = malloc_gpu(batch*H*W*C);
-#else
-  output = new float[batch*C];
-  if(train_flag)
-    m_delta = new float[batch*H*W*C];
-#endif
-
-}
-
 void AvgPool::print() {
 
   float umem = (float)(batch*C + batch*H*W*C)/(1024*1024);
@@ -37,6 +24,16 @@ void AvgPool::print() {
                   umem, H, W, C, 1, 1, FC);
 
 	  
+}
+
+
+
+void AvgPool::init() {
+
+  output = new float[batch*C];
+  if(train_flag)
+    m_delta = new float[batch*H*W*C];
+
 }
 
 
@@ -76,7 +73,7 @@ void AvgPool::backward(float *delta) {
 void AvgPool::update(update_args a) {
 }
 
-void AvgPool::save(fstream *file) {
+void AvgPool::save(std::fstream *file) {
   char buf[64] = {0};
   sprintf(buf, "AvgPool,%d,%d,%d,%d,%d,%d,%d,%d",
     W, H, C, FW, FH, FC, stride, pad);

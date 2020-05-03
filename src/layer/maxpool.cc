@@ -1,4 +1,4 @@
-#include "layers.h"
+#include "layer/maxpool.h"
 
 MaxPool::MaxPool(int W, int H, int C,
   int FW, int FH, int FC, int stride, bool pad) {
@@ -30,32 +30,25 @@ MaxPool::MaxPool(int W, int H, int C,
 MaxPool::~MaxPool() {
 
 }
-
-void MaxPool::init() {
-
-#ifdef GPU
-
-  output = malloc_gpu(batch*out_w*out_h*FC);
-  m_delta = malloc_gpu(batch*H*W*C);
-  indexes = malloc_gpu(batch*out_w*out_h*FC);
-
-#else
-  output = new float[batch*out_w*out_h*FC];
-  if(train_flag) {
-    indexes = new float[batch*out_w*out_h*FC];
-    m_delta = new float[batch*H*W*C];
-  }
-#endif
-
-}
-
-
 void MaxPool::print() {
 
   float umem = (float)(batch*out_w*out_h*FC*3)/(1024*1024);
   printf("Max \t %.2f \t %d x %d x %d \t %d x %d x %d \n",
                   umem, H, W, C, out_h, out_w, FC);
 }
+
+#ifndef GPU
+void MaxPool::init() {
+
+  output = new float[batch*out_w*out_h*FC];
+  if(train_flag) {
+    indexes = new float[batch*out_w*out_h*FC];
+    m_delta = new float[batch*H*W*C];
+  }
+
+}
+
+
 
 void MaxPool::forward() {
 
@@ -98,34 +91,14 @@ void MaxPool::backward(float *delta) {
     int j = indexes[i];
     m_delta[j] = delta[i];
   }
-  /*
-  memset(delta_col, 0.0, batch*out_channel*out_w*out_h); 
-  for(int i = 0; i < out_w*out_h*C*batch; i++)
-    delta_col[max_seq[i]] = delta[i];
-    //m_delta[max_seq[i]] = delta[i];
-  //float
-  for(int i = 0; i < batch; i++) {
-    memcpy(col, delta_col + i*col_size, col_size*sizeof(float)); 
-    col2im(W, H, C, FW, FH, C, stride, pad, im, col);
-    memcpy(m_delta + i*im_size, im, im_size*sizeof(float));
-  }
- */
 
-/*
-#ifdef GPU
-  cudaFree(im);
-  cudaFree(col);
-#else
-  delete[] im;
-  delete[] col; 
-#endif
-  */  
 }
 
+#endif
 void MaxPool::update(update_args a) {
 }
 
-void MaxPool::save(fstream *file) {
+void MaxPool::save(std::fstream *file) {
   char buf[64] = {0};
   sprintf(buf, "Pooling,%d,%d,%d,%d,%d,%d,%d,%d",
     W, H, C, FW, FH, FC, stride, pad);

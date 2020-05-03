@@ -59,11 +59,7 @@ float* Network::inference(float *input) {
   layers[0]->input = input;
   for(int i = 0; i < layers.size(); i++) {
     //ms_t start = getms();   
-#ifdef GPU
-    layers[i]->forward_gpu();
-#else
     layers[i]->forward();
-#endif
     //cout << "layer: " << i << ", time = " << (getms()-start) << endl;
   }
   return layers[layers.size() - 1]->output;
@@ -75,11 +71,7 @@ void Network::train(float *Y) {
  
   for(int i = layers.size() - 1; i >= 0; i--) {
     //ms_t start = getms();
-#ifdef GPU
-    layers[i]->backward_gpu(delta);
-#else
     layers[i]->backward(delta);
-#endif
     delta = layers[i]->m_delta;
     //cout << "layer: " << i << ", time = " << (getms()-start) << endl;
   }

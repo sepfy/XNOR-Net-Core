@@ -1,4 +1,4 @@
-#include "layers.h"
+#include "gpu.h"
 
 /*
 __global__ void row_sum_gpu_kernel(float *A, float *B) {

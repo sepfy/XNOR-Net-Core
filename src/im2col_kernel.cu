@@ -1,4 +1,4 @@
-#include "layers.h"
+#include "layer.h"
 
 __global__ void im2col_gpu_kernel(int W, int H, int C, int FW, int FH, int FC,
             int stride, int pad, float *im, float *col, int size) {

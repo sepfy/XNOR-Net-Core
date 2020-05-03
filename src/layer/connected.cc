@@ -1,4 +1,4 @@
-#include "layers.h"
+#include "layer/connected.h"
 
 Connected::Connected(int n, int m) {
   N = n;
@@ -9,29 +9,17 @@ Connected::~Connected() {
 
 }
 
+void Connected::print() {
+
+  float umem = (float)(4*N*M + 4*M + 2*batch*N)/(1024*1024);
+
+  printf("Conn \t %.2f \t 1 x 1 x %d \t\t 1 x 1 x %d  \n", umem, N, M);
+
+}
+
+#ifndef GPU
 void Connected::init() {
 
-#ifdef GPU
-
-  output = malloc_gpu(batch*M);
-      
-  weight = malloc_gpu(N*M);
-  bias   = malloc_gpu(M);
-  grad_weight = malloc_gpu(N*M);
-  grad_bias = malloc_gpu(M);
-
-  m_delta = malloc_gpu(batch*N);
-
-  // Adam optimizer
-  m_weight = malloc_gpu(N*M);
-  v_weight = malloc_gpu(N*M);
-  m_bias = malloc_gpu(M);
-  v_bias = malloc_gpu(M);
-
-  random_normal_gpu(N*M, weight);
-  random_normal_gpu(M, bias);
-
-#else
   weight = new float[N*M];
   bias   = new float[M];
   output = new float[batch*M];
@@ -55,17 +43,8 @@ void Connected::init() {
     memset(v_bias, 0, M*sizeof(float));
   }
 
-#endif
-
 }
 
-void Connected::print() {
-
-  float umem = (float)(4*N*M + 4*M + 2*batch*N)/(1024*1024);
-
-  printf("Conn \t %.2f \t 1 x 1 x %d \t\t 1 x 1 x %d  \n", umem, N, M);
-
-}
 
 void Connected::bias_add() {
 
@@ -90,32 +69,12 @@ void Connected::backward(float *delta) {
 
 void Connected::update(update_args a) {
 
-#if GPU
-  axpy_gpu(N*M, a.decay, weight, grad_weight);
-  //axpy_gpu(M, a.decay, bias, grad_bias);
-
-  if(a.adam) {
-    adam_gpu(N*M, weight, grad_weight, m_weight, v_weight, a);
-    adam_gpu(M, bias, grad_bias, m_bias, v_bias, a);
-  }
-  else {
-    momentum_gpu(N*M, weight, grad_weight, v_weight, a);
-    momentum_gpu(M, bias, grad_bias, v_bias, a);
-  }
-#else
   adam_cpu(N*M, weight, grad_weight, m_weight, v_weight, a);
   adam_cpu(M, bias, grad_bias, m_bias, v_bias, a);
-#endif  
-
-#if 0
-  mat_scalar(N, M, grad_weight, lr, grad_weight);
-  mat_minus(N, M, weight, grad_weight, weight);
-  mat_scalar(1, M, grad_bias, lr, grad_bias);
-  mat_minus(1, M, bias, grad_bias, bias);
-#endif
 }
 
-void Connected::save(fstream *file) {
+#endif
+void Connected::save(std::fstream *file) {
 
   char buf[64] = {0};
   sprintf(buf, "Connected,%d,%d", N, M);

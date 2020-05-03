@@ -1,3 +1,5 @@
+#ifndef GEMM_H_
+#define GEMM_H_
 
 enum TRS {
   TRS_N,
@@ -21,4 +23,4 @@ void gemm_gpu(TRS TRS_A, TRS TRS_B,
               int M, int N, int P,
   float alpha, float *A, float *B, float *C);
 
-
+#endif //  GEMM_H_

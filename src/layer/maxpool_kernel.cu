@@ -1,4 +1,12 @@
-#include "layers.h"
+#include "layer/maxpool.h"
+
+void MaxPool::init() {
+
+  output = malloc_gpu(batch*out_w*out_h*FC);
+  m_delta = malloc_gpu(batch*H*W*C);
+  indexes = malloc_gpu(batch*out_w*out_h*FC);
+}
+
 
 __global__ void maxpool_forward_gpu_kernel(float *output, float *input, float *indexes, int H, int W, int C, int FH, int FW, int FC, int out_h, int out_w, int stride, int size) {
 
@@ -36,7 +44,7 @@ __global__ void maxpool_forward_gpu_kernel(float *output, float *input, float *i
 
 
 
-void MaxPool::forward_gpu() {
+void MaxPool::forward() {
 
   int out_w = (W + 2*pad - FW)/stride + 1;
   int out_h = (H + 2*pad - FH)/stride + 1;
@@ -54,7 +62,7 @@ __global__ void maxpool_backward_gpu_kernel(float *m_delta, float *delta, float 
     m_delta[j] = delta[i];
 }
 
-void MaxPool::backward_gpu(float *delta) {
+void MaxPool::backward(float *delta) {
 
   int size = out_w*out_h*FC*batch;
   maxpool_backward_gpu_kernel<<<default_grid(size), BLOCK>>>(m_delta, delta, indexes, size);

@@ -1,4 +1,4 @@
-#include "layers.h"
+#include "layer/shortcut.h"
 
 Shortcut::Shortcut(int iw, int ih, int ic, int ow, int oh, int oc,
 	int actv_idx, Activation *_activation) {
@@ -116,7 +116,7 @@ void Shortcut::backward(float *delta) {
 void Shortcut::update(update_args a) {
 }
 
-void Shortcut::save(fstream *file) {
+void Shortcut::save(std::fstream *file) {
   char buf[64] = {0};
   sprintf(buf, "Shortcut,%d,%d,%d,%d,%d,%d,%d", iw, ih, ic, 
     ow, oh, oc, actv_idx);

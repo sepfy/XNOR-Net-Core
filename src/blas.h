@@ -1,3 +1,6 @@
+#ifndef BLAS_H_
+#define BLAS_H_
+
 #include <math.h>
 void add(int N, int M, float *A, float *B, float *C);
 void row_sum(int N, int M, float *A, float *B);
@@ -21,3 +24,5 @@ void col_sum_gpu(int N, int M, float *A, float *B);
 void bias_add_gpu(float *output, float *bias, int batch, int size, int c);
 void elementwise_mul_gpu(float *A, float *B, float *C, int N);
 #endif
+
+#endif //  BLAS_H_

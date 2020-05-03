@@ -1,4 +1,4 @@
-#include "layers.h"
+#include "layer/batchnorm.h"
 
 Batchnorm::Batchnorm(int N) {
   this->N = N;
@@ -36,89 +36,6 @@ Batchnorm::~Batchnorm() {
 
 #endif
 }
-
-void Batchnorm::init() {
-
-
-#ifdef GPU
-  mean = malloc_gpu(N);
-
-  std = malloc_gpu(N);
-  var  = malloc_gpu(N);
-
-  running_mean = malloc_gpu(N);
-  running_var  = malloc_gpu(N);
-  normal = malloc_gpu(batch*N);
-  output = malloc_gpu(batch*N);
-  m_delta = malloc_gpu(batch*N);
-
-  xc = malloc_gpu(batch*N);
-  dxn = malloc_gpu(batch*N);
-  dxc = malloc_gpu(batch*N);
-  dvar = malloc_gpu(N);
-  dstd = malloc_gpu(N);
-  dmu = malloc_gpu(N);
-
-  dgamma = malloc_gpu(N);
-  dbeta = malloc_gpu(N);
-  gamma = malloc_gpu(N);
-  beta = malloc_gpu(N);
-  m_gamma = malloc_gpu(N);
-  m_beta = malloc_gpu(N);
-  v_gamma = malloc_gpu(N);
-  v_beta = malloc_gpu(N);
-
-  memset_gpu(gamma, 1.0, N);
-
-#else
-
-  std = new float[N];
-  running_mean = new float[N];
-  running_var  = new float[N];
-  gamma = new float[N];
-  beta = new float[N];
-  output = new float[batch*N];
-
-  if(!runtime)
-    normal = new float[batch*N];
-
-  if(train_flag) {
-    mean = new float[N];
-    var  = new float[N];
-    m_delta = new float[batch*N];
-    dxn = new float[batch*N];
-    dxc = new float[batch*N];
-    dvar = new float[N];
-    dstd = new float[N];
-    dmu = new float[N];
-
-    dgamma = new float[N];
-    dbeta = new float[N];
-    m_gamma = new float[N];
-    m_beta = new float[N];
-    v_gamma = new float[N];
-    v_beta = new float[N];
-
-    for(int i = 0; i < N; i++) {
-      gamma[i] = 1.0;
-      beta[i] = 0.0;
-
-      m_beta[i] = 0.0;
-      v_beta[i] = 0.0;
-      m_gamma[i] = 0.0;
-      m_gamma[i] = 0.0;
-
-      running_mean[i] = 0.0;
-      running_var[i] = 0.0;
-    }
-
-  }
-
-#endif
-
-
-}
-
 void Batchnorm::print() {
   float umem = (float)(15*N + 6*batch*N)/(1024*1024);
 
@@ -164,6 +81,57 @@ void Batchnorm::scale_and_shift() {
       output[i*N+j] = gamma[j]*normal[i*N+j] + beta[j];
 }
 
+#ifndef GPU
+
+void Batchnorm::init() {
+
+  std = new float[N];
+  running_mean = new float[N];
+  running_var  = new float[N];
+  gamma = new float[N];
+  beta = new float[N];
+  output = new float[batch*N];
+
+  if(!runtime)
+    normal = new float[batch*N];
+
+  if(train_flag) {
+    mean = new float[N];
+    var  = new float[N];
+    m_delta = new float[batch*N];
+    dxn = new float[batch*N];
+    dxc = new float[batch*N];
+    dvar = new float[N];
+    dstd = new float[N];
+    dmu = new float[N];
+
+    dgamma = new float[N];
+    dbeta = new float[N];
+    m_gamma = new float[N];
+    m_beta = new float[N];
+    v_gamma = new float[N];
+    v_beta = new float[N];
+
+    for(int i = 0; i < N; i++) {
+      gamma[i] = 1.0;
+      beta[i] = 0.0;
+
+      m_beta[i] = 0.0;
+      v_beta[i] = 0.0;
+      m_gamma[i] = 0.0;
+      m_gamma[i] = 0.0;
+
+      running_mean[i] = 0.0;
+      running_var[i] = 0.0;
+    }
+
+  }
+
+
+}
+
+
+
 void Batchnorm::forward() {
 
   if(train_flag) {
@@ -192,11 +160,6 @@ void Batchnorm::forward() {
 }
 
 void Batchnorm::backward(float *delta) {
-
-
-#ifdef GPU
-  backward_gpu(delta);
-#else
 
   memset(dbeta, 0 , N*sizeof(float));
   memset(dgamma, 0 , N*sizeof(float));
@@ -260,53 +223,18 @@ void Batchnorm::backward(float *delta) {
 
     }
   }
-#endif
 }
+
 
 void Batchnorm::update(update_args a) {
 
-
-#ifdef GPU
-
-  if(a.adam) {
-    adam_gpu(N, gamma, dgamma, m_gamma, v_gamma, a);
-    adam_gpu(N, beta, dbeta, m_beta, v_beta, a);
-  }
-  else {
-    momentum_gpu(N, gamma, dgamma, v_gamma, a);
-    momentum_gpu(N, beta, dbeta, v_beta, a);
-  }
-
-#else
   adam_cpu(N, gamma, dgamma, m_gamma, v_gamma, a);
   adam_cpu(N, beta, dbeta, m_beta, v_beta, a);
-#endif
-
-
-#if 0
-
-  float m_lr = a.lr * pow(1.0 - pow(a.beta2, a.iter), 0.5) / (1.0 - pow(a.beta1, a.iter));
-  for(int i = 0; i < N; i++) {
-    m_gamma[i] = (1 - a.beta1)*dgamma[i] + a.beta1*m_gamma[i];
-    v_gamma[i] = (1 - a.beta2)*pow(dgamma[i], 2.0) + a.beta2*v_gamma[i];
-    m_beta[i] = (1 - a.beta1)*dbeta[i] + a.beta1*m_beta[i];
-    v_beta[i] = (1 - a.beta2)*pow(dbeta[i], 2.0) + a.beta2*v_beta[i];
-  }
-
-  for(int i = 0; i < N; i++) {
-    gamma[i] -= m_lr * m_gamma[i]/(pow(v_gamma[i], 0.5) + a.epsilon);
-    beta[i] -= m_lr * m_beta[i]/(pow(v_beta[i], 0.5) + a.epsilon);
-  }
-
-  for(int i = 0; i < N; i++) {
-    gamma[i] -= lr*dgamma[i];
-    beta[i] -= lr*dbeta[i];
-  } 
-#endif
 
 }
+#endif
 
-void Batchnorm::save(fstream *file) {
+void Batchnorm::save(std::fstream *file) {
   char buf[64] = {0};
   sprintf(buf, "Batchnorm,%d", N);
   file->write(buf, sizeof(buf));

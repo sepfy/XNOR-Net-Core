@@ -1,4 +1,4 @@
-#include "layers.h"
+#include "layer/shortcut.h"
 
 
 __global__ void shortcut_forward_gpu_kernel(float *input, float *output, float *identity, int size,
@@ -29,7 +29,7 @@ __global__ void shortcut_forward_gpu_kernel(float *input, float *output, float *
 }
 
 
-void Shortcut::forward_gpu() {
+void Shortcut::forward() {
 
   size_t size = batch*oh*ow*oc;
   shortcut_forward_gpu_kernel<<<default_grid(size), BLOCK>>>(input, output, identity, size,
@@ -69,7 +69,7 @@ __global__ void shortcut_backward_gpu_kernel(float *delta, float *m_delta, float
 
 
 
-void Shortcut::backward_gpu(float *delta) {
+void Shortcut::backward(float *delta) {
 
   size_t size = batch*oh*ow*oc;
   shortcut_backward_gpu_kernel<<<default_grid(size), BLOCK>>>(delta, m_delta, activation->cut, size,

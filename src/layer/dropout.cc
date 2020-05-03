@@ -1,4 +1,4 @@
-#include "layers.h"
+#include "dropout.h"
 
 Dropout::Dropout(int N, float ratio) {
   this->N = N;
@@ -62,7 +62,7 @@ void Dropout::backward(float *delta) {
 void Dropout::update(update_args a) {
 }
 
-void Dropout::save(fstream *file) {
+void Dropout::save(std::fstream *file) {
   char buf[64] = {0};
   sprintf(buf, "Dropout,%d", N);
   //cout << buf << endl;

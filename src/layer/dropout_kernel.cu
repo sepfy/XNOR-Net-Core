@@ -1,4 +1,4 @@
-#include "layers.h"
+#include "layer/dropout.h"
 
 __global__ void dropout_forward_gpu_kernel(float *output, float *input, float *mask, float *prob, int ratio, int size) {
 
@@ -17,7 +17,7 @@ __global__ void dropout_copy_kernel(float *output, float *input, int size) {
 }
 
 
-void Dropout::forward_gpu() {
+void Dropout::forward() {
 
 
   if(train_flag) {
@@ -50,7 +50,7 @@ __global__ void dropout_backward_gpu_kernel(float *m_delta, float *delta, float 
   m_delta[index] = delta[index]*mask[index];
 }
 
-void Dropout::backward_gpu(float *delta) {
+void Dropout::backward(float *delta) {
     int size = batch*N;
     dropout_backward_gpu_kernel<<<default_grid(size), BLOCK>>>(m_delta, delta, mask, size);
 }

@@ -1,8 +1,29 @@
 #include <vector>
 #include <map>
-#include "layers.h"
 #include <fstream>
 #include <string>
+
+#include "layer.h"
+#include "layer/batchnorm.h"
+#include "layer/connected.h"
+#include "layer/convolution.h"
+#include "layer/activation.h"
+#include "layer/maxpool.h"
+#include "layer/avgpool.h"
+#include "layer/dropout.h"
+#include "layer/shortcut.h"
+#include "layer/softmax.h"
+#include "gemm.h"
+#include "blas.h"
+#include <stdlib.h>
+#include <stdio.h>
+#include "utils.h"
+#include <string.h>
+#include <fstream>
+#include "binary.h"
+#include "optimizer.h"
+
+
 using namespace std; 
 
 class Network {

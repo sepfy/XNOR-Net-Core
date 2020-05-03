@@ -1,5 +1,38 @@
-#include "layers.h"
+#include "layer/batchnorm.h"
 #include "blas.h"
+
+void Batchnorm::init() {
+
+  mean = malloc_gpu(N);
+
+  std = malloc_gpu(N);
+  var  = malloc_gpu(N);
+
+  running_mean = malloc_gpu(N);
+  running_var  = malloc_gpu(N);
+  normal = malloc_gpu(batch*N);
+  output = malloc_gpu(batch*N);
+  m_delta = malloc_gpu(batch*N);
+
+  xc = malloc_gpu(batch*N);
+  dxn = malloc_gpu(batch*N);
+  dxc = malloc_gpu(batch*N);
+  dvar = malloc_gpu(N);
+  dstd = malloc_gpu(N);
+  dmu = malloc_gpu(N);
+
+  dgamma = malloc_gpu(N);
+  dbeta = malloc_gpu(N);
+  gamma = malloc_gpu(N);
+  beta = malloc_gpu(N);
+  m_gamma = malloc_gpu(N);
+  m_beta = malloc_gpu(N);
+  v_gamma = malloc_gpu(N);
+  v_beta = malloc_gpu(N);
+
+  memset_gpu(gamma, 1.0, N);
+}
+
 
 __global__ void mean_gpu_kernel(float *input, float *mean, float batch, int N) {
 
@@ -111,7 +144,7 @@ void Batchnorm::scale_and_shift_gpu() {
 
 }
 
-void Batchnorm::forward_gpu() {
+void Batchnorm::forward() {
 
   get_mean_gpu();
   get_variance_gpu();
@@ -156,7 +189,7 @@ __global__ void calc_dxc2(float *dxc, float *input, float *mean, float *dvar, fl
   dxc[index] += (2.0/batch)*(input[index] - mean[j])*dvar[j];
 }
 
-void Batchnorm::backward_gpu(float *delta) {
+void Batchnorm::backward(float *delta) {
 
   col_sum_gpu(batch, N, delta, dbeta);
 
@@ -182,4 +215,15 @@ void Batchnorm::backward_gpu(float *delta) {
 
 }
 
+void Batchnorm::update(update_args a) {
+
+  if(a.adam) {
+    adam_gpu(N, gamma, dgamma, m_gamma, v_gamma, a);
+    adam_gpu(N, beta, dbeta, m_beta, v_beta, a);
+  }
+  else {
+    momentum_gpu(N, gamma, dgamma, v_gamma, a);
+    momentum_gpu(N, beta, dbeta, v_beta, a);
+  }
+}
 

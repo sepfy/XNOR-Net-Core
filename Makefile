@@ -6,7 +6,7 @@ OUTDIR = objs
 SRCDIR = src
 SAMPLE = samples
 
-SRC = $(wildcard $(SRCDIR)/*.cc)
+SRC = $(wildcard $(SRCDIR)/*.cc) $(wildcard $(SRCDIR)/layer/*.cc)
 OBJS = $(addsuffix .o, $(basename $(patsubst $(SRCDIR)/%,$(OUTDIR)/%,$(SRC))))
 
 ARCH= -gencode arch=compute_30,code=sm_30 \
@@ -18,7 +18,7 @@ ARCH= -gencode arch=compute_30,code=sm_30 \
 NVCC = /usr/local/cuda/bin/nvcc $(ARCH)
 
 CXXFLAGS = -O3 -std=c++11 -Wno-unused-result -funroll-all-loops
-INCLUDE = -I ./include/ -I ./gemmbitserial/
+INCLUDE = -I ./src/ -I ./gemmbitserial/
 LIBS = -lm
 LIB = libxnnc.a
 OPENCV = `pkg-config opencv --cflags --libs`
@@ -32,7 +32,7 @@ ifeq ($(USE_GPU), 1)
   MACRO += -D GPU
   LIBS += -L /usr/local/cuda/lib64 -lcublas -lcudart -lcurand
   INCLUDE += -I /usr/local/cuda/include/
-  CUDA_SRC = $(wildcard $(SRCDIR)/*.cu)
+  CUDA_SRC = $(wildcard $(SRCDIR)/*.cu) $(wildcard $(SRCDIR)/layer/*.cu)
   OBJS += $(addsuffix .o, $(basename $(patsubst $(SRCDIR)/%,$(OUTDIR)/%,$(CUDA_SRC))))
 endif
 
@@ -63,7 +63,7 @@ $(OUTDIR)/%.o: $(SRCDIR)/%.cu
 	$(NVCC) $(MACRO) $(INCLUDE) -c $< -o $@ 
 
 $(OUTDIR):
-	mkdir -p $(OUTDIR)
+	mkdir -p $(OUTDIR)/layer
 
 clean:
 	rm -rf $(SAMPLE)/mnist $(SAMPLE)/cifar $(SAMPLE)/lenet $(OUTDIR) libxnnc.a

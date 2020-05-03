@@ -1,7 +1,7 @@
-#include "layers.h"
-
-
-using namespace std;
+#include "layer/convolution.h"
+#include "utils.h"
+#include "blas.h"
+#include "gemm.h"
 
 Convolution::Convolution(int W, int H, int C,
   int FW, int FH, int FC, int stride, int pad) {
@@ -281,6 +281,7 @@ void Convolution::forward_full() {
 
 }
 
+#ifndef GPU
 void Convolution::forward() {
 
   if(xnor)
@@ -291,12 +292,6 @@ void Convolution::forward() {
   bias_add();
 }
 
-void Convolution::bias_add() {
-  for(int b = 0; b < batch; b++)
-    for(int i = 0; i < out_w*out_h; i++)
-        for(int j = 0; j < FC; j++)
-          output[b*out_w*out_h*FC + i*FC + j] += bias[j];
-}
 
 
 void Convolution::backward(float *delta) {
@@ -337,6 +332,14 @@ void Convolution::backward(float *delta) {
       m_delta + i*im_size, shared + i*col_size);
 
 }
+#endif
+
+void Convolution::bias_add() {
+  for(int b = 0; b < batch; b++)
+    for(int i = 0; i < out_w*out_h; i++)
+        for(int j = 0; j < FC; j++)
+          output[b*out_w*out_h*FC + i*FC + j] += bias[j];
+}
 
 void Convolution::update(update_args a) {
 
@@ -368,7 +371,7 @@ void Convolution::update(update_args a) {
 
 }
 
-void Convolution::save(fstream *file) {
+void Convolution::save(std::fstream *file) {
 
   char buf[64] = {0};
   sprintf(buf, "Convolution,%d,%d,%d,%d,%d,%d,%d,%d,%d", 

@@ -1,4 +1,11 @@
-#include "layers.h"
+#include "layer/avgpool.h"
+
+
+void AvgPool::init() {
+
+  output = malloc_gpu(batch*C);
+  m_delta = malloc_gpu(batch*H*W*C);
+}
 
 __global__ void avgpool_forward_gpu_kernel(float *output, float *input, int H, int W, int C) {
 
@@ -19,7 +26,7 @@ __global__ void avgpool_forward_gpu_kernel(float *output, float *input, int H, i
 
 
 
-void AvgPool::forward_gpu() {
+void AvgPool::forward() {
 
   avgpool_forward_gpu_kernel<<<batch, C>>>(output, input, H, W, C);
   check_error(cudaGetLastError());
@@ -44,7 +51,7 @@ __global__ void avgpool_backward_gpu_kernel(float *m_delta, float *delta, int H,
 }
 
 
-void AvgPool::backward_gpu(float *delta) {
+void AvgPool::backward(float *delta) {
 
   avgpool_backward_gpu_kernel<<<batch, C>>>(m_delta, delta, H, W, C);
   check_error(cudaGetLastError());

@@ -1,4 +1,7 @@
-#include "layers.h"
+#include "layer/convolution.h"
+#include "gemm.h"
+#include "utils.h"
+#include "blas.h"
 
 __global__ void binarize_input_gpu_kernel(float *input, int size) {
 
@@ -134,14 +137,14 @@ void Convolution::bias_add_gpu() {
   check_error(cudaGetLastError());
 }
 
-void Convolution::forward_gpu() {
+void Convolution::forward() {
   
   if(xnor) forward_xnor_gpu();
   else forward_full_gpu();
   bias_add_gpu();
 }
 
-void Convolution::backward_gpu(float *delta) {
+void Convolution::backward(float *delta) {
 
   for(int i = 0; i < batch; i++)
     im2col_gpu(W, H, C, FW, FH, FC, stride, pad,

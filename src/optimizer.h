@@ -1,3 +1,6 @@
+#ifndef OPTIMIZER_H_
+#define OPTIMIZER_H_
+
 #include <math.h>
 
 typedef struct UPDATE_ARGS {
@@ -21,3 +24,4 @@ void adam_gpu(int n, float *x, float *grad_x, float *m_x, float *v_x, update_arg
 void momentum_gpu(int n, float *x, float *grad_x, float *v_x, update_args a);
 #endif
 
+#endif

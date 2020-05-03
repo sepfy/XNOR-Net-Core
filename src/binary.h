@@ -1,3 +1,6 @@
+#ifndef BINARY_H_
+#define BINARY_H_
+
 #include <iostream>
 #include <random>
 #include <sys/time.h>
@@ -33,3 +36,5 @@ void bin_gemm(int M, int N, int P,
 void bin_gemm(int M, int N, int P,
   float alpha, float *A, float *B, float *C);
 
+
+#endif //  BINARY_H_
