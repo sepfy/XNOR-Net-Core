@@ -17,10 +17,10 @@ Batchnorm::~Batchnorm() {
   delete []beta;
   delete []output;
 
-  if(train_flag) {
+  if(train_flag_) {
     delete []mean;
     delete []var;
-    delete []m_delta;
+    delete []delta_;
     delete []dxn; 
     delete []dxc; 
     delete []dvar; 
@@ -36,7 +36,7 @@ Batchnorm::~Batchnorm() {
 
 #endif
 }
-void Batchnorm::print() {
+void Batchnorm::Print() {
   float umem = (float)(15*N + 6*batch*N)/(1024*1024);
 
   printf("BN \t %.2f\n", umem);
@@ -83,7 +83,7 @@ void Batchnorm::scale_and_shift() {
 
 #ifndef GPU
 
-void Batchnorm::init() {
+void Batchnorm::Init() {
 
   std = new float[N];
   running_mean = new float[N];
@@ -95,10 +95,10 @@ void Batchnorm::init() {
   if(!runtime)
     normal = new float[batch*N];
 
-  if(train_flag) {
+  if(train_flag_) {
     mean = new float[N];
     var  = new float[N];
-    m_delta = new float[batch*N];
+    delta_ = new float[batch*N];
     dxn = new float[batch*N];
     dxc = new float[batch*N];
     dvar = new float[N];
@@ -132,9 +132,9 @@ void Batchnorm::init() {
 
 
 
-void Batchnorm::forward() {
+void Batchnorm::Forward() {
 
-  if(train_flag) {
+  if(train_flag_) {
     get_mean();
     get_variance();
     normalize();
@@ -159,7 +159,7 @@ void Batchnorm::forward() {
 
 }
 
-void Batchnorm::backward(float *delta) {
+void Batchnorm::Backward(float *delta) {
 
   memset(dbeta, 0 , N*sizeof(float));
   memset(dgamma, 0 , N*sizeof(float));
@@ -219,14 +219,14 @@ void Batchnorm::backward(float *delta) {
   // Step 0
   for(int i = 0; i < batch; i++) {
     for(int j = 0; j < N; j++) {
-      m_delta[i*N+j] = dxc[i*N+j] - dmu[j]/(float)batch;
+      delta_[i*N+j] = dxc[i*N+j] - dmu[j]/(float)batch;
 
     }
   }
 }
 
 
-void Batchnorm::update(update_args a) {
+void Batchnorm::Update(UpdateArgs a) {
 
   adam_cpu(N, gamma, dgamma, m_gamma, v_gamma, a);
   adam_cpu(N, beta, dbeta, m_beta, v_beta, a);
@@ -234,7 +234,7 @@ void Batchnorm::update(update_args a) {
 }
 #endif
 
-void Batchnorm::save(std::fstream *file) {
+void Batchnorm::Save(std::fstream *file) {
   char buf[64] = {0};
   sprintf(buf, "Batchnorm,%d", N);
   file->write(buf, sizeof(buf));

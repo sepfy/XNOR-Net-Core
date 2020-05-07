@@ -1,9 +1,9 @@
 #include "layer/maxpool.h"
 
-void MaxPool::init() {
+void Maxpool::Init() {
 
   output = malloc_gpu(batch*out_w*out_h*FC);
-  m_delta = malloc_gpu(batch*H*W*C);
+  delta_ = malloc_gpu(batch*H*W*C);
   indexes = malloc_gpu(batch*out_w*out_h*FC);
 }
 
@@ -44,7 +44,7 @@ __global__ void maxpool_forward_gpu_kernel(float *output, float *input, float *i
 
 
 
-void MaxPool::forward() {
+void Maxpool::Forward() {
 
   int out_w = (W + 2*pad - FW)/stride + 1;
   int out_h = (H + 2*pad - FH)/stride + 1;
@@ -54,17 +54,17 @@ void MaxPool::forward() {
   check_error(cudaGetLastError());
 }
 
-__global__ void maxpool_backward_gpu_kernel(float *m_delta, float *delta, float *indexes, int size) {
+__global__ void maxpool_backward_gpu_kernel(float *delta_, float *delta, float *indexes, int size) {
     
     int i = blockIdx.x*blockDim.x + threadIdx.x;
     if(i > size) return;
     int j = indexes[i];
-    m_delta[j] = delta[i];
+    delta_[j] = delta[i];
 }
 
-void MaxPool::backward(float *delta) {
+void Maxpool::Backward(float *delta) {
 
   int size = out_w*out_h*FC*batch;
-  maxpool_backward_gpu_kernel<<<default_grid(size), BLOCK>>>(m_delta, delta, indexes, size);
+  maxpool_backward_gpu_kernel<<<default_grid(size), BLOCK>>>(delta_, delta, indexes, size);
   check_error(cudaGetLastError());
 }

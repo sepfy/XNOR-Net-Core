@@ -16,12 +16,11 @@ class Shortcut : public Layer {
     float *identity;
     Convolution *conv;
     Activation *activation;
-    void init();
-    void print();
-    void forward();
-    void backward(float *delta);
-    void update(update_args a);
-    void save(std::fstream *file);
+    void Init();
+    void Print();
+    void Forward();
+    void Backward(float *delta);
+    void Save(std::fstream *file);
     static Shortcut* load(char *buf);
 
 };

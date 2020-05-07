@@ -3,42 +3,36 @@
 
 #include "layer.h"
 
-enum ACT{
+enum ActivationType {
   RELU,
   LEAKY,
   SIGMD,
-  NUM_TYPE
 };
 
 class Activation : public Layer {
-  public:
-    
-    ACT activation;
-    void relu_activate();
-    void leaky_activate();
-    void sigmoid_activate();
-    void relu_backward(float *delta);
-    void leaky_backward(float *delta);
-    void sigmoid_backward(float *delta);
+ public:
+  Activation(int N, ActivationType activation_type) : N(N), activation_type_(activation_type) {};
+  ~Activation();
 
-    int N;
-    float *cut;
-    Activation(int N, ACT act);
-    ~Activation();
-    void init();
-    void print();
-    void forward();
-    void backward(float *delta);
-    void update(update_args a);
-    void save(std::fstream *file);
-    static Activation* load(char *buf);
+  ActivationType activation_type_;
+  int N;
+  float *cut;
+  void Init();
+  void Forward();
+  void Print();
+  void Backward(float *delta);
+  void Save(std::fstream *file);
+  static Activation* load(char *buf);
 
-#ifdef GPU
-    void relu_activate_gpu();
-    void leaky_activate_gpu();
-    void relu_backward_gpu(float *delta);
-    void leaky_backward_gpu(float *delta);
-#endif
+
+ private:
+  void relu_activate();
+  void leaky_activate();
+  void sigmoid_activate();
+  void relu_backward(float *delta);
+  void leaky_backward(float *delta);
+  void sigmoid_backward(float *delta);
+
 };
 
 #endif //  LAYER_ACTIVATION_H_

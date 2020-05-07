@@ -1,97 +1,84 @@
 #include "network.h"
 using namespace std; 
 
-Network::Network() {
-
-
+void Network::Add(Layer* layer) {
+  layers_.push_back(layer); 
 }
 
-Network::~Network() {
-
-  delete []shared;
-  if(quantized_shared)
-    delete []quantized_shared;
-
-}
-
-void Network::add(Layer* layer) {
-  layers.push_back(layer); 
-}
-
-void Network::initial(int batch, float _lr, bool use_adam) {
-  a.lr = _lr;
-  a.adam = use_adam;
+void Network::Init(int batch, float _lr, bool use_adam) {
+  update_args_.lr = _lr;
+  update_args_.adam = use_adam;
   //a.decay = 0.01;
 
   size_t max = 0;
-  for(int i = 0; i < layers.size(); i++) {
-    layers[i]->train_flag = true;
-    layers[i]->batch = batch;
-    layers[i]->init();
+  for(int i = 0; i < layers_.size(); i++) {
+    layers_[i]->train_flag_ = true;
+    layers_[i]->batch = batch;
+    layers_[i]->Init();
+    layers_[i]->Print();
 
-    layers[i]->print();
-
-    //cout << layers[i]->shared_size << endl;
-    if(layers[i]->shared_size > max)
-      max = layers[i]->shared_size;
+    //cout << layers_[i]->shared_size_ << endl;
+    if(layers_[i]->shared_size_ > max)
+      max = layers_[i]->shared_size_;
   }
 
   //cout << max/(1024*1024) << endl;
 
-  // Create shared
+  // Create shared_
 #ifdef GPU 
-  shared = malloc_gpu(max);
+  shared_ = malloc_gpu(max);
 #else
-  shared = new float[max];
+  shared_ = new float[max];
 #endif
 
-  for(int i = 0; i < layers.size(); i++)
-    layers[i]->shared = shared;
+  for(int i = 0; i < layers_.size(); i++)
+    layers_[i]->shared_ = shared_;
 
-  for(int i = 1; i < layers.size(); i++) {
-    layers[i]->input = layers[i-1]->output;
+  for(int i = 1; i < layers_.size(); i++) {
+    layers_[i]->input = layers_[i-1]->output;
   }
 
 }
 
 
-float* Network::inference(float *input) {
-  layers[0]->input = input;
-  for(int i = 0; i < layers.size(); i++) {
+void Network::Inference(float *input) {
+  layers_[0]->input = input;
+  for(int i = 0; i < layers_.size(); i++) {
     //ms_t start = getms();   
-    layers[i]->forward();
+    layers_[i]->Forward();
     //cout << "layer: " << i << ", time = " << (getms()-start) << endl;
   }
-  return layers[layers.size() - 1]->output;
+
+  output_ = layers_[layers_.size() - 1]->output;
 }
 
-void Network::train(float *Y) {
+void Network::Train(float *correct) {
 
-  float *delta = Y;
+  float *delta = correct;
  
-  for(int i = layers.size() - 1; i >= 0; i--) {
+  for(int i = layers_.size() - 1; i >= 0; i--) {
     //ms_t start = getms();
-    layers[i]->backward(delta);
-    delta = layers[i]->m_delta;
+    layers_[i]->Backward(delta);
+    delta = layers_[i]->delta_;
     //cout << "layer: " << i << ", time = " << (getms()-start) << endl;
   }
 
-  a.iter++;
-  for(int i = layers.size() - 1; i >= 0; i--) {
+  update_args_.iter++;
+  for(int i = layers_.size() - 1; i >= 0; i--) {
     //ms_t start = getms();   
-    layers[i]->update(a);
+    layers_[i]->Update(update_args_);
     //cout << "layer: " << i << ", time = " << (getms()-start) << endl;
   }
 } 
 
-void Network::deploy() {
-  for(int i = 0; i < layers.size(); i++) {
-    layers[i]->train_flag = false;
+void Network::Deploy() {
+  for(int i = 0; i < layers_.size(); i++) {
+    layers_[i]->train_flag_ = false;
   }
 
 }
 
-void Network::save(char *filename) {
+void Network::Save(char *filename) {
 
   fstream file;
   file.open(filename, ios::out);
@@ -100,13 +87,13 @@ void Network::save(char *filename) {
     exit(-1);
   }
 
-  for(int i = 0; i < layers.size(); i++) {
-    layers[i]->save(&file);
+  for(int i = 0; i < layers_.size(); i++) {
+    layers_[i]->Save(&file);
   }
   file.close();
 }
 
-void Network::load(char *filename, int batch) {
+void Network::Load(char *filename, int batch) {
 
   char buf[64] = {0};
   fstream rfile;
@@ -128,8 +115,8 @@ void Network::load(char *filename, int batch) {
 
       Convolution *conv = Convolution::load(token);
       conv->batch = batch;
-      conv->train_flag = false;
-      conv->init();
+      conv->train_flag_ = false;
+      conv->Init();
       conv->runtime = true;
       if(conv->xnor) {
 
@@ -166,14 +153,14 @@ void Network::load(char *filename, int batch) {
       rfile.read((char*)conv->bias, conv->bias_size*sizeof(float));
 #endif
 
-      this->add(conv); 
+      this->Add(conv); 
       //cout << conv->weight[0] << endl;
       //cout << conv->bias[0] << endl;
     }
     else if(!strcmp(token, "Connected")) {
       Connected *conn = Connected::load(token);
       conn->batch = batch;
-      conn->init();
+      conn->Init();
 
 #ifdef GPU
       float *weight_tmp = new float[conn->N*conn->M];
@@ -189,45 +176,45 @@ void Network::load(char *filename, int batch) {
       rfile.read((char*)conn->bias, conn->M*sizeof(float));
       //cout << conn->N << endl;
 #endif
-      this->add(conn); 
+      this->Add(conn); 
 
     }
     else if(!strcmp(token, "Pooling")) {
-      MaxPool *pool = MaxPool::load(token);
+      Maxpool *pool = Maxpool::load(token);
       pool->batch = batch;
-      pool->init();
-      this->add(pool);
+      pool->Init();
+      this->Add(pool);
       //cout << pool->FC << endl;
     }
-    else if(!strcmp(token, "AvgPool")) {
-      AvgPool *avgpool = AvgPool::load(token);
+    else if(!strcmp(token, "Avgpool")) {
+      Avgpool *avgpool = Avgpool::load(token);
       avgpool->batch = batch;
-      avgpool->init();
-      this->add(avgpool);
+      avgpool->Init();
+      this->Add(avgpool);
       //cout << pool->FC << endl;
     }
     else if(!strcmp(token, "Shortcut")) {
       Shortcut *shortcut = Shortcut::load(token);
       shortcut->batch = batch;
-      size_t l = layers.size();
-      //shortcut->conv = (Convolution*)(layers[l + shortcut->conv_idx]);
-      shortcut->activation = (Activation*)(layers[l + shortcut->actv_idx]);
-      shortcut->init();
-      this->add(shortcut);
+      size_t l = layers_.size();
+      //shortcut->conv = (Convolution*)(layers_[l + shortcut->conv_idx]);
+      shortcut->activation = (Activation*)(layers_[l + shortcut->actv_idx]);
+      shortcut->Init();
+      this->Add(shortcut);
       //cout << pool->FC << endl;
     }
     else if(!strcmp(token, "Activation")) {
       Activation *actv = Activation::load(token);
       actv->batch = batch;
-      actv->init(); 
-      this->add(actv);
+      actv->Init(); 
+      this->Add(actv);
       //cout << relu->N << endl;
     }
     else if(!strcmp(token, "Batchnorm")) {
       Batchnorm *bn = Batchnorm::load(token);
       bn->batch = batch;
-      bn->train_flag = false;
-      bn->init();
+      bn->train_flag_ = false;
+      bn->Init();
 #ifdef GPU
       float *mean_tmp = new float[bn->N];
       float *var_tmp = new float[bn->N];
@@ -254,41 +241,41 @@ void Network::load(char *filename, int batch) {
           bn->std[i] = pow(bn->running_var[i] + bn->epsilon, 0.5);
       bn->runtime = true;
 #endif
-      this->add(bn);
+      this->Add(bn);
       //cout << relu->N << endl;
     }
     else if(!strcmp(token, "Softmax")) {
       SoftmaxWithCrossEntropy *softmax = SoftmaxWithCrossEntropy::load(token);
       softmax->batch = batch;
-      softmax->init();
-      this->add(softmax);
+      softmax->Init();
+      this->Add(softmax);
       //cout << softmax->N << endl;
     }
 
   }
 
-  for(int i = 1; i < layers.size(); i++) {
-    this->layers[i]->input = layers[i-1]->output;
+  for(int i = 1; i < layers_.size(); i++) {
+    this->layers_[i]->input = layers_[i-1]->output;
   }
 
   size_t max = 0;
-  for(int i = 0; i < layers.size(); i++) {
-    layers[i]->print();
-    if(layers[i]->shared_size > max)
-      max = layers[i]->shared_size;
+  for(int i = 0; i < layers_.size(); i++) {
+    layers_[i]->Print();
+    if(layers_[i]->shared_size_ > max)
+      max = layers_[i]->shared_size_;
   }
 #ifdef GPU 
-  shared = malloc_gpu(max);
+  shared_ = malloc_gpu(max);
 #else
-  shared = new float[max];
-  quantized_shared = new int8_t[max];
+  shared_ = new float[max];
+  quantized_shared_ = new int8_t[max];
 #endif
 
-  for(int i = 0; i < layers.size(); i++) {
-    layers[i]->shared = shared;
-    layers[i]->quantized_shared = quantized_shared;
+  for(int i = 0; i < layers_.size(); i++) {
+    layers_[i]->shared_ = shared_;
+    layers_[i]->quantized_shared_ = quantized_shared_;
   }
   rfile.close();
-  deploy();
+  Deploy();
 }
 

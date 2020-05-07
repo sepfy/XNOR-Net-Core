@@ -30,7 +30,7 @@ void Convolution::binarize_input_gpu() {
   check_error(cudaGetLastError());
 
   size = batch*out_h*out_w*out_channel;
-  binarize_input_gpu_kernel<<<default_grid(size), BLOCK>>>(shared, size);
+  binarize_input_gpu_kernel<<<default_grid(size), BLOCK>>>(shared_, size);
   check_error(cudaGetLastError());
 
 }
@@ -86,12 +86,12 @@ void Convolution::forward_xnor_gpu() {
 
   for(int i = 0; i < batch; i++)
     im2col_gpu(W, H, C, FW, FH, FC, stride, pad,
-      input + i*im_size, shared+i*col_size);
+      input + i*im_size, shared_+i*col_size);
 
   binarize_input_gpu();
   
 
-  gemm_gpu(TRS_N, TRS_N, batch*out_h*out_w, FC, out_channel, 1, shared, weight, output);
+  gemm_gpu(TRS_N, TRS_N, batch*out_h*out_w, FC, out_channel, 1, shared_, weight, output);
 
 
   // Do K = A (*) k
@@ -109,9 +109,9 @@ void Convolution::forward_full_gpu() {
 
   for(int i = 0; i < batch; i++)
     im2col_gpu(W, H, C, FW, FH, FC, stride, pad,
-      input + i*im_size, shared+i*col_size);
+      input + i*im_size, shared_+i*col_size);
 
-  gemm_gpu(TRS_N, TRS_N, batch*out_h*out_w, FC, out_channel, 1, shared, weight, output);
+  gemm_gpu(TRS_N, TRS_N, batch*out_h*out_w, FC, out_channel, 1, shared_, weight, output);
 
 }
 
@@ -137,31 +137,31 @@ void Convolution::bias_add_gpu() {
   check_error(cudaGetLastError());
 }
 
-void Convolution::forward() {
+void Convolution::Forward() {
   
   if(xnor) forward_xnor_gpu();
   else forward_full_gpu();
   bias_add_gpu();
 }
 
-void Convolution::backward(float *delta) {
+void Convolution::Backward(float *delta) {
 
   for(int i = 0; i < batch; i++)
     im2col_gpu(W, H, C, FW, FH, FC, stride, pad,
-      input + i*im_size, shared+i*col_size);
+      input + i*im_size, shared_+i*col_size);
 
   gemm_gpu(TRS_T, TRS_N,
            out_channel, FC, out_h*out_w*batch, 1.0,
-           shared, delta, grad_weight);
+           shared_, delta, grad_weight);
   row_sum_gpu(batch*out_w*out_h, FC, delta, grad_bias);
 
   gemm_gpu(TRS_N, TRS_T,
        batch*out_w*out_h, out_channel, FC, 1.0,
-       delta, weight, shared);
+       delta, weight, shared_);
 
   for(int i = 0; i < batch; i++) {
     col2im_gpu(W, H, C, FW, FH, FC, stride, pad,
-      m_delta + i*im_size, shared  + i*col_size);
+      delta_ + i*im_size, shared_  + i*col_size);
   }
 }
 

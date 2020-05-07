@@ -3,7 +3,7 @@
 
 #include "layer.h"
 
-class AvgPool : public Layer {
+class Avgpool : public Layer {
 
   public:
 
@@ -17,16 +17,15 @@ class AvgPool : public Layer {
     float *grad_weight;
     float *delta_col;
     float *indexes;
-    AvgPool(int W, int H, int C,
+    Avgpool(int W, int H, int C,
 	int FW, int FH, int FC, int stride, bool pad);
-    ~AvgPool();
-    void init();
-    void print();
-    void forward();
-    void backward(float *delta);
-    void update(update_args a);
-    void save(std::fstream *file);
-    static AvgPool* load(char *buf);
+    ~Avgpool();
+    void Init();
+    void Print();
+    void Forward();
+    void Backward(float *delta);
+    void Save(std::fstream *file);
+    static Avgpool* load(char *buf);
 };
 
 #endif //  LAYER_AVGPOOL_H_

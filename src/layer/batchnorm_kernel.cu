@@ -1,7 +1,7 @@
 #include "layer/batchnorm.h"
 #include "blas.h"
 
-void Batchnorm::init() {
+void Batchnorm::Init() {
 
   mean = malloc_gpu(N);
 
@@ -12,7 +12,7 @@ void Batchnorm::init() {
   running_var  = malloc_gpu(N);
   normal = malloc_gpu(batch*N);
   output = malloc_gpu(batch*N);
-  m_delta = malloc_gpu(batch*N);
+  delta_ = malloc_gpu(batch*N);
 
   xc = malloc_gpu(batch*N);
   dxn = malloc_gpu(batch*N);
@@ -108,7 +108,7 @@ __global__ void get_running_variable(float momentum, float *running_x, float *x,
 
 void Batchnorm::normalize_gpu() {
 
-  if(train_flag) {
+  if(train_flag_) {
 
     normalize_gpu_kernel<<<N, batch>>>(normal, input, mean, var, epsilon);
     check_error(cudaGetLastError());
@@ -144,7 +144,7 @@ void Batchnorm::scale_and_shift_gpu() {
 
 }
 
-void Batchnorm::forward() {
+void Batchnorm::Forward() {
 
   get_mean_gpu();
   get_variance_gpu();
@@ -172,12 +172,12 @@ __global__ void cal_dvar_kernel(float *dvar, float *dstd, float *var, float epsi
 }
 
 
-__global__ void cal_mdelta_kernel(float *m_delta, float *dxc, float *dmu, float batch) {
+__global__ void cal_mdelta_kernel(float *delta_, float *dxc, float *dmu, float batch) {
 
 
   int j = blockIdx.x;
   int index = gridDim.x*threadIdx.x + blockIdx.x;
-  m_delta[index] = dxc[index] - dmu[j]/batch;
+  delta_[index] = dxc[index] - dmu[j]/batch;
 
 }
 
@@ -189,7 +189,7 @@ __global__ void calc_dxc2(float *dxc, float *input, float *mean, float *dvar, fl
   dxc[index] += (2.0/batch)*(input[index] - mean[j])*dvar[j];
 }
 
-void Batchnorm::backward(float *delta) {
+void Batchnorm::Backward(float *delta) {
 
   col_sum_gpu(batch, N, delta, dbeta);
 
@@ -210,12 +210,12 @@ void Batchnorm::backward(float *delta) {
 
   col_sum_gpu(batch, N, dxc, dmu);
 
-  cal_mdelta_kernel<<<N, batch>>>(m_delta, dxc, dmu, (float)batch);
+  cal_mdelta_kernel<<<N, batch>>>(delta_, dxc, dmu, (float)batch);
   check_error(cudaGetLastError());
 
 }
 
-void Batchnorm::update(update_args a) {
+void Batchnorm::Update(UpdateArgs a) {
 
   if(a.adam) {
     adam_gpu(N, gamma, dgamma, m_gamma, v_gamma, a);

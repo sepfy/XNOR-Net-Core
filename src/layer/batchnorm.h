@@ -24,12 +24,12 @@ class Batchnorm : public Layer {
     float beta2 = 0.999;
     Batchnorm(int N);
     ~Batchnorm();
-    void init();
-    void print();
-    void forward();
-    void backward(float *delta);
-    void update(update_args a);
-    void save(std::fstream *file);
+    void Init();
+    void Print();
+    void Forward();
+    void Backward(float *delta);
+    void Update(UpdateArgs a) override;
+    void Save(std::fstream *file);
     static Batchnorm* load(char *buf);
 
 

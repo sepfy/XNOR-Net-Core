@@ -1,4 +1,11 @@
-#include "activation.h"
+#include "layer/activation.h"
+
+void Activation::Init() {
+
+  output = malloc_gpu(batch*N);
+  delta_ = malloc_gpu(batch*N);
+  cut = malloc_gpu(batch*N);
+}
 
 __global__ void relu_activate_gpu_kernel(float *input, float *output, int size) {
 
@@ -8,7 +15,7 @@ __global__ void relu_activate_gpu_kernel(float *input, float *output, int size) 
   output[index] = input[index]*(input[index] >=0);
 }
 
-void Activation::relu_activate_gpu() {
+void Activation::relu_activate() {
 
   int grid = batch*((N-1)/256 + 1);
     
@@ -17,20 +24,20 @@ void Activation::relu_activate_gpu() {
 }
 
 
-__global__ void relu_backward_gpu_kernel(float *m_delta, float *delta, float *input, float *cut, int size) {
+__global__ void relu_backward_gpu_kernel(float *delta_, float *delta, float *input, float *cut, int size) {
 
   int index = blockIdx.x*blockDim.x + threadIdx.x;
   if( index > size)
     return;
-  m_delta[index] = (cut[index] + delta[index])*(input[index] >= 0);
+  delta_[index] = (cut[index] + delta[index])*(input[index] >= 0);
 }
 
 
 
-void Activation::relu_backward_gpu(float *delta) {
+void Activation::relu_backward(float *delta) {
 
   int grid = batch*((N-1)/256 + 1);
-  relu_backward_gpu_kernel<<<grid, 256>>>(m_delta, delta, input, cut, batch*N);
+  relu_backward_gpu_kernel<<<grid, 256>>>(delta_, delta, input, cut, batch*N);
   check_error(cudaGetLastError());
 }
 
@@ -43,47 +50,47 @@ __global__ void leaky_activate_gpu_kernel(float *input, float *output, int size)
   output[index] = (input[index] >= 0 ? input[index] : 0.1*input[index]);
 }
 
-void Activation::leaky_activate_gpu() {
+void Activation::leaky_activate() {
 
   leaky_activate_gpu_kernel<<<default_grid(batch*N), BLOCK>>>(input, output, batch*N);
   check_error(cudaGetLastError());
 }
 
 
-__global__ void leaky_backward_gpu_kernel(float *m_delta, float *delta, float *input, float *cut, int size) {
+__global__ void leaky_backward_gpu_kernel(float *delta_, float *delta, float *input, float *cut, int size) {
 
   int index = blockIdx.x*blockDim.x + threadIdx.x;
   if( index > size)
     return;
-  m_delta[index] = (cut[index] + delta[index])*(input[index] >= 0 ? 1.0 : 0.1);
+  delta_[index] = (cut[index] + delta[index])*(input[index] >= 0 ? 1.0 : 0.1);
 }
 
 
 
-void Activation::leaky_backward_gpu(float *delta) {
+void Activation::leaky_backward(float *delta) {
 
-  leaky_backward_gpu_kernel<<<default_grid(batch*N), BLOCK>>>(m_delta, delta, input, cut, batch*N);
+  leaky_backward_gpu_kernel<<<default_grid(batch*N), BLOCK>>>(delta_, delta, input, cut, batch*N);
   check_error(cudaGetLastError());
 }
 
 
-void Activation::forward() {
+void Activation::Forward() {
 
-   switch(activation) {
+   switch(activation_type_) {
     case RELU:
-      relu_activate_gpu();
+      relu_activate();
     case LEAKY:
-      leaky_activate_gpu();
+      leaky_activate();
   }
 }
 
-void Activation::backward(float *delta) {
+void Activation::Backward(float *delta) {
 
-  switch(activation) {
+  switch(activation_type_) {
     case RELU:
-      relu_backward_gpu(delta);
+      relu_backward(delta);
     case LEAKY:
-      leaky_backward_gpu(delta);
+      leaky_backward(delta);
   }
 }
 

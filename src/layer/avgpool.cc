@@ -1,6 +1,6 @@
 #include "layer/avgpool.h"
 
-AvgPool::AvgPool(int W, int H, int C,
+Avgpool::Avgpool(int W, int H, int C,
   int FW, int FH, int FC, int stride, bool pad) {
 
   this->W = W;
@@ -13,11 +13,8 @@ AvgPool::AvgPool(int W, int H, int C,
 
 }
 
-AvgPool::~AvgPool() {
 
-}
-
-void AvgPool::print() {
+void Avgpool::Print() {
 
   float umem = (float)(batch*C + batch*H*W*C)/(1024*1024);
   printf("Avg \t %.2f \t %d x %d x %d \t\t %d x %d x %d \n",
@@ -28,16 +25,16 @@ void AvgPool::print() {
 
 
 
-void AvgPool::init() {
+void Avgpool::Init() {
 
   output = new float[batch*C];
-  if(train_flag)
-    m_delta = new float[batch*H*W*C];
+  if(train_flag_)
+    delta_ = new float[batch*H*W*C];
 
 }
 
 
-void AvgPool::forward() {
+void Avgpool::Forward() {
 
   memset(output, 0, sizeof(float)*batch*C);
   for(int b = 0; b < batch; b++)
@@ -57,7 +54,7 @@ void AvgPool::forward() {
 
 }
 
-void AvgPool::backward(float *delta) {
+void Avgpool::Backward(float *delta) {
 
   for(int b = 0; b < batch; b++)
     for(int n = 0; n < H; n++)
@@ -65,24 +62,22 @@ void AvgPool::backward(float *delta) {
         for(int k = 0; k < C; k++) {
           int out_idx = b*C + k;
           int idx = b*H*W*C + n*W*C + m*C + k;
-	  m_delta[idx] = delta[out_idx]/(float)(H*W);
+	  delta_[idx] = delta[out_idx]/(float)(H*W);
         }
 
 }
 
-void AvgPool::update(update_args a) {
-}
 
-void AvgPool::save(std::fstream *file) {
+void Avgpool::Save(std::fstream *file) {
   char buf[64] = {0};
-  sprintf(buf, "AvgPool,%d,%d,%d,%d,%d,%d,%d,%d",
+  sprintf(buf, "Avgpool,%d,%d,%d,%d,%d,%d,%d,%d",
     W, H, C, FW, FH, FC, stride, pad);
   //cout << buf << endl;
   file->write(buf, sizeof(buf));
 }
 
 
-AvgPool* AvgPool::load(char* buf) {
+Avgpool* Avgpool::load(char* buf) {
 
   int para[8] = {0};
   int idx = 0;
@@ -96,7 +91,7 @@ AvgPool* AvgPool::load(char* buf) {
       break;
   }
 
-  AvgPool *pool = new AvgPool(para[0], para[1],
+  Avgpool *pool = new Avgpool(para[0], para[1],
   para[2], para[3], para[4], para[5], para[6], para[7]);
   return pool;
 }

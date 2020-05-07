@@ -18,23 +18,23 @@ __global__ void softmax_kernel(float *input, float *output, int N) {
 
 }
 
-void SoftmaxWithCrossEntropy::forward() {
+void SoftmaxWithCrossEntropy::Forward() {
 
   softmax_kernel<<<1, batch>>>(input, output, N);
   check_error(cudaGetLastError());
 }
 
-void SoftmaxWithCrossEntropy::backward(float *delta) {
+void SoftmaxWithCrossEntropy::Backward(float *delta) {
   float alpha = 1.0/(float)batch;
   size_t size = sizeof(float)*batch*N;
-  cudaError_t status = cudaMemset(m_delta, 0, size);
+  cudaError_t status = cudaMemset(delta_, 0, size);
   check_error(status);
 
-  cublasSaxpy(gpu_handle(), batch*N, &alpha, output, 1, m_delta, 1);
+  cublasSaxpy(gpu_handle(), batch*N, &alpha, output, 1, delta_, 1);
   check_error(cudaGetLastError());
 
   alpha = -1.0/(float)batch;
-  cublasSaxpy(gpu_handle(), batch*N, &alpha, delta, 1, m_delta, 1);
+  cublasSaxpy(gpu_handle(), batch*N, &alpha, delta, 1, delta_, 1);
   check_error(cudaGetLastError());
 }
 

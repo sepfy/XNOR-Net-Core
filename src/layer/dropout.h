@@ -11,13 +11,12 @@ class Dropout : public Layer {
     float ratio;
     Dropout(int N, float ratio);
     ~Dropout();
-    void init();
-    void print();
-    void forward();
+    void Init();
+    void Print();
+    void Forward();
 
-    void backward(float *delta);
-    void update(update_args a);
-    void save(std::fstream *file);
+    void Backward(float *delta);
+    void Save(std::fstream *file);
     static Dropout* load(char *buf);
 
 };

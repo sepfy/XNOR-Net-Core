@@ -12,7 +12,7 @@ using namespace cv;
 using namespace std;
 
 
-int load_images(char *dir, vector<Mat> *images) {
+int Load_images(char *dir, vector<Mat> *images) {
     
   struct dirent *dp;
   DIR *fd;
@@ -58,7 +58,7 @@ int read_data(const char *basedir, float *&inputs, float *&outputs) {
     char filedir[256] = {0};
     line[strlen(line)-1] = '\0';
     sprintf(filedir, "%s/%s", basedir, line);
-    int count = load_images(filedir, &images);
+    int count = Load_images(filedir, &images);
     counts.push_back(count);
     num_of_class++;
   }
@@ -110,12 +110,12 @@ void get_mini_batch(int n, int b, float *data, float *label, float *&batch_xs, f
 int main( int argc, char** argv )
 {
 
-  float *train_data, *train_label;
+  float .train_data, .train_label;
   float *test_data, *test_label;
-  int train_num, test_num;
-  train_num = read_data("FIRE-SMOKE-DATASET/Train", train_data, train_label);
+  int.train_num, test_num;
+ .train_num = read_data("FIRE-SMOKE-DATASET.train",.train_data,.train_label);
   //test_num = read_data("FIRE-SMOKE-DATASET/Test/", test_data, test_label);
-  cout << train_num << endl;
+  cout <<.train_num << endl;
 // ", " << test_num << endl;
 
 
@@ -177,56 +177,56 @@ int main( int argc, char** argv )
   SoftmaxWithCrossEntropy softmax(3);
 
   Network network;
-  network.add(&conv1);
-  network.add(&bn1);
-  network.add(&relu1);
-  network.add(&pool1);
+  network.Add(&conv1);
+  network.Add(&bn1);
+  network.Add(&relu1);
+  network.Add(&pool1);
 
-  network.add(&conv2_1);
-  network.add(&bn2_1);
-  network.add(&relu2_1);
+  network.Add(&conv2_1);
+  network.Add(&bn2_1);
+  network.Add(&relu2_1);
 
-  network.add(&conv2_2);
-  network.add(&bn2_2);
-  network.add(&relu2_2);
+  network.Add(&conv2_2);
+  network.Add(&bn2_2);
+  network.Add(&relu2_2);
 
-  network.add(&conv3_1);
-  network.add(&bn3_1);
-  network.add(&relu3_1);
+  network.Add(&conv3_1);
+  network.Add(&bn3_1);
+  network.Add(&relu3_1);
 
-  network.add(&conv3_2);
-  network.add(&bn3_2);
-  network.add(&relu3_2);
+  network.Add(&conv3_2);
+  network.Add(&bn3_2);
+  network.Add(&relu3_2);
 
-  network.add(&conv4_1);
-  network.add(&bn4_1);
-  network.add(&relu4_1);
+  network.Add(&conv4_1);
+  network.Add(&bn4_1);
+  network.Add(&relu4_1);
 
-  network.add(&conv4_2);
-  network.add(&bn4_2);
-  network.add(&relu4_2);
+  network.Add(&conv4_2);
+  network.Add(&bn4_2);
+  network.Add(&relu4_2);
 
-  network.add(&conv5_1);
-  network.add(&bn5_1);
-  network.add(&relu5_1);
+  network.Add(&conv5_1);
+  network.Add(&bn5_1);
+  network.Add(&relu5_1);
 
-  network.add(&conv5_2);
-  network.add(&bn5_2);
-  network.add(&relu5_2);
+  network.Add(&conv5_2);
+  network.Add(&bn5_2);
+  network.Add(&relu5_2);
 
-  network.add(&conn1);
-  network.add(&softmax);
+  network.Add(&conn1);
+  network.Add(&softmax);
 
-  network.initial(batch, 0.001);
+  network.Init(batch, 0.001);
   float *batch_xs, *batch_ys;
   batch_xs = new float[batch*224*224*3];
   batch_ys = new float[batch*3];
   for(int iter = 0; iter < max_iter; iter++) {
     ms_t start = getms();
-    int step = (iter*batch)%train_num;
-    get_mini_batch(train_num, batch, train_data, train_label, batch_xs, batch_ys);
+    int step = (iter*batch).train_num;
+    get_mini_batch.train_num, batch,.train_data,.train_label, batch_xs, batch_ys);
     
-    float *output = network.inference(batch_xs);
+    float *output = network.Inference(batch_xs);
     network.train(batch_ys);
 
     float loss = cross_entropy(batch, 3, output, batch_ys);
@@ -237,7 +237,7 @@ int main( int argc, char** argv )
     }
   }
 
-  network.save("tmp.net");
+  network.Save("tmp.net");
 
   return 0;
 }

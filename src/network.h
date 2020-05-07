@@ -23,23 +23,23 @@
 #include "binary.h"
 #include "optimizer.h"
 
-
-using namespace std; 
-
 class Network {
-  public:
-    vector<Layer*> layers;
-    float lr;
-    float *shared;
-    int8_t *quantized_shared;
-    update_args a;
-    Network();
-    ~Network();
-    void add(Layer* layer);
-    void initial(int batch, float _lr, bool use_adam);
-    float* inference(float *input);
-    void train(float *Y);
-    void save(char *filename);
-    void load(char *filename, int batch);
-    void deploy();
+ public:
+  Network() {};
+  ~Network() {};
+  void Add(Layer* layer);
+  void Init(int batch, float lr, bool use_adam);
+  void Save(char *filename);
+  void Load(char *filename, int batch);
+  void Deploy();
+  void Train(float *correct);
+  void Inference(float *input);
+  float* output() { return output_; }
+
+ private:
+  vector<Layer*> layers_;
+  UpdateArgs update_args_;
+  int8_t *quantized_shared_;
+  float *shared_;
+  float *output_;
 };

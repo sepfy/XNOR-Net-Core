@@ -25,13 +25,13 @@ class Connected : public Layer {
  
   Connected(int n, int m);
   ~Connected();
-  void init(); 
-  void print();
-  void forward();
+  void Init(); 
+  void Print();
+  void Forward();
   void bias_add();
-  void backward(float *delta);
-  void update(update_args a);
-  void save(std::fstream *file);
+  void Backward(float *delta);
+  void Update(UpdateArgs update_args) override;
+  void Save(std::fstream *file);
   static Connected* load(char *buf);
 
 };

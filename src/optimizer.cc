@@ -1,6 +1,6 @@
 #include "optimizer.h"
 
-void adam_cpu(int n, float *x, float *grad_x, float *m_x, float *v_x, update_args a) {
+void adam_cpu(int n, float *x, float *grad_x, float *m_x, float *v_x, UpdateArgs a) {
 
   float m_lr = a.lr * pow(1.0 - pow(a.beta2, a.iter), 0.5) / (1.0 - pow(a.beta1, a.iter));
   for(int i = 0; i < n; i++) {

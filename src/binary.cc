@@ -10,7 +10,7 @@ Bitset::~Bitset() {
   delete[] bits;
 }
 
-void Bitset::init(int input_size) {
+void Bitset::Init(int input_size) {
   BN = sizeof(BIT_BLK)*8;
   bitnum = input_size;
   offset = input_size%BN;
@@ -78,7 +78,7 @@ void bin_gemm(int M, int N, int P,
   Bitset *bB = new Bitset[N];
 
   for(int i = 0; i < M; i++) {
-    bA[i].init(P);
+    bA[i].Init(P);
     bA[i].set(A+i*P);
   }
 
@@ -88,7 +88,7 @@ void bin_gemm(int M, int N, int P,
       BB[i*P+j] = B[j*N+i];
 
   for(int i = 0; i < N; i++) {
-    bB[i].init(P);
+    bB[i].Init(P);
     bB[i].set(BB+i*P);
   }
 

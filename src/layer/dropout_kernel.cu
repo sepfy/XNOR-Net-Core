@@ -17,10 +17,10 @@ __global__ void dropout_copy_kernel(float *output, float *input, int size) {
 }
 
 
-void Dropout::forward() {
+void Dropout::Forward() {
 
 
-  if(train_flag) {
+  if(train_flag_) {
     srand(time(NULL));
 
     float *prob_tmp = new float[N*batch];
@@ -43,15 +43,15 @@ void Dropout::forward() {
 }
 
 
-__global__ void dropout_backward_gpu_kernel(float *m_delta, float *delta, float *mask, int size) {
+__global__ void dropout_backward_gpu_kernel(float *delta_, float *delta, float *mask, int size) {
 
   int index = blockIdx.x*blockDim.x + threadIdx.x;
   if(index >= size) return;
-  m_delta[index] = delta[index]*mask[index];
+  delta_[index] = delta[index]*mask[index];
 }
 
-void Dropout::backward(float *delta) {
+void Dropout::Backward(float *delta) {
     int size = batch*N;
-    dropout_backward_gpu_kernel<<<default_grid(size), BLOCK>>>(m_delta, delta, mask, size);
+    dropout_backward_gpu_kernel<<<default_grid(size), BLOCK>>>(delta_, delta, mask, size);
 }
 

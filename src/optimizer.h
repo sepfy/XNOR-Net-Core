@@ -15,13 +15,13 @@ typedef struct UPDATE_ARGS {
   bool adam = false;
   float decay = 0.0;
 
-} update_args;
+} UpdateArgs;
 
-void adam_cpu(int n, float *x, float *grad_x, float *m_x, float *v_x, update_args a);
+void adam_cpu(int n, float *x, float *grad_x, float *m_x, float *v_x, UpdateArgs a);
 
 #ifdef GPU
-void adam_gpu(int n, float *x, float *grad_x, float *m_x, float *v_x, update_args a);
-void momentum_gpu(int n, float *x, float *grad_x, float *v_x, update_args a);
+void adam_gpu(int n, float *x, float *grad_x, float *m_x, float *v_x, UpdateArgs a);
+void momentum_gpu(int n, float *x, float *grad_x, float *v_x, UpdateArgs a);
 #endif
 
 #endif

@@ -14,7 +14,7 @@ __global__ void adam_gpu_kernel(int n, float *x, float *grad_x, float *m_x, floa
 
 }
 
-void adam_gpu(int n, float *x, float *grad_x, float *m_x, float *v_x, update_args a) {
+void adam_gpu(int n, float *x, float *grad_x, float *m_x, float *v_x, UpdateArgs a) {
 
   float m_lr = a.lr * pow(1.0 - pow(a.beta2, a.iter), 0.5) / (1.0 - pow(a.beta1, a.iter));
   adam_gpu_kernel<<<default_grid(n), BLOCK>>>(n, x, grad_x, m_x, v_x, a.beta1, a.beta2, m_lr, a.epsilon);
@@ -36,7 +36,7 @@ __global__ void momentum_gpu_kernel(int n, float *x, float *grad_x, float *v_x, 
 
 
 
-void momentum_gpu(int n, float *x, float *grad_x, float *v_x, update_args a) {
+void momentum_gpu(int n, float *x, float *grad_x, float *v_x, UpdateArgs a) {
   
   momentum_gpu_kernel<<<default_grid(n), BLOCK>>>(n, x, grad_x, v_x, a.lr, a.momentum);
   check_error(cudaGetLastError());

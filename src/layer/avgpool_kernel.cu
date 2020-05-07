@@ -1,10 +1,10 @@
 #include "layer/avgpool.h"
 
 
-void AvgPool::init() {
+void Avgpool::Init() {
 
   output = malloc_gpu(batch*C);
-  m_delta = malloc_gpu(batch*H*W*C);
+  delta_ = malloc_gpu(batch*H*W*C);
 }
 
 __global__ void avgpool_forward_gpu_kernel(float *output, float *input, int H, int W, int C) {
@@ -26,14 +26,14 @@ __global__ void avgpool_forward_gpu_kernel(float *output, float *input, int H, i
 
 
 
-void AvgPool::forward() {
+void Avgpool::Forward() {
 
   avgpool_forward_gpu_kernel<<<batch, C>>>(output, input, H, W, C);
   check_error(cudaGetLastError());
 }
 
     
-__global__ void avgpool_backward_gpu_kernel(float *m_delta, float *delta, int H, int W, int C) {
+__global__ void avgpool_backward_gpu_kernel(float *delta_, float *delta, int H, int W, int C) {
 
 
   int b = blockIdx.x;
@@ -44,15 +44,15 @@ __global__ void avgpool_backward_gpu_kernel(float *m_delta, float *delta, int H,
   for(int n = 0; n < H; n++) {
     for(int m = 0; m < W; m++) {
       int idx = b*H*W*C + n*W*C + m*C + k;
-      m_delta[idx] = delta[out_idx]/(float)(H*W);
+      delta_[idx] = delta[out_idx]/(float)(H*W);
     }
   }
 
 }
 
 
-void AvgPool::backward(float *delta) {
+void Avgpool::Backward(float *delta) {
 
-  avgpool_backward_gpu_kernel<<<batch, C>>>(m_delta, delta, H, W, C);
+  avgpool_backward_gpu_kernel<<<batch, C>>>(delta_, delta, H, W, C);
   check_error(cudaGetLastError());
 }

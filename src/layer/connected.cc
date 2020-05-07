@@ -9,7 +9,7 @@ Connected::~Connected() {
 
 }
 
-void Connected::print() {
+void Connected::Print() {
 
   float umem = (float)(4*N*M + 4*M + 2*batch*N)/(1024*1024);
 
@@ -18,16 +18,16 @@ void Connected::print() {
 }
 
 #ifndef GPU
-void Connected::init() {
+void Connected::Init() {
 
   weight = new float[N*M];
   bias   = new float[M];
   output = new float[batch*M];
 
-  if(train_flag) {
+  if(train_flag_) {
     grad_weight = new float[N*M];
     grad_bias = new float[M];
-    m_delta = new float[batch*N];
+    delta_ = new float[batch*N];
     // Adam optimizer 
     m_weight = new float[N*M];
     v_weight = new float[N*M];
@@ -53,28 +53,28 @@ void Connected::bias_add() {
       output[i*M+j] += bias[j];
 }
 
-void Connected::forward() {  
+void Connected::Forward() {  
 
   gemm_cpu(TRS_N, TRS_N, batch, M, N, 1, input, weight, output);
   bias_add();
 }
 
-void Connected::backward(float *delta) {
+void Connected::Backward(float *delta) {
 
-  gemm_cpu(TRS_N, TRS_T, batch, N, M, 1.0, delta, weight, m_delta);
+  gemm_cpu(TRS_N, TRS_T, batch, N, M, 1.0, delta, weight, delta_);
   gemm_cpu(TRS_T, TRS_N, N, M, batch, 1.0, input, delta, grad_weight);
   row_sum(batch, M, delta, grad_bias);
 
 }
 
-void Connected::update(update_args a) {
+void Connected::Update(UpdateArgs update_args) {
 
-  adam_cpu(N*M, weight, grad_weight, m_weight, v_weight, a);
-  adam_cpu(M, bias, grad_bias, m_bias, v_bias, a);
+  adam_cpu(N*M, weight, grad_weight, m_weight, v_weight, update_args);
+  adam_cpu(M, bias, grad_bias, m_bias, v_bias, update_args);
 }
 
 #endif
-void Connected::save(std::fstream *file) {
+void Connected::Save(std::fstream *file) {
 
   char buf[64] = {0};
   sprintf(buf, "Connected,%d,%d", N, M);

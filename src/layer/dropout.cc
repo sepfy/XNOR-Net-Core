@@ -10,28 +10,28 @@ Dropout::~Dropout() {
 }
 
 
-void Dropout::init() {
+void Dropout::Init() {
 
 #ifdef GPU
   output = malloc_gpu(batch*N);
-  m_delta = malloc_gpu(batch*N);
+  delta_ = malloc_gpu(batch*N);
   mask = malloc_gpu(batch*N);
   prob = malloc_gpu(batch*N);
 #else	
   output = new float[batch*N];
-  m_delta = new float[batch*N];
+  delta_ = new float[batch*N];
   mask = new float[batch*N];
 #endif
 
 }
 
-void Dropout::print() {
+void Dropout::Print() {
   printf("Dropout\n");
 }
 
-void Dropout::forward() {
+void Dropout::Forward() {
 
-  if(train_flag) {
+  if(train_flag_) {
     srand(time(NULL));
     for(int i = 0; i < batch; i++) 
       for(int j = 0; j < N; j++) {
@@ -49,20 +49,18 @@ void Dropout::forward() {
       //output[i*N+j] = (input[i*N+j] >= 0 ? input[i*N+j] : 0);
 }
 
-void Dropout::backward(float *delta) {
+void Dropout::Backward(float *delta) {
 
   for(int i = 0; i < batch; i++) 
     for(int j = 0; j < N; j++)
-      m_delta[i*N+j] = delta[i*N+j]*mask[i*N+j];
+      delta_[i*N+j] = delta[i*N+j]*mask[i*N+j];
 
  
-      //m_delta[i*N+j] = delta[i*N+j]*(input[i*N+j] >= 0);
+      //delta_[i*N+j] = delta[i*N+j]*(input[i*N+j] >= 0);
 }
 
-void Dropout::update(update_args a) {
-}
 
-void Dropout::save(std::fstream *file) {
+void Dropout::Save(std::fstream *file) {
   char buf[64] = {0};
   sprintf(buf, "Dropout,%d", N);
   //cout << buf << endl;

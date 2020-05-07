@@ -23,7 +23,7 @@ class Bitset {
     int N, BN;
     Bitset(){}; 
     ~Bitset(); 
-    void init(int input_size);
+    void Init(int input_size);
     void clean();
     void set(float *inputs);
 };

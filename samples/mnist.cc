@@ -2,19 +2,19 @@
 
 #define LEARNING_RATE 1.0e-3
 #define BATCH 100
-#define MAX_ITER 25000
+#define MAX_ITER 30
 
 void MnistXnorNet(Network *network) {
 
   Convolution *conv1 = new Convolution(28, 28, 1, 5, 5, 32, 1, false);
   conv1->xnor = false;
   Activation *relu1 = new Activation(24*24*32, RELU);
-  MaxPool *pool1 = new MaxPool(24, 24, 32, 2, 2, 32, 2, false); 
+  Maxpool *pool1 = new Maxpool(24, 24, 32, 2, 2, 32, 2, false); 
 
   Batchnorm *bn1 = new Batchnorm(12*12*32);
   Convolution *conv2 = new Convolution(12, 12, 32, 5, 5, 64, 1, false);
   Activation *relu2 = new Activation(8*8*64, RELU);
-  MaxPool *pool2 = new MaxPool(8, 8, 64, 2, 2, 64, 2, false);
+  Maxpool *pool2 = new Maxpool(8, 8, 64, 2, 2, 64, 2, false);
 
   Batchnorm *bn2 = new Batchnorm(4*4*64);
   Convolution *conv3 = new Convolution(4, 4, 64, 4, 4, 512, 1, false);
@@ -24,18 +24,18 @@ void MnistXnorNet(Network *network) {
   Connected *conn1 = new Connected(512, 10);
   SoftmaxWithCrossEntropy *softmax = new SoftmaxWithCrossEntropy(10);
 
-  network->add(conv1);
-  network->add(relu1);
-  network->add(pool1);
-  network->add(bn1);
-  network->add(conv2);
-  network->add(relu2);
-  network->add(pool2);
-  network->add(bn2);
-  network->add(conv3);
-  network->add(relu3);
-  network->add(conn1);
-  network->add(softmax);
+  network->Add(conv1);
+  network->Add(relu1);
+  network->Add(pool1);
+  network->Add(bn1);
+  network->Add(conv2);
+  network->Add(relu2);
+  network->Add(pool2);
+  network->Add(bn2);
+  network->Add(conv3);
+  network->Add(relu3);
+  network->Add(conn1);
+  network->Add(softmax);
 
 }
 
@@ -46,13 +46,13 @@ void MnistNet(Network *network) {
   conv1->xnor = false;
   Batchnorm *bn1 = new Batchnorm(24*24*20);
   Activation *relu1 = new Activation(24*24*20, RELU);
-  MaxPool *pool1 = new MaxPool(24, 24, 20, 2, 2, 20, 2, false); 
+  Maxpool *pool1 = new Maxpool(24, 24, 20, 2, 2, 20, 2, false); 
 
   Convolution *conv2 = new Convolution(12, 12, 20, 5, 5, 50, 1, false);
   conv2->xnor = false;
   Batchnorm *bn2 = new Batchnorm(8*8*50);
   Activation *relu2 = new Activation(8*8*50, RELU);
-  MaxPool *pool2 = new MaxPool(8, 8, 50, 2, 2, 50, 2, false);
+  Maxpool *pool2 = new Maxpool(8, 8, 50, 2, 2, 50, 2, false);
 
   Convolution *conv3 = new Convolution(4, 4, 50, 4, 4, 500, 1, false);
   conv3->xnor = false;
@@ -63,30 +63,30 @@ void MnistNet(Network *network) {
   Connected *conn = new Connected(500, 10);
   SoftmaxWithCrossEntropy *softmax = new SoftmaxWithCrossEntropy(10);
   
-  network->add(conv1);
-  network->add(bn1);
-  network->add(relu1);
-  network->add(pool1);
+  network->Add(conv1);
+  network->Add(bn1);
+  network->Add(relu1);
+  network->Add(pool1);
 
-  network->add(conv2);
-  network->add(bn2);
-  network->add(relu2);
-  network->add(pool2);
+  network->Add(conv2);
+  network->Add(bn2);
+  network->Add(relu2);
+  network->Add(pool2);
 
-  network->add(conv3);
-  network->add(bn3);
-  network->add(relu3);
+  network->Add(conv3);
+  network->Add(bn3);
+  network->Add(relu3);
 
-  network->add(dropout);
-  network->add(conn);
-  network->add(softmax);
+  network->Add(dropout);
+  network->Add(conn);
+  network->Add(softmax);
 
 }
 
 
 
 void help() {
-  cout << "Usage: ./mnist <train/deploy> <model name> <mnist dataset>" << endl;
+  cout << "Usage: ./mnist .train/Deploy> <model name> <mnist dataset>" << endl;
   exit(1);
 }
 
@@ -104,7 +104,7 @@ int main( int argc, char** argv ) {
 
     MnistXnorNet(&network);
     //MnistNet(&network);
-    network.initial(BATCH, LEARNING_RATE, true);
+    network.Init(BATCH, LEARNING_RATE, true);
 
 
 #ifdef GPU
@@ -128,9 +128,10 @@ int main( int argc, char** argv ) {
       int step = (iter*BATCH)%60000;
       float *batch_xs = train_data + step*IM_SIZE;
       float *batch_ys = train_label + step*CLASSES;
-      float *output = network.inference(batch_xs);
+      network.Inference(batch_xs);
+      float *output = network.output();
 
-      network.train(batch_ys);
+      network.Train(batch_ys);
       if(iter%10 == 0) {
         float loss = cross_entropy(BATCH, 10, output, batch_ys);
         cout << "iter = " << iter << ", time = " << (getms() - start) << "ms, loss = "
@@ -141,7 +142,7 @@ int main( int argc, char** argv ) {
  
     }
 
-    network.save(argv[2]);
+    network.Save(argv[2]);
 #ifdef GPU
     cudaFree(train_data);
     cudaFree(train_label);
@@ -151,7 +152,7 @@ int main( int argc, char** argv ) {
 #endif
   }
   else if(strcmp(argv[1], "deploy") == 0) {
-    network.load(argv[2], BATCH);
+    network.Load(argv[2], BATCH);
   }
   else {
     help();
@@ -180,7 +181,7 @@ int main( int argc, char** argv ) {
   float total = 0.0;
   int batch_num = 10000/BATCH;
 
-  network.deploy();
+  network.Deploy();
 
   ms_t start = getms();
   for(int iter = 0; iter < batch_num; iter++) {
@@ -188,7 +189,8 @@ int main( int argc, char** argv ) {
     int step = (iter*BATCH);
     float *batch_xs = test_data + step*IM_SIZE;
     float *batch_ys = test_label + step*CLASSES;
-    float *output = network.inference(batch_xs);
+    network.Inference(batch_xs);
+    float *output = network.output();
     total += accuracy(BATCH, CLASSES, output, batch_ys);
   }
   cout << "Validate set error = " << (total/batch_num)*100 

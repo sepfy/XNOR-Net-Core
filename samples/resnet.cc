@@ -22,7 +22,7 @@ void TinyResnetXnor(Network *network) {
   Batchnorm *bn1 = new Batchnorm(112*112*32);
   Activation *actv1 = new Activation(112*112*32, LEAKY);
 
-  MaxPool *pool1 = new MaxPool(112, 112, 32, 2, 2, 32, 2, false);
+  Maxpool *pool1 = new Maxpool(112, 112, 32, 2, 2, 32, 2, false);
 
   Batchnorm *bn2 = new Batchnorm(56*56*32);
   Convolution *conv2 = new Convolution(56, 56, 32, 3, 3, 64, 1, 1);
@@ -48,44 +48,44 @@ void TinyResnetXnor(Network *network) {
   Batchnorm *bn9 = new Batchnorm(7*7*512);
   Convolution *conv9 = new Convolution(7, 7, 512, 3, 3, 512, 1, 1);
 
-  AvgPool *avgpool1 = new AvgPool(7, 7, 512, 7, 7, 512, 1, false);
+  Avgpool *avgpool1 = new Avgpool(7, 7, 512, 7, 7, 512, 1, false);
   Connected *conn1 = new Connected(512, 3);
   SoftmaxWithCrossEntropy *softmax = new SoftmaxWithCrossEntropy(3);
 
 
-  network->add(conv1);
-  network->add(bn1);
-  network->add(actv1);
+  network->Add(conv1);
+  network->Add(bn1);
+  network->Add(actv1);
 
-  network->add(pool1);
+  network->Add(pool1);
 
-  network->add(bn2);
-  network->add(conv2);
+  network->Add(bn2);
+  network->Add(conv2);
 
-  //network->add(bn3);
-  //network->add(conv3);
+  //network->Add(bn3);
+  //network->Add(conv3);
 
-  network->add(bn4);
-  network->add(conv4);
+  network->Add(bn4);
+  network->Add(conv4);
 
-  //network->add(bn5);
-  //network->add(conv5);
+  //network->Add(bn5);
+  //network->Add(conv5);
 
-  network->add(bn6);
-  network->add(conv6);
+  network->Add(bn6);
+  network->Add(conv6);
 
-  //network->add(bn7);
-  //network->add(conv7);
+  //network->Add(bn7);
+  //network->Add(conv7);
 
-  network->add(bn8);
-  network->add(conv8);
+  network->Add(bn8);
+  network->Add(conv8);
 
-  //network->add(bn9);
-  //network->add(conv9);
+  //network->Add(bn9);
+  //network->Add(conv9);
 
-  network->add(avgpool1);
-  network->add(conn1);
-  network->add(softmax);
+  network->Add(avgpool1);
+  network->Add(conn1);
+  network->Add(softmax);
 
 }
 
@@ -98,7 +98,7 @@ void ResnetXnor18(Network *network) {
   Batchnorm *bn1 = new Batchnorm(112*112*64);
   Activation *actv1 = new Activation(112*112*64, LEAKY);
 
-  MaxPool *pool1 = new MaxPool(112, 112, 64, 2, 2, 64, 2, false);
+  Maxpool *pool1 = new Maxpool(112, 112, 64, 2, 2, 64, 2, false);
 
   Batchnorm *bn2 = new Batchnorm(56*56*64);
   Convolution *conv2 = new Convolution(56, 56, 64, 3, 3, 64, 1, 1);
@@ -157,68 +157,68 @@ void ResnetXnor18(Network *network) {
   Convolution *conv17 = new Convolution(7, 7, 512, 3, 3, 512, 1, 1);
   //Shortcut *shortcut17 = new Shortcut(7, 7, 512, 7, 7,512, -6, actv15);
 
-  AvgPool *avgpool1 = new AvgPool(7, 7, 512, 7, 7, 512, 1, false);
+  Avgpool *avgpool1 = new Avgpool(7, 7, 512, 7, 7, 512, 1, false);
   Connected *conn1 = new Connected(512, 3);
   SoftmaxWithCrossEntropy *softmax = new SoftmaxWithCrossEntropy(3);
 
 
-  network->add(conv1);
-  network->add(bn1);
-  network->add(actv1);
+  network->Add(conv1);
+  network->Add(bn1);
+  network->Add(actv1);
 
-  network->add(pool1);
+  network->Add(pool1);
 
-  network->add(bn2);
-  network->add(conv2);
+  network->Add(bn2);
+  network->Add(conv2);
 
-  network->add(bn3);
-  network->add(conv3);
+  network->Add(bn3);
+  network->Add(conv3);
 
-  network->add(bn4);
-  network->add(conv4);
+  network->Add(bn4);
+  network->Add(conv4);
 
-  network->add(bn5);
-  network->add(conv5);
+  network->Add(bn5);
+  network->Add(conv5);
 
-  network->add(bn6);
-  network->add(conv6);
+  network->Add(bn6);
+  network->Add(conv6);
 
-  network->add(bn7);
-  network->add(conv7);
+  network->Add(bn7);
+  network->Add(conv7);
 
-  network->add(bn8);
-  network->add(conv8);
+  network->Add(bn8);
+  network->Add(conv8);
 
-  network->add(bn9);
-  network->add(conv9);
+  network->Add(bn9);
+  network->Add(conv9);
 
-  network->add(bn10);
-  network->add(conv10);
+  network->Add(bn10);
+  network->Add(conv10);
 
-  network->add(bn11);
-  network->add(conv11);
+  network->Add(bn11);
+  network->Add(conv11);
 
-  network->add(bn12);
-  network->add(conv12);
+  network->Add(bn12);
+  network->Add(conv12);
 
-  network->add(bn13);
-  network->add(conv13);
+  network->Add(bn13);
+  network->Add(conv13);
 
-  network->add(bn14);
-  network->add(conv14);
+  network->Add(bn14);
+  network->Add(conv14);
 
-  network->add(bn15);
-  network->add(conv15);
+  network->Add(bn15);
+  network->Add(conv15);
 
-  network->add(bn16);
-  network->add(conv16);
+  network->Add(bn16);
+  network->Add(conv16);
 
-  network->add(bn17);
-  network->add(conv17);
+  network->Add(bn17);
+  network->Add(conv17);
 
-  network->add(avgpool1);
-  network->add(conn1);
-  network->add(softmax);
+  network->Add(avgpool1);
+  network->Add(conn1);
+  network->Add(softmax);
 
 }
 
@@ -231,7 +231,7 @@ void Resnet18(Network *network) {
   Batchnorm *bn1 = new Batchnorm(112*112*64);
   Activation *actv1 = new Activation(112*112*64, LEAKY);
 
-  MaxPool *pool1 = new MaxPool(112, 112, 64, 2, 2, 64, 2, false);
+  Maxpool *pool1 = new Maxpool(112, 112, 64, 2, 2, 64, 2, false);
 
   Convolution *conv2 = new Convolution(56, 56, 64, 3, 3, 64, 1, 1);
   conv2->xnor = false;
@@ -321,92 +321,92 @@ void Resnet18(Network *network) {
   Shortcut *shortcut17 = new Shortcut(7, 7, 512, 7, 7,512, -6, actv15);
   Activation *actv17 = new Activation(7*7*512, LEAKY);
 
-  AvgPool *avgpool1 = new AvgPool(7, 7, 512, 7, 7, 512, 1, false);
+  Avgpool *avgpool1 = new Avgpool(7, 7, 512, 7, 7, 512, 1, false);
   Connected *conn1 = new Connected(512, 3);
   SoftmaxWithCrossEntropy *softmax = new SoftmaxWithCrossEntropy(3);
 
   
-  network->add(conv1);
-  network->add(bn1);
-  network->add(actv1);
+  network->Add(conv1);
+  network->Add(bn1);
+  network->Add(actv1);
 
-  network->add(pool1);
+  network->Add(pool1);
 
-  network->add(conv2);
-  network->add(bn2);
-  network->add(actv2);
+  network->Add(conv2);
+  network->Add(bn2);
+  network->Add(actv2);
 
-  network->add(conv3);
-  network->add(bn3);
-  network->add(actv3);
+  network->Add(conv3);
+  network->Add(bn3);
+  network->Add(actv3);
 
-  network->add(conv4);
-  network->add(bn4);
-  network->add(actv4);
+  network->Add(conv4);
+  network->Add(bn4);
+  network->Add(actv4);
 
-  network->add(conv5);
-  network->add(bn5);
-  network->add(shortcut5);
-  network->add(actv5);
+  network->Add(conv5);
+  network->Add(bn5);
+  network->Add(shortcut5);
+  network->Add(actv5);
 
-  network->add(conv6);
-  network->add(bn6);
-  network->add(actv6);
+  network->Add(conv6);
+  network->Add(bn6);
+  network->Add(actv6);
 
-  network->add(conv7);
-  network->add(bn7);
-  //network->add(shortcut7);
-  network->add(actv7);
+  network->Add(conv7);
+  network->Add(bn7);
+  //network->Add(shortcut7);
+  network->Add(actv7);
 
-  network->add(conv8);
-  network->add(bn8);
-  network->add(actv8);
+  network->Add(conv8);
+  network->Add(bn8);
+  network->Add(actv8);
 
-  network->add(conv9);
-  network->add(bn9);
-  network->add(shortcut9);
-  network->add(actv9);
+  network->Add(conv9);
+  network->Add(bn9);
+  network->Add(shortcut9);
+  network->Add(actv9);
 
 
-  network->add(conv10);
-  network->add(bn10);
-  network->add(actv10);
+  network->Add(conv10);
+  network->Add(bn10);
+  network->Add(actv10);
 
-  network->add(conv11);
-  network->add(bn11);
-  //network->add(shortcut11);
-  network->add(actv11);
+  network->Add(conv11);
+  network->Add(bn11);
+  //network->Add(shortcut11);
+  network->Add(actv11);
 
-  network->add(conv12);
-  network->add(bn12);
-  network->add(actv12);
+  network->Add(conv12);
+  network->Add(bn12);
+  network->Add(actv12);
 
-  network->add(conv13);
-  network->add(bn13);
-  network->add(shortcut13);
-  network->add(actv13);
+  network->Add(conv13);
+  network->Add(bn13);
+  network->Add(shortcut13);
+  network->Add(actv13);
 
-  network->add(conv14);
-  network->add(bn14);
-  network->add(actv14);
+  network->Add(conv14);
+  network->Add(bn14);
+  network->Add(actv14);
 
-  network->add(conv15);
-  network->add(bn15);
-  network->add(shortcut15);
-  network->add(actv15);
+  network->Add(conv15);
+  network->Add(bn15);
+  network->Add(shortcut15);
+  network->Add(actv15);
 
-  network->add(conv16);
-  network->add(bn16);
-  network->add(actv16);
+  network->Add(conv16);
+  network->Add(bn16);
+  network->Add(actv16);
 
-  network->add(conv17);
-  network->add(bn17);
-  //network->add(shortcut17);
-  network->add(actv17);
+  network->Add(conv17);
+  network->Add(bn17);
+  //network->Add(shortcut17);
+  network->Add(actv17);
 
-  network->add(avgpool1);
-  network->add(conn1);
-  network->add(softmax);
+  network->Add(avgpool1);
+  network->Add(conn1);
+  network->Add(softmax);
 
 }
 
@@ -424,13 +424,13 @@ int main( int argc, char** argv ) {
   if(strcmp(argv[1], "train") == 0) {
 
     TinyResnetXnor(&network);
-    network.initial(BATCH, LEARNING_RATE, true);
+    network.Init(BATCH, LEARNING_RATE, true);
 
     float *inputs, *outputs;
     char train_folder[64] = {0};
-    sprintf(train_folder, "%s/Train", argv[3]);
+    sprintf(train_folder, "%s/train", argv[3]);
     int n = read_data(train_folder, inputs, outputs);
-    cout << "Train set = " << n << endl;
+    cout << "train set = " << n << endl;
     //show_image(35, inputs, outputs);
     float *batch_xs;
     float *batch_ys;
@@ -452,9 +452,9 @@ int main( int argc, char** argv ) {
       batch_xs = inputs + step*IM_SIZE;
       batch_ys = outputs + step*NUM_OF_CLASS;
 #endif
-
-      float *output = network.inference(batch_xs);
-      network.train(batch_ys);
+      network.Inference(batch_xs);
+      float *output = network.output();
+      network.Train(batch_ys);
 
 
       float acc = accuracy(BATCH, NUM_OF_CLASS, output, batch_ys); 
@@ -467,7 +467,7 @@ int main( int argc, char** argv ) {
 
     }
 
-    network.save(argv[2]);
+    network.Save(argv[2]);
 #ifdef GPU
     cudaFree(batch_xs);
     cudaFree(batch_ys);
@@ -476,15 +476,16 @@ int main( int argc, char** argv ) {
     delete []outputs;
   }
   else if(strcmp(argv[1], "deploy") == 0) {
-    network.load(argv[2], BATCH);
+    network.Load(argv[2], BATCH);
   }
   else if(strcmp(argv[1], "eval") == 0) {
 
-    network.load(argv[2], 1);
+    network.Load(argv[2], 1);
     float *input = new float[IM_SIZE];
     eval_model(argv[3], input);
     ms_t start = getms();
-    float *output = network.inference(input);
+    network.Inference(input);
+    float *output = network.output();
     for(int i = 0; i < NUM_OF_CLASS; i++)
       cout << "Class " << i << ": " << output[i] << endl;
     cout << "time = " << (getms() - start) << endl;
@@ -515,7 +516,7 @@ int main( int argc, char** argv ) {
 
   float total = 0.0;
   ms_t start = getms();
-  network.deploy();
+  network.Deploy();
 
   for(int iter = 0; iter < batch_num; iter++) {
     int step = (iter*BATCH)%n;
@@ -528,7 +529,8 @@ int main( int argc, char** argv ) {
       batch_ys = test_label + step*NUM_OF_CLASS;
 #endif
 
-    float *output = network.inference(batch_xs);
+    network.Inference(batch_xs);
+    float *output = network.output();
     total += accuracy(BATCH, NUM_OF_CLASS, output, batch_ys); 
   }
 

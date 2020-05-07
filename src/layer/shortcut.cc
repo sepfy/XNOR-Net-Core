@@ -20,27 +20,27 @@ Shortcut::~Shortcut() {
 
 }
 
-void Shortcut::print() { 
+void Shortcut::Print() { 
 
   printf("Shortcut\t %d x %d x %d \t %d x %d x %d\n", iw, ih, ic, ow, oh, oc); 
 }
 
-void Shortcut::init() {
+void Shortcut::Init() {
 
 #ifdef GPU
   output = malloc_gpu(batch*oh*ow*oc);
-  m_delta = malloc_gpu(batch*oh*ow*oc);
+  delta_ = malloc_gpu(batch*oh*ow*oc);
   identity = activation->output;
  
 #else
   output = new float[batch*oh*ow*oc];
-  m_delta = new float[batch*oh*ow*oc];
+  delta_ = new float[batch*oh*ow*oc];
   identity = activation->output;
 #endif
 }
 
 
-void Shortcut::forward() {
+void Shortcut::Forward() {
 
   int sample = iw/ow;
   int stride = ic/oc;
@@ -75,7 +75,7 @@ void Shortcut::forward() {
 #endif
 }
 
-void Shortcut::backward(float *delta) {
+void Shortcut::Backward(float *delta) {
 
   int sample = iw/ow;
   int stride = ic/oc;
@@ -90,7 +90,7 @@ void Shortcut::backward(float *delta) {
         for(int k = 0; k < maxc; k++) {
           int out_idx = b*oh*ow*oc + i*ow*oc + j*oc + k;
           int idt_idx = b*ih*iw*ic + sample*i*iw*ic + sample*j*ic + k*stride;
-          m_delta[out_idx] = delta[out_idx];
+          delta_[out_idx] = delta[out_idx];
           activation->cut[idt_idx] = delta[out_idx];
         }
       }
@@ -104,7 +104,7 @@ void Shortcut::backward(float *delta) {
       for(int j = 0; j < ow; j++) {
         for(int k = 0; k < oc; k++) {
           int out_idx = b*oh*ow*oc + i*ow*oc + j*oc + k;
-          m_delta[out_idx] = delta[out_idx];
+          delta_[out_idx] = delta[out_idx];
           activation->cut[out_idx] = delta[out_idx];
         }
       }
@@ -113,10 +113,8 @@ void Shortcut::backward(float *delta) {
 */
 }
 
-void Shortcut::update(update_args a) {
-}
 
-void Shortcut::save(std::fstream *file) {
+void Shortcut::Save(std::fstream *file) {
   char buf[64] = {0};
   sprintf(buf, "Shortcut,%d,%d,%d,%d,%d,%d,%d", iw, ih, ic, 
     ow, oh, oc, actv_idx);

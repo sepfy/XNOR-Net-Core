@@ -44,18 +44,18 @@ class Convolution : public Layer {
     Convolution(int W, int H, int C,
 	int FW, int FH, int FC, int stride, int pad);
     ~Convolution();
-    void init();
-    void print();
+    void Init();
+    void Print();
     
     void bias_add();
     void forward_xnor();
     void forward_full();
     float* backward_xnor(float *delta);
     float* backward_full(float *delta);
-    void forward();
-    void backward(float *delta);
-    void update(update_args a);
-    void save(std::fstream *file);
+    void Forward();
+    void Backward(float *delta);
+    void Update(UpdateArgs update_args) override;
+    void Save(std::fstream *file);
     static Convolution* load(char *buf);
 
 #ifdef GPU

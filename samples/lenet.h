@@ -15,7 +15,7 @@ using namespace std;
 #define IM_SIZE 32*32*3
 #define NUM_OF_CLASS 10
 
-int load_images(char *dir, vector<Mat> *images) {
+int Load_images(char *dir, vector<Mat> *images) {
     
   struct dirent *dp;
   DIR *fd;
@@ -44,7 +44,7 @@ int load_images(char *dir, vector<Mat> *images) {
 }
 
 
-void load_classes(const char *dir, vector<string> *classes) {
+void Load_classes(const char *dir, vector<string> *classes) {
 
   struct dirent *dp;
   DIR *fd;
@@ -72,7 +72,7 @@ int read_data(const char *basedir, float *&inputs, float *&outputs) {
   size_t len = 0;
 
   vector<string> classes;
-  load_classes(basedir, &classes);
+  Load_classes(basedir, &classes);
   sort(classes.begin(), classes.end());
   vector<Mat> images;
   vector<int> counts;
@@ -81,7 +81,7 @@ int read_data(const char *basedir, float *&inputs, float *&outputs) {
     cout << "Class " << i << ": " << classes[i] << endl;
     char filedir[256] = {0};
     sprintf(filedir, "%s/%s", basedir, classes[i].c_str());
-    int count = load_images(filedir, &images);
+    int count = Load_images(filedir, &images);
     counts.push_back(count);
   }
   

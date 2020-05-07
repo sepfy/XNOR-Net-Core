@@ -13,24 +13,23 @@
 #include "gpu.h"
 #endif
 
-
 class Layer {
  public:
-  virtual void forward() = 0;
-  virtual void backward(float* delta) = 0;
-  virtual void update(update_args a) = 0;
-  virtual void init() = 0;
-  virtual void print() = 0;
-  virtual void save(std::fstream *file) = 0;
+  virtual void Init() = 0;
+  virtual void Print() = 0;
+  virtual void Forward() = 0;
+  virtual void Backward(float *delta) = 0;
+  virtual void Save(std::fstream *file) = 0;
+  virtual void Update(UpdateArgs update_args) {};
 
   int batch;
-  bool train_flag = false;
   float *input;
   float *output;
-  float *m_delta;
-  size_t shared_size = 0;
-  float *shared;
-  int8_t *quantized_shared;
+  bool train_flag_ = false;
+  float *delta_;
+  size_t shared_size_ = 0;
+  float *shared_;
+  int8_t *quantized_shared_;
 };
 
 #endif //  LAYER_H_

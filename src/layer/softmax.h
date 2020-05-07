@@ -10,12 +10,11 @@ class SoftmaxWithCrossEntropy : public Layer {
 
     SoftmaxWithCrossEntropy(int n);
     ~SoftmaxWithCrossEntropy();
-    void init();
-    void print();
-    void forward();
-    void backward(float *delta);
-    void update(update_args a);
-    void save(std::fstream *file);
+    void Init();
+    void Print();
+    void Forward();
+    void Backward(float *delta);
+    void Save(std::fstream *file);
     static SoftmaxWithCrossEntropy* load(char *buf);
 
 };

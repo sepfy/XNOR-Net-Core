@@ -30,7 +30,7 @@ void eval_model(char *filepath, float *input) {
 }
 
 
-int load_images(char *dir, vector<Mat> *images) {
+int Load_images(char *dir, vector<Mat> *images) {
     
   struct dirent *dp;
   DIR *fd;
@@ -87,7 +87,7 @@ void get_random_images(int n, float *inputs, float *outputs) {
 
 
 
-void load_classes(const char *dir, vector<string> *classes) {
+void Load_classes(const char *dir, vector<string> *classes) {
 
   struct dirent *dp;
   DIR *fd;
@@ -115,7 +115,7 @@ int read_data(const char *basedir, float *&inputs, float *&outputs) {
   size_t len = 0;
 
   vector<string> classes;
-  load_classes(basedir, &classes);
+  Load_classes(basedir, &classes);
   sort(classes.begin(), classes.end());
   vector<Mat> images;
   vector<int> counts;
@@ -124,7 +124,7 @@ int read_data(const char *basedir, float *&inputs, float *&outputs) {
     cout << "Class " << i << ": " << classes[i] << endl;
     char filedir[256] = {0};
     sprintf(filedir, "%s/%s", basedir, classes[i].c_str());
-    int count = load_images(filedir, &images);
+    int count = Load_images(filedir, &images);
     counts.push_back(count);
   }
   
