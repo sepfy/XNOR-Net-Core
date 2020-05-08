@@ -9,9 +9,33 @@
 using namespace gemmbitserial;
 #endif
 
+
+// Convolution layer
 class Convolution : public Layer {
 
-  public:
+ public:
+  Convolution(int W, int H, int C, int FW, int FH, int FC, int stride, int pad) :
+  W(W), H(H), C(C), FW(FW), FH(FH), FC(FC), stride(stride), pad(pad) {
+
+    out_w = (W + 2*pad - FW)/stride + 1;
+    out_h = (H + 2*pad - FH)/stride + 1;
+    out_channel = FW*FH*C;
+    col_size = out_w*out_h*out_channel;
+    im_size = H*W*C;
+    weight_size = out_channel*FC;
+    bias_size = FC;
+
+  }
+  ~Convolution();
+  void Init() override;
+  void Print() override;
+  void Forward() override;
+  void Backward(float *delta) override;
+  void Update(UpdateArgs update_args) override;
+  void Save(std::fstream *file) override;
+  static Convolution* load(char *buf);
+
+
     bool xnor = true;
     float *col;
     int FW, FH, FC;
@@ -41,22 +65,12 @@ class Convolution : public Layer {
     float iter = 0.0;
     float epsilon = 1.0e-7;
 
-    Convolution(int W, int H, int C,
-	int FW, int FH, int FC, int stride, int pad);
-    ~Convolution();
-    void Init();
-    void Print();
-    
+   
     void bias_add();
     void forward_xnor();
     void forward_full();
     float* backward_xnor(float *delta);
     float* backward_full(float *delta);
-    void Forward();
-    void Backward(float *delta);
-    void Update(UpdateArgs update_args) override;
-    void Save(std::fstream *file);
-    static Convolution* load(char *buf);
 
 #ifdef GPU
     void forward_full_gpu();

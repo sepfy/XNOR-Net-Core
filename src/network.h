@@ -27,7 +27,7 @@ class Network {
  public:
   Network() {};
   ~Network() {};
-  void Add(Layer* layer);
+  inline void Add(Layer* layer) { layers_.push_back(layer); }
   void Init(int batch, float lr, bool use_adam);
   void Save(char *filename);
   void Load(char *filename, int batch);

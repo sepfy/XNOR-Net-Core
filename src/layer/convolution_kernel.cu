@@ -3,6 +3,55 @@
 #include "utils.h"
 #include "blas.h"
 
+
+void Convolution::Init() {
+
+  output = malloc_gpu(batch*out_w*out_h*FC);
+  weight = malloc_gpu(out_channel*FC);
+  grad_weight = malloc_gpu(out_channel*FC);
+  bias = malloc_gpu(FC);
+  grad_bias = malloc_gpu(FC);
+  delta_ = malloc_gpu(batch*W*H*C);
+
+  // Adam optimizer
+  m_weight = malloc_gpu(out_channel*FC);
+  v_weight = malloc_gpu(out_channel*FC);
+  m_bias = malloc_gpu(FC);
+  v_bias = malloc_gpu(FC);
+
+  binary_weight = malloc_gpu(out_channel*FC);
+  avg_filter = malloc_gpu(batch*im_size);
+  avg_col = malloc_gpu(out_w*out_h*FW*FC*batch);
+  k_filter = malloc_gpu(FW*FH);
+  k_output = malloc_gpu(out_w*out_h*batch);
+
+  memset_gpu(k_filter, 1.0/(float)(FW*FH), FW*FH);
+  mean = malloc_gpu(FC);
+
+  random_normal_gpu(out_channel*FC, weight);
+  random_normal_gpu(FC, bias);
+
+  shared_size_ = out_w*out_h*out_channel*batch;
+  input_size = batch*im_size;
+
+  #ifdef GEMMBITSERIAL
+  ctx = allocGEMMContext(batch*out_h*out_w, out_channel, FC, 1, 1, 1, 1);
+#else
+  bitset_outcol = new Bitset[batch*out_h*out_w];
+  bitset_weight = new Bitset[FC];
+
+  for(int i = 0; i < batch*out_h*out_w; i++)
+    bitset_outcol[i].Init(out_channel);
+
+  for(int i = 0; i < FC; i++)
+    bitset_weight[i].Init(out_channel);
+#endif
+
+  shared_size_ = out_w*out_h*out_channel*batch;
+  input_size = batch*im_size;
+
+}
+
 __global__ void binarize_input_gpu_kernel(float *input, int size) {
 
   int i = blockDim.x*blockIdx.x + threadIdx.x;
@@ -165,3 +214,17 @@ void Convolution::Backward(float *delta) {
   }
 }
 
+void Convolution::Update(UpdateArgs update_args) {
+
+  axpy_gpu(out_channel*FC, update_args.decay, weight, grad_weight);
+  //axpy_gpu(FC, a.decay, bias, grad_bias);
+
+  if(update_args.adam) {
+    adam_gpu(out_channel*FC, weight, grad_weight, m_weight, v_weight, update_args);
+    adam_gpu(FC, bias, grad_bias, m_bias, v_bias, update_args);
+  }
+  else {
+    momentum_gpu(out_channel*FC, weight, grad_weight, v_weight, update_args);
+    momentum_gpu(FC, bias, grad_bias, v_bias, update_args);
+  }
+}

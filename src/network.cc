@@ -1,9 +1,4 @@
 #include "network.h"
-using namespace std; 
-
-void Network::Add(Layer* layer) {
-  layers_.push_back(layer); 
-}
 
 void Network::Init(int batch, float _lr, bool use_adam) {
   update_args_.lr = _lr;
@@ -40,42 +35,35 @@ void Network::Init(int batch, float _lr, bool use_adam) {
 
 }
 
-
 void Network::Inference(float *input) {
-  layers_[0]->input = input;
-  for(int i = 0; i < layers_.size(); i++) {
+
+  layers_.front()->input = input;
+  for(auto layer = layers_.begin(); layer != layers_.end(); ++layer) {
     //ms_t start = getms();   
-    layers_[i]->Forward();
+    (*layer)->Forward();
     //cout << "layer: " << i << ", time = " << (getms()-start) << endl;
   }
-
-  output_ = layers_[layers_.size() - 1]->output;
+  output_ = layers_.back()->output;
 }
 
 void Network::Train(float *correct) {
 
   float *delta = correct;
- 
-  for(int i = layers_.size() - 1; i >= 0; i--) {
+  update_args_.iter++;
+
+  for(auto layer = layers_.rbegin(); layer != layers_.rend(); ++layer) {
     //ms_t start = getms();
-    layers_[i]->Backward(delta);
-    delta = layers_[i]->delta_;
+    (*layer)->Backward(delta);
+    (*layer)->Update(update_args_);
+    delta = (*layer)->delta_;
     //cout << "layer: " << i << ", time = " << (getms()-start) << endl;
   }
 
-  update_args_.iter++;
-  for(int i = layers_.size() - 1; i >= 0; i--) {
-    //ms_t start = getms();   
-    layers_[i]->Update(update_args_);
-    //cout << "layer: " << i << ", time = " << (getms()-start) << endl;
-  }
 } 
 
 void Network::Deploy() {
-  for(int i = 0; i < layers_.size(); i++) {
-    layers_[i]->train_flag_ = false;
-  }
-
+  for(auto layer = layers_.begin(); layer != layers_.end(); ++layer)
+    (*layer)->train_flag_ = false;
 }
 
 void Network::Save(char *filename) {
@@ -87,7 +75,7 @@ void Network::Save(char *filename) {
     exit(-1);
   }
 
-  for(int i = 0; i < layers_.size(); i++) {
+  for(int i = 0; i < layers_.size(); i++) { 
     layers_[i]->Save(&file);
   }
   file.close();
@@ -163,17 +151,17 @@ void Network::Load(char *filename, int batch) {
       conn->Init();
 
 #ifdef GPU
-      float *weight_tmp = new float[conn->N*conn->M];
-      float *bias_tmp = new float[conn->M];
-      rfile.read((char*)weight_tmp, conn->N*conn->M*sizeof(float));
-      rfile.read((char*)bias_tmp, conn->M*sizeof(float));
-      gpu_push_array(conn->weight, weight_tmp, conn->N*conn->M);
-      gpu_push_array(conn->bias, bias_tmp, conn->M);
+      float *weight_tmp = new float[conn->n_*conn->m_];
+      float *bias_tmp = new float[conn->m_];
+      rfile.read((char*)weight_tmp, conn->n_*conn->m_*sizeof(float));
+      rfile.read((char*)bias_tmp, conn->m_*sizeof(float));
+      gpu_push_array(conn->weight, weight_tmp, conn->n_*conn->m_);
+      gpu_push_array(conn->bias, bias_tmp, conn->m_);
       delete []weight_tmp;
       delete []bias_tmp;
 #else
-      rfile.read((char*)conn->weight, conn->N*conn->M*sizeof(float));
-      rfile.read((char*)conn->bias, conn->M*sizeof(float));
+      rfile.read((char*)conn->weight, conn->n_*conn->m_*sizeof(float));
+      rfile.read((char*)conn->bias, conn->m_*sizeof(float));
       //cout << conn->N << endl;
 #endif
       this->Add(conn); 
@@ -216,28 +204,28 @@ void Network::Load(char *filename, int batch) {
       bn->train_flag_ = false;
       bn->Init();
 #ifdef GPU
-      float *mean_tmp = new float[bn->N];
-      float *var_tmp = new float[bn->N];
-      float *gamma_tmp = new float[bn->N];
-      float *beta_tmp = new float[bn->N];
-      rfile.read((char*)mean_tmp, bn->N*sizeof(float));
-      rfile.read((char*)var_tmp, bn->N*sizeof(float));
-      rfile.read((char*)gamma_tmp, bn->N*sizeof(float));
-      rfile.read((char*)beta_tmp, bn->N*sizeof(float));
-      gpu_push_array(bn->running_mean, mean_tmp, bn->N);
-      gpu_push_array(bn->running_var, var_tmp, bn->N);
-      gpu_push_array(bn->gamma, gamma_tmp, bn->N);
-      gpu_push_array(bn->beta, beta_tmp, bn->N);
+      float *mean_tmp = new float[bn->n_];
+      float *var_tmp = new float[bn->n_];
+      float *gamma_tmp = new float[bn->n_];
+      float *beta_tmp = new float[bn->n_];
+      rfile.read((char*)mean_tmp, bn->n_*sizeof(float));
+      rfile.read((char*)var_tmp, bn->n_*sizeof(float));
+      rfile.read((char*)gamma_tmp, bn->n_*sizeof(float));
+      rfile.read((char*)beta_tmp, bn->n_*sizeof(float));
+      gpu_push_array(bn->running_mean, mean_tmp, bn->n_);
+      gpu_push_array(bn->running_var, var_tmp, bn->n_);
+      gpu_push_array(bn->gamma, gamma_tmp, bn->n_);
+      gpu_push_array(bn->beta, beta_tmp, bn->n_);
       delete []mean_tmp;
       delete []var_tmp;
       delete []gamma_tmp;
       delete []beta_tmp;
 #else
-      rfile.read((char*)bn->running_mean, bn->N*sizeof(float));
-      rfile.read((char*)bn->running_var, bn->N*sizeof(float));
-      rfile.read((char*)bn->gamma, bn->N*sizeof(float));
-      rfile.read((char*)bn->beta, bn->N*sizeof(float));
-      for(int i = 0; i < bn->N; i++)
+      rfile.read((char*)bn->running_mean, bn->n_*sizeof(float));
+      rfile.read((char*)bn->running_var, bn->n_*sizeof(float));
+      rfile.read((char*)bn->gamma, bn->n_*sizeof(float));
+      rfile.read((char*)bn->beta, bn->n_*sizeof(float));
+      for(int i = 0; i < bn->n_; i++)
           bn->std[i] = pow(bn->running_var[i] + bn->epsilon, 0.5);
       bn->runtime = true;
 #endif

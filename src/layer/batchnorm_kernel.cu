@@ -3,56 +3,56 @@
 
 void Batchnorm::Init() {
 
-  mean = malloc_gpu(N);
+  mean = malloc_gpu(n_);
 
-  std = malloc_gpu(N);
-  var  = malloc_gpu(N);
+  std = malloc_gpu(n_);
+  var  = malloc_gpu(n_);
 
-  running_mean = malloc_gpu(N);
-  running_var  = malloc_gpu(N);
-  normal = malloc_gpu(batch*N);
-  output = malloc_gpu(batch*N);
-  delta_ = malloc_gpu(batch*N);
+  running_mean = malloc_gpu(n_);
+  running_var  = malloc_gpu(n_);
+  normal = malloc_gpu(batch*n_);
+  output = malloc_gpu(batch*n_);
+  delta_ = malloc_gpu(batch*n_);
 
-  xc = malloc_gpu(batch*N);
-  dxn = malloc_gpu(batch*N);
-  dxc = malloc_gpu(batch*N);
-  dvar = malloc_gpu(N);
-  dstd = malloc_gpu(N);
-  dmu = malloc_gpu(N);
+  xc = malloc_gpu(batch*n_);
+  dxn = malloc_gpu(batch*n_);
+  dxc = malloc_gpu(batch*n_);
+  dvar = malloc_gpu(n_);
+  dstd = malloc_gpu(n_);
+  dmu = malloc_gpu(n_);
 
-  dgamma = malloc_gpu(N);
-  dbeta = malloc_gpu(N);
-  gamma = malloc_gpu(N);
-  beta = malloc_gpu(N);
-  m_gamma = malloc_gpu(N);
-  m_beta = malloc_gpu(N);
-  v_gamma = malloc_gpu(N);
-  v_beta = malloc_gpu(N);
+  dgamma = malloc_gpu(n_);
+  dbeta = malloc_gpu(n_);
+  gamma = malloc_gpu(n_);
+  beta = malloc_gpu(n_);
+  m_gamma = malloc_gpu(n_);
+  m_beta = malloc_gpu(n_);
+  v_gamma = malloc_gpu(n_);
+  v_beta = malloc_gpu(n_);
 
-  memset_gpu(gamma, 1.0, N);
+  memset_gpu(gamma, 1.0, n_);
 }
 
 
-__global__ void mean_gpu_kernel(float *input, float *mean, float batch, int N) {
+__global__ void mean_gpu_kernel(float *input, float *mean, float batch, int n_) {
 
   int index = blockIdx.x*blockDim.x + threadIdx.x;
-  if(index >= N)
+  if(index >= n_)
     return;
   
   mean[index] = 0.0;
   int i;
   for(i = 0; i < batch; i++)
-    mean[index] += input[i*N + index];
+    mean[index] += input[i*n_ + index];
 
   mean[index] /= batch;
 
 }
 
 
-void Batchnorm::get_mean_gpu() {
+void Batchnorm::GetMean() {
 
-  mean_gpu_kernel<<<default_grid(N),BLOCK>>>(input, mean, batch, N);  
+  mean_gpu_kernel<<<default_grid(n_),BLOCK>>>(input, mean, batch, n_);  
   check_error(cudaGetLastError());
 
 }
@@ -65,10 +65,10 @@ __global__ void calc_xc(float *input, float *mean, float *xc) {
 }
 */
 
-__global__ void variance_gpu_kernel(float *input, float *mean, float *var, float batch, int N) {
+__global__ void variance_gpu_kernel(float *input, float *mean, float *var, float batch, int n_) {
 
   int index = blockIdx.x*blockDim.x + threadIdx.x;
-  if(index >= N)
+  if(index >= n_)
     return;
   
   var[index] = 0.0;
@@ -76,21 +76,21 @@ __global__ void variance_gpu_kernel(float *input, float *mean, float *var, float
 
   //xc[i] = (pow(input[i] - mean[j], 2.0));
   for(i = 0; i < batch; i++)
-    var[index] += pow(input[i*N + index] - mean[index], 2.0);
+    var[index] += pow(input[i*n_ + index] - mean[index], 2.0);
 
   var[index] /= batch;
 
 
 }
 
-void Batchnorm::get_variance_gpu() {
+void Batchnorm::GetVariance() {
 
-  variance_gpu_kernel<<<default_grid(N),BLOCK>>>(input, mean, var, batch, N);  
+  variance_gpu_kernel<<<default_grid(n_),BLOCK>>>(input, mean, var, batch, n_);  
   check_error(cudaGetLastError());
 
 }
 
-__global__ void normalize_gpu_kernel(float *normal, float *input, float *mean,  float *var, float epsilon) {
+__global__ void Normalize_gpu_kernel(float *normal, float *input, float *mean,  float *var, float epsilon) {
 
   int j = blockIdx.x;
   int index = gridDim.x*threadIdx.x + blockIdx.x;
@@ -106,29 +106,29 @@ __global__ void get_running_variable(float momentum, float *running_x, float *x,
 
 }
 
-void Batchnorm::normalize_gpu() {
+void Batchnorm::Normalize() {
 
   if(train_flag_) {
 
-    normalize_gpu_kernel<<<N, batch>>>(normal, input, mean, var, epsilon);
+    Normalize_gpu_kernel<<<n_, batch>>>(normal, input, mean, var, epsilon);
     check_error(cudaGetLastError());
 
-    get_running_variable<<<default_grid(N), BLOCK>>>(
-		    momentum, running_mean, mean, N);
+    get_running_variable<<<default_grid(n_), BLOCK>>>(
+		    momentum, running_mean, mean, n_);
     check_error(cudaGetLastError());
 
-    get_running_variable<<<default_grid(N), BLOCK>>>(
-		    momentum, running_var, var, N);
+    get_running_variable<<<default_grid(n_), BLOCK>>>(
+		    momentum, running_var, var, n_);
     check_error(cudaGetLastError());
   }
   else {
-    normalize_gpu_kernel<<<N, batch>>>(
+    Normalize_gpu_kernel<<<n_, batch>>>(
 		    normal, input, running_mean, running_var, epsilon);
     check_error(cudaGetLastError());
   }
 }
 
-__global__ void scale_and_shift_gpu_kernel(float *output, float *normal, float *gamma, float *beta) {
+__global__ void ScaleAndShift_gpu_kernel(float *output, float *normal, float *gamma, float *beta) {
 
   int j = blockIdx.x;
   int index = gridDim.x*threadIdx.x + blockIdx.x;
@@ -137,19 +137,19 @@ __global__ void scale_and_shift_gpu_kernel(float *output, float *normal, float *
 }
 
 
-void Batchnorm::scale_and_shift_gpu() {
+void Batchnorm::ScaleAndShift() {
 
-  scale_and_shift_gpu_kernel<<<N, batch>>>(output, normal, gamma, beta);
+  ScaleAndShift_gpu_kernel<<<n_, batch>>>(output, normal, gamma, beta);
   check_error(cudaGetLastError());
 
 }
 
 void Batchnorm::Forward() {
 
-  get_mean_gpu();
-  get_variance_gpu();
-  normalize_gpu();
-  scale_and_shift_gpu();
+  GetMean();
+  GetVariance();
+  Normalize();
+  ScaleAndShift();
 }
 
 
@@ -164,10 +164,10 @@ __global__ void cal_dx(float *dxn, float *dxc, float *gamma, float *delta, float
   //dxn[index] = -1.0*(dxn[index]*(pow(input[index] - mean[j], 2.0)))/(var[j] + epsilon);
 }
 
-__global__ void cal_dvar_kernel(float *dvar, float *dstd, float *var, float epsilon, int N) {
+__global__ void cal_dvar_kernel(float *dvar, float *dstd, float *var, float epsilon, int n_) {
   
   int j = blockIdx.x*blockDim.x + threadIdx.x;
-  if(j >= N) return;
+  if(j >= n_) return;
   dvar[j] = 0.5*dstd[j]/pow(var[j] + epsilon, 0.5);
 }
 
@@ -191,26 +191,26 @@ __global__ void calc_dxc2(float *dxc, float *input, float *mean, float *dvar, fl
 
 void Batchnorm::Backward(float *delta) {
 
-  col_sum_gpu(batch, N, delta, dbeta);
+  col_sum_gpu(batch, n_, delta, dbeta);
 
-  elementwise_mul_gpu(normal, delta, normal, batch*N);
+  elementwise_mul_gpu(normal, delta, normal, batch*n_);
 
-  col_sum_gpu(batch, N, normal, dgamma);
+  col_sum_gpu(batch, n_, normal, dgamma);
 
-  cal_dx<<<N, batch>>>(dxn, dxc, gamma, delta, var, xc, input, mean, epsilon);
+  cal_dx<<<n_, batch>>>(dxn, dxc, gamma, delta, var, xc, input, mean, epsilon);
   check_error(cudaGetLastError());
 
-  col_sum_gpu(batch, N, dxn, dstd);
+  col_sum_gpu(batch, n_, dxn, dstd);
 
-  cal_dvar_kernel<<<default_grid(N),BLOCK>>>(dvar, dstd, var, epsilon, N);
+  cal_dvar_kernel<<<default_grid(n_),BLOCK>>>(dvar, dstd, var, epsilon, n_);
   check_error(cudaGetLastError());
 
-  calc_dxc2<<<N, batch>>>(dxc, input, mean, dvar, (float)batch);
+  calc_dxc2<<<n_, batch>>>(dxc, input, mean, dvar, (float)batch);
   check_error(cudaGetLastError());
 
-  col_sum_gpu(batch, N, dxc, dmu);
+  col_sum_gpu(batch, n_, dxc, dmu);
 
-  cal_mdelta_kernel<<<N, batch>>>(delta_, dxc, dmu, (float)batch);
+  cal_mdelta_kernel<<<n_, batch>>>(delta_, dxc, dmu, (float)batch);
   check_error(cudaGetLastError());
 
 }
@@ -218,12 +218,12 @@ void Batchnorm::Backward(float *delta) {
 void Batchnorm::Update(UpdateArgs a) {
 
   if(a.adam) {
-    adam_gpu(N, gamma, dgamma, m_gamma, v_gamma, a);
-    adam_gpu(N, beta, dbeta, m_beta, v_beta, a);
+    adam_gpu(n_, gamma, dgamma, m_gamma, v_gamma, a);
+    adam_gpu(n_, beta, dbeta, m_beta, v_beta, a);
   }
   else {
-    momentum_gpu(N, gamma, dgamma, v_gamma, a);
-    momentum_gpu(N, beta, dbeta, v_beta, a);
+    momentum_gpu(n_, gamma, dgamma, v_gamma, a);
+    momentum_gpu(n_, beta, dbeta, v_beta, a);
   }
 }
 

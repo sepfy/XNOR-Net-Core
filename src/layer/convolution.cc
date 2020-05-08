@@ -3,146 +3,6 @@
 #include "blas.h"
 #include "gemm.h"
 
-Convolution::Convolution(int W, int H, int C,
-  int FW, int FH, int FC, int stride, int pad) {
-
-  this->W = W;
-  this->H = H;
-  this->C = C;
-  this->FW = FW;
-  this->FH = FH;
-  this->FC = FC;
-  this->stride = stride;
-  this->pad = pad;
-  
-  out_w = (W + 2*pad - FW)/stride + 1;
-  out_h = (H + 2*pad - FH)/stride + 1;
-
-
-  out_channel = FW*FH*C;
-  col_size = out_w*out_h*out_channel;
-  im_size = H*W*C;
-  weight_size = out_channel*FC;
-  bias_size = FC;
-  input_size = batch*im_size;
-
-}
-
-Convolution::~Convolution() {
-
-#ifdef GPU
-
-#else
-
-  delete []output;
-  delete []bias;
-  delete []weight;
-  delete []k_output;
-  delete []k_filter;
-  delete []avg_filter;
-  delete []avg_col;
-  delete []mean;
-
-
-  if(train_flag_) {
-    delete []binary_weight;
-    delete []grad_weight;
-    delete []grad_bias;
-    delete []delta_;
-    delete []m_weight;
-    delete []v_weight;
-    delete []m_bias;
-    delete []v_bias;
-  }
-
-#endif
-
-}
-
-void Convolution::Init() {
-
-#ifdef GPU
-
-  output = malloc_gpu(batch*out_w*out_h*FC);
-  weight = malloc_gpu(out_channel*FC);
-  grad_weight = malloc_gpu(out_channel*FC);
-  bias = malloc_gpu(FC);
-  grad_bias = malloc_gpu(FC);
-  delta_ = malloc_gpu(batch*W*H*C); 
-
-  // Adam optimizer
-  m_weight = malloc_gpu(out_channel*FC);
-  v_weight = malloc_gpu(out_channel*FC);
-  m_bias = malloc_gpu(FC);
-  v_bias = malloc_gpu(FC);
-
-  binary_weight = malloc_gpu(out_channel*FC);
-  avg_filter = malloc_gpu(batch*im_size);
-  avg_col = malloc_gpu(out_w*out_h*FW*FC*batch);
-  k_filter = malloc_gpu(FW*FH);
-  k_output = malloc_gpu(out_w*out_h*batch);
-
-  memset_gpu(k_filter, 1.0/(float)(FW*FH), FW*FH);
-  mean = malloc_gpu(FC);
-
-  random_normal_gpu(out_channel*FC, weight);
-  random_normal_gpu(FC, bias);
-
-#else
-
-  output = new float[batch*out_w*out_h*FC];
-  weight = new float[out_channel*FC];
-  bias = new float[FC];
-
-  // XNOR  
-  binary_weight = new float[out_channel*FC];
-  avg_filter = new float[batch*im_size];
-  avg_col = new float[out_w*out_h*FW*FC*batch];
-  k_filter = new float[FW*FH];
-  k_output = new float[out_w*out_h*batch];
-  for(int i = 0; i < FW*FH; i++)
-    k_filter[i] = 1.0/(float)(FW*FH);
-  mean = new float[FC];
-
-  if(train_flag_) {
-    grad_weight = new float[out_channel*FC];
-    grad_bias = new float[FC];
-    delta_ = new float[batch*W*H*C]; 
-
-    /* Adam optimizer */
-    m_weight = new float[out_channel*FC];
-    v_weight = new float[out_channel*FC];
-    m_bias = new float[FC];
-    v_bias = new float[FC];
-
-    random_normal(out_channel*FC, weight);
-    random_normal(FC, bias);
-    memset(m_weight, 0, out_channel*FC*sizeof(float));
-    memset(v_weight, 0, out_channel*FC*sizeof(float));
-    memset(m_bias, 0 , FC*sizeof(float));  
-    memset(v_bias, 0 , FC*sizeof(float));  
-  }
-#endif
-
-
-
-#ifdef GEMMBITSERIAL
-  ctx = allocGEMMContext(batch*out_h*out_w, out_channel, FC, 1, 1, 1, 1);
-#else
-  bitset_outcol = new Bitset[batch*out_h*out_w];
-  bitset_weight = new Bitset[FC];
-
-  for(int i = 0; i < batch*out_h*out_w; i++)
-    bitset_outcol[i].Init(out_channel);
-
-  for(int i = 0; i < FC; i++)
-    bitset_weight[i].Init(out_channel);
-#endif
-
-  shared_size_ = out_w*out_h*out_channel*batch;
-
-}
-
 
 void Convolution::Print() {
 
@@ -282,6 +142,64 @@ void Convolution::forward_full() {
 }
 
 #ifndef GPU
+
+
+void Convolution::Init() {
+
+  output = new float[batch*out_w*out_h*FC];
+  weight = new float[out_channel*FC];
+  bias = new float[FC];
+
+  // XNOR  
+  binary_weight = new float[out_channel*FC];
+  avg_filter = new float[batch*im_size];
+  avg_col = new float[out_w*out_h*FW*FC*batch];
+  k_filter = new float[FW*FH];
+  k_output = new float[out_w*out_h*batch];
+  for(int i = 0; i < FW*FH; i++)
+    k_filter[i] = 1.0/(float)(FW*FH);
+  mean = new float[FC];
+
+  if(train_flag_) {
+    grad_weight = new float[out_channel*FC];
+    grad_bias = new float[FC];
+    delta_ = new float[batch*W*H*C]; 
+
+    /* Adam optimizer */
+    m_weight = new float[out_channel*FC];
+    v_weight = new float[out_channel*FC];
+    m_bias = new float[FC];
+    v_bias = new float[FC];
+
+    random_normal(out_channel*FC, weight);
+    random_normal(FC, bias);
+    memset(m_weight, 0, out_channel*FC*sizeof(float));
+    memset(v_weight, 0, out_channel*FC*sizeof(float));
+    memset(m_bias, 0 , FC*sizeof(float));  
+    memset(v_bias, 0 , FC*sizeof(float));  
+  }
+
+
+
+#ifdef GEMMBITSERIAL
+  ctx = allocGEMMContext(batch*out_h*out_w, out_channel, FC, 1, 1, 1, 1);
+#else
+  bitset_outcol = new Bitset[batch*out_h*out_w];
+  bitset_weight = new Bitset[FC];
+
+  for(int i = 0; i < batch*out_h*out_w; i++)
+    bitset_outcol[i].Init(out_channel);
+
+  for(int i = 0; i < FC; i++)
+    bitset_weight[i].Init(out_channel);
+#endif
+
+  shared_size_ = out_w*out_h*out_channel*batch;
+  input_size = batch*im_size;
+}
+
+
+
 void Convolution::Forward() {
 
   if(xnor)
@@ -332,7 +250,6 @@ void Convolution::Backward(float *delta) {
       delta_ + i*im_size, shared_ + i*col_size);
 
 }
-#endif
 
 void Convolution::bias_add() {
   for(int b = 0; b < batch; b++)
@@ -343,33 +260,11 @@ void Convolution::bias_add() {
 
 void Convolution::Update(UpdateArgs update_args) {
 
-#ifdef GPU
-  axpy_gpu(out_channel*FC, update_args.decay, weight, grad_weight);
-  //axpy_gpu(FC, a.decay, bias, grad_bias);
-
-  if(update_args.adam) {
-    adam_gpu(out_channel*FC, weight, grad_weight, m_weight, v_weight, update_args);
-    adam_gpu(FC, bias, grad_bias, m_bias, v_bias, update_args);
-  }
-  else {
-    momentum_gpu(out_channel*FC, weight, grad_weight, v_weight, update_args);
-    momentum_gpu(FC, bias, grad_bias, v_bias, update_args);
-  }
-
-#else
   adam_cpu(out_channel*FC, weight, grad_weight, m_weight, v_weight, update_args);
   adam_cpu(FC, bias, grad_bias, m_bias, v_bias, update_args);
-#endif
-
-
-#if 0
-  mat_scalar(out_channel, FC, grad_weight, lr, grad_weight);
-  mat_minus(out_channel, FC, weight, grad_weight, weight);
-  mat_scalar(1, out_w*out_h*FC, grad_bias, lr, grad_bias);
-  mat_minus(1, out_w*out_h*FC, bias, grad_bias, bias);
-#endif
 
 }
+#endif
 
 void Convolution::Save(std::fstream *file) {
 
