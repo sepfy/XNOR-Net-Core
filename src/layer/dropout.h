@@ -4,21 +4,21 @@
 #include "layer.h"
 
 class Dropout : public Layer {
-  public:
-    int N;
-    float *mask;
-    float *prob;
-    float ratio;
-    Dropout(int N, float ratio);
-    ~Dropout();
-    void Init();
-    void Print();
-    void Forward();
+ public:
+  Dropout(int n, float ratio) : n_(n), ratio_(ratio) {}
+  ~Dropout() {}
+  void Init();
+  void Print();
+  void Forward();
+  void Backward(float *delta);
+  void Save(std::fstream *file);
+  static Dropout* load(char *buf);
 
-    void Backward(float *delta);
-    void Save(std::fstream *file);
-    static Dropout* load(char *buf);
-
+ private:
+  int n_;
+  float ratio_;
+  float *mask_;
+  float *prob_;
 };
 
 #endif //  LAYER_DROPOUT_H_

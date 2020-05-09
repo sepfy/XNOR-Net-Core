@@ -17,11 +17,11 @@ typedef struct UPDATE_ARGS {
 
 } UpdateArgs;
 
-void adam_cpu(int n, float *x, float *grad_x, float *m_x, float *v_x, UpdateArgs a);
-
 #ifdef GPU
 void adam_gpu(int n, float *x, float *grad_x, float *m_x, float *v_x, UpdateArgs a);
 void momentum_gpu(int n, float *x, float *grad_x, float *v_x, UpdateArgs a);
+#else
+void adam_cpu(int n, float *x, float *grad_x, float *m_x, float *v_x, UpdateArgs a);
 #endif
 
-#endif
+#endif //  OPTIMIZER_H_

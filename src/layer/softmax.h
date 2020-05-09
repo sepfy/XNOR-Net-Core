@@ -4,18 +4,18 @@
 #include "layer.h"
 
 class SoftmaxWithCrossEntropy : public Layer {
+ public:
+  SoftmaxWithCrossEntropy(int n) : n_(n) {}
+  ~SoftmaxWithCrossEntropy() {}
+  void Init();
+  void Print();
+  void Forward();
+  void Backward(float *delta);
+  void Save(std::fstream *file);
+  static SoftmaxWithCrossEntropy* load(char *buf);
 
-  public:
-    int N;
-
-    SoftmaxWithCrossEntropy(int n);
-    ~SoftmaxWithCrossEntropy();
-    void Init();
-    void Print();
-    void Forward();
-    void Backward(float *delta);
-    void Save(std::fstream *file);
-    static SoftmaxWithCrossEntropy* load(char *buf);
+ private:
+  int n_;
 
 };
 
