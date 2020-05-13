@@ -6,7 +6,9 @@ OUTDIR = objs
 SRCDIR = src
 SAMPLE = samples
 
-SRC = $(wildcard $(SRCDIR)/*.cc) $(wildcard $(SRCDIR)/layer/*.cc)
+UNITTEST_SRC = $(wildcard $(SRCDIR)/layer/*unittest.cc)
+SRC = $(filter-out $(UNITTEST_SRC), $(wildcard $(SRCDIR)/*.cc $(SRCDIR)/layer/*.cc))
+
 OBJS = $(addsuffix .o, $(basename $(patsubst $(SRCDIR)/%,$(OUTDIR)/%,$(SRC))))
 
 ARCH= -gencode arch=compute_30,code=sm_30 \

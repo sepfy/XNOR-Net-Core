@@ -2,26 +2,23 @@
 
 #define LEARNING_RATE 1.0e-3
 #define BATCH 100
-#define MAX_ITER 30
+#define MAX_ITER 20000
 
 void MnistXnorNet(Network *network) {
 
-  Convolution *conv1 = new Convolution(28, 28, 1, 5, 5, 32, 1, false);
+  Convolution *conv1 = new Convolution(28, 28, 1, 5, 5, 32, 1, 0);
   conv1->xnor = false;
   Activation *relu1 = new Activation(24*24*32, RELU);
   Maxpool *pool1 = new Maxpool(24, 24, 32, 2, 2, 32, 2, false); 
 
-  Batchnorm *bn1 = new Batchnorm(12*12*32);
-  Convolution *conv2 = new Convolution(12, 12, 32, 5, 5, 64, 1, false);
-  Activation *relu2 = new Activation(8*8*64, RELU);
+  Batchnorm *bn1 = new Batchnorm(12*12, 32);
+  Convolution *conv2 = new Convolution(12, 12, 32, 5, 5, 64, 1, 0);
   Maxpool *pool2 = new Maxpool(8, 8, 64, 2, 2, 64, 2, false);
 
-  Batchnorm *bn2 = new Batchnorm(4*4*64);
-  Convolution *conv3 = new Convolution(4, 4, 64, 4, 4, 512, 1, false);
+  Batchnorm *bn2 = new Batchnorm(4*4, 64);
+  Convolution *conv3 = new Convolution(4, 4, 64, 4, 4, 500, 1, 0);
   
-  Activation *relu3 = new Activation(512, RELU);
-
-  Connected *conn1 = new Connected(512, 10);
+  Connected *conn1 = new Connected(500, 10);
   SoftmaxWithCrossEntropy *softmax = new SoftmaxWithCrossEntropy(10);
 
   network->Add(conv1);
@@ -29,11 +26,9 @@ void MnistXnorNet(Network *network) {
   network->Add(pool1);
   network->Add(bn1);
   network->Add(conv2);
-  network->Add(relu2);
   network->Add(pool2);
   network->Add(bn2);
   network->Add(conv3);
-  network->Add(relu3);
   network->Add(conn1);
   network->Add(softmax);
 
@@ -42,23 +37,22 @@ void MnistXnorNet(Network *network) {
 void MnistNet(Network *network) {
 
 
-  Convolution *conv1 = new Convolution(28, 28, 1, 5, 5, 20, 1, false);
+  Convolution *conv1 = new Convolution(28, 28, 1, 5, 5, 20, 1, 0);
   conv1->xnor = false;
-  Batchnorm *bn1 = new Batchnorm(24*24*20);
+  Batchnorm *bn1 = new Batchnorm(24*24, 20);
   Activation *relu1 = new Activation(24*24*20, RELU);
   Maxpool *pool1 = new Maxpool(24, 24, 20, 2, 2, 20, 2, false); 
 
-  Convolution *conv2 = new Convolution(12, 12, 20, 5, 5, 50, 1, false);
+  Convolution *conv2 = new Convolution(12, 12, 20, 5, 5, 50, 1, 0);
   conv2->xnor = false;
-  Batchnorm *bn2 = new Batchnorm(8*8*50);
+  Batchnorm *bn2 = new Batchnorm(8*8, 50);
   Activation *relu2 = new Activation(8*8*50, RELU);
   Maxpool *pool2 = new Maxpool(8, 8, 50, 2, 2, 50, 2, false);
 
-  Convolution *conv3 = new Convolution(4, 4, 50, 4, 4, 500, 1, false);
+  Convolution *conv3 = new Convolution(4, 4, 50, 4, 4, 500, 1, 0);
   conv3->xnor = false;
-  Batchnorm *bn3 = new Batchnorm(500);
+  Batchnorm *bn3 = new Batchnorm(1, 500);
   Activation *relu3 = new Activation(500, RELU);
-  Dropout *dropout = new Dropout(500, 0.5);
  
   Connected *conn = new Connected(500, 10);
   SoftmaxWithCrossEntropy *softmax = new SoftmaxWithCrossEntropy(10);
@@ -77,7 +71,6 @@ void MnistNet(Network *network) {
   network->Add(bn3);
   network->Add(relu3);
 
-  network->Add(dropout);
   network->Add(conn);
   network->Add(softmax);
 

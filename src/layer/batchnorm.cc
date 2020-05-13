@@ -199,7 +199,7 @@ void Batchnorm::Update(UpdateArgs a) {
 
 void Batchnorm::Save(std::fstream *file) {
   char buf[64] = {0};
-  sprintf(buf, "Batchnorm,%d", n_);
+  sprintf(buf, "Batchnorm,%d,%d", spatial_, channel_);
   file->write(buf, sizeof(buf));
 
 #ifdef GPU
@@ -228,11 +228,20 @@ void Batchnorm::Save(std::fstream *file) {
 }
 
 Batchnorm* Batchnorm::load(char *buf) {
-  int para = 0;
+
+  int para[2] = {0};
+  int idx = 0;
+
   char *token;
-  token = strtok(NULL, ",");
-  para = atoi(token);
-  Batchnorm *bn = new Batchnorm(para);
+  while (buf) {
+    token = strtok(NULL, ",");
+    para[idx] = atoi(token);
+    idx++;
+    if(idx > 2)
+      break;
+  }
+
+  Batchnorm *bn = new Batchnorm(para[0], para[1]);
   return bn;
 }
 

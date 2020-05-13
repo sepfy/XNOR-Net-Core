@@ -6,7 +6,7 @@
 // Batch normalization layer
 class Batchnorm : public Layer {
  public:
-  Batchnorm(int n) : n_(n) {}
+  Batchnorm(int spatial, int channel) : spatial_(spatial), channel_(channel) {}
   ~Batchnorm();
   void Init() override;
   void Print() override;
@@ -33,6 +33,9 @@ class Batchnorm : public Layer {
   float beta1 = 0.9;
   float beta2 = 0.999;
 
+  int spatial_;
+  int channel_;
+  
  private:
   void GetMean();
   void GetVariance();

@@ -19,33 +19,33 @@ void TinyResnetXnor(Network *network) {
 
   Convolution *conv1 = new Convolution(224, 224, 3, 2, 2, 32, 2, 0);
   conv1->xnor = false;
-  Batchnorm *bn1 = new Batchnorm(112*112*32);
+  Batchnorm *bn1 = new Batchnorm(112*112, 32);
   Activation *actv1 = new Activation(112*112*32, LEAKY);
 
   Maxpool *pool1 = new Maxpool(112, 112, 32, 2, 2, 32, 2, false);
 
-  Batchnorm *bn2 = new Batchnorm(56*56*32);
+  Batchnorm *bn2 = new Batchnorm(56*56, 32);
   Convolution *conv2 = new Convolution(56, 56, 32, 3, 3, 64, 1, 1);
 
-  Batchnorm *bn3 = new Batchnorm(56*56*64);
+  Batchnorm *bn3 = new Batchnorm(56*56, 64);
   Convolution *conv3 = new Convolution(56, 56, 64, 3, 3, 64, 1, 1);
 
-  Batchnorm *bn4 = new Batchnorm(56*56*64);
+  Batchnorm *bn4 = new Batchnorm(56*56, 64);
   Convolution *conv4 = new Convolution(56, 56, 64, 3, 3, 128, 2, 1);
 
-  Batchnorm *bn5 = new Batchnorm(28*28*128);
+  Batchnorm *bn5 = new Batchnorm(28*28, 128);
   Convolution *conv5 = new Convolution(28, 28, 128, 3, 3, 128, 1, 1);
 
-  Batchnorm *bn6 = new Batchnorm(28*28*128);
+  Batchnorm *bn6 = new Batchnorm(28*28, 128);
   Convolution *conv6 = new Convolution(28, 28, 128, 3, 3, 256, 2, 1);
 
-  Batchnorm *bn7 = new Batchnorm(14*14*256);
+  Batchnorm *bn7 = new Batchnorm(14*14, 256);
   Convolution *conv7 = new Convolution(14, 14, 256, 3, 3, 256, 1, 1);
 
-  Batchnorm *bn8 = new Batchnorm(14*14*256);
+  Batchnorm *bn8 = new Batchnorm(14*14, 256);
   Convolution *conv8 = new Convolution(14, 14, 256, 3, 3, 512, 2, 1);
 
-  Batchnorm *bn9 = new Batchnorm(7*7*512);
+  Batchnorm *bn9 = new Batchnorm(7*7, 512);
   Convolution *conv9 = new Convolution(7, 7, 512, 3, 3, 512, 1, 1);
 
   Avgpool *avgpool1 = new Avgpool(7, 7, 512, 7, 7, 512, 1, false);
@@ -95,65 +95,65 @@ void ResnetXnor18(Network *network) {
 
   Convolution *conv1 = new Convolution(224, 224, 3, 2, 2, 64, 2, 0);
   conv1->xnor = false;
-  Batchnorm *bn1 = new Batchnorm(112*112*64);
+  Batchnorm *bn1 = new Batchnorm(112*112, 64);
   Activation *actv1 = new Activation(112*112*64, LEAKY);
 
   Maxpool *pool1 = new Maxpool(112, 112, 64, 2, 2, 64, 2, false);
 
-  Batchnorm *bn2 = new Batchnorm(56*56*64);
+  Batchnorm *bn2 = new Batchnorm(56*56, 64);
   Convolution *conv2 = new Convolution(56, 56, 64, 3, 3, 64, 1, 1);
 
-  Batchnorm *bn3 = new Batchnorm(56*56*64);
+  Batchnorm *bn3 = new Batchnorm(56*56, 64);
   Convolution *conv3 = new Convolution(56, 56, 64, 3, 3, 64, 1, 1);
 
-  Batchnorm *bn4 = new Batchnorm(56*56*64);
+  Batchnorm *bn4 = new Batchnorm(56*56, 64);
   Convolution *conv4 = new Convolution(56, 56, 64, 3, 3, 64, 1, 1);
 
-  Batchnorm *bn5 = new Batchnorm(56*56*64);
+  Batchnorm *bn5 = new Batchnorm(56*56, 64);
   Convolution *conv5 = new Convolution(56, 56, 64, 3, 3, 64, 1, 1);
   //Shortcut *shortcut5 = new Shortcut(56, 56, 64, 56, 56, 64, -6, actv3);
 
 
-  Batchnorm *bn6 = new Batchnorm(56*56*64);
+  Batchnorm *bn6 = new Batchnorm(56*56, 64);
   Convolution *conv6 = new Convolution(56, 56, 64, 3, 3, 128, 2, 1);
 
 
-  Batchnorm *bn7 = new Batchnorm(28*28*128);
+  Batchnorm *bn7 = new Batchnorm(28*28, 128);
   Convolution *conv7 = new Convolution(28, 28, 128, 3, 3, 128, 1, 1);
   //Shortcut *shortcut7 = new Shortcut(56, 56, 64, 28, 28, 128, -6, actv5);
 
-  Batchnorm *bn8 = new Batchnorm(28*28*128);
+  Batchnorm *bn8 = new Batchnorm(28*28, 128);
   Convolution *conv8 = new Convolution(28, 28, 128, 3, 3, 128, 1, 1);
 
-  Batchnorm *bn9 = new Batchnorm(28*28*128);
+  Batchnorm *bn9 = new Batchnorm(28*28, 128);
   Convolution *conv9 = new Convolution(28, 28, 128, 3, 3, 128, 1, 1);
   //Shortcut *shortcut9 = new Shortcut(28, 28, 128, 28, 28, 128, -6, actv7);
 
-  Batchnorm *bn10 = new Batchnorm(28*28*128);
+  Batchnorm *bn10 = new Batchnorm(28*28, 128);
   Convolution *conv10 = new Convolution(28, 28, 128, 3, 3, 256, 2, 1);
 
-  Batchnorm *bn11 = new Batchnorm(14*14*256);
+  Batchnorm *bn11 = new Batchnorm(14*14, 256);
   Convolution *conv11 = new Convolution(14, 14, 256, 3, 3, 256, 1, 1);
   //Shortcut *shortcut11 = new Shortcut(28, 28, 128, 14, 14, 256, -6, actv9);
 
-  Batchnorm *bn12 = new Batchnorm(14*14*256);
+  Batchnorm *bn12 = new Batchnorm(14*14, 256);
   Convolution *conv12 = new Convolution(14, 14, 256, 3, 3, 256, 1, 1);
 
-  Batchnorm *bn13 = new Batchnorm(14*14*256);
+  Batchnorm *bn13 = new Batchnorm(14*14, 256);
   Convolution *conv13 = new Convolution(14, 14, 256, 3, 3, 256, 1, 1);
   //Shortcut *shortcut13 = new Shortcut(14, 14, 256, 14, 14, 256, -6, actv11);
 
-  Batchnorm *bn14 = new Batchnorm(14*14*256);
+  Batchnorm *bn14 = new Batchnorm(14*14, 256);
   Convolution *conv14 = new Convolution(14, 14, 256, 3, 3, 512, 2, 1);
 
-  Batchnorm *bn15 = new Batchnorm(7*7*512);
+  Batchnorm *bn15 = new Batchnorm(7*7, 512);
   Convolution *conv15 = new Convolution(7, 7, 512, 3, 3, 512, 1, 1);
   //Shortcut *shortcut15 = new Shortcut(14, 14, 256, 7, 7,512, -6, actv13);
 
-  Batchnorm *bn16 = new Batchnorm(7*7*512);
+  Batchnorm *bn16 = new Batchnorm(7*7, 512);
   Convolution *conv16 = new Convolution(7, 7, 512, 3, 3, 512, 1, 1);
 
-  Batchnorm *bn17 = new Batchnorm(7*7*512);
+  Batchnorm *bn17 = new Batchnorm(7*7, 512);
   Convolution *conv17 = new Convolution(7, 7, 512, 3, 3, 512, 1, 1);
   //Shortcut *shortcut17 = new Shortcut(7, 7, 512, 7, 7,512, -6, actv15);
 
@@ -228,96 +228,96 @@ void Resnet18(Network *network) {
 
   Convolution *conv1 = new Convolution(224, 224, 3, 7, 7, 64, 2, 3);
   conv1->xnor = false;
-  Batchnorm *bn1 = new Batchnorm(112*112*64);
+  Batchnorm *bn1 = new Batchnorm(112*112, 64);
   Activation *actv1 = new Activation(112*112*64, LEAKY);
 
   Maxpool *pool1 = new Maxpool(112, 112, 64, 2, 2, 64, 2, false);
 
   Convolution *conv2 = new Convolution(56, 56, 64, 3, 3, 64, 1, 1);
   conv2->xnor = false;
-  Batchnorm *bn2 = new Batchnorm(56*56*64);
+  Batchnorm *bn2 = new Batchnorm(56*56, 64);
   Activation *actv2 = new Activation(56*56*64, LEAKY);
 
   Convolution *conv3 = new Convolution(56, 56, 64, 3, 3, 64, 1, 1);
   conv3->xnor = false;
-  Batchnorm *bn3 = new Batchnorm(56*56*64);
+  Batchnorm *bn3 = new Batchnorm(56*56, 64);
   Activation *actv3 = new Activation(56*56*64, LEAKY);
 
   Convolution *conv4 = new Convolution(56, 56, 64, 3, 3, 64, 1, 1);
   conv4->xnor = false;
-  Batchnorm *bn4 = new Batchnorm(56*56*64);
+  Batchnorm *bn4 = new Batchnorm(56*56, 64);
   Activation *actv4 = new Activation(56*56*64, LEAKY);
 
   Convolution *conv5 = new Convolution(56, 56, 64, 3, 3, 64, 1, 1);
   conv5->xnor = false;
-  Batchnorm *bn5 = new Batchnorm(56*56*64);
+  Batchnorm *bn5 = new Batchnorm(56*56, 64);
   Shortcut *shortcut5 = new Shortcut(56, 56, 64, 56, 56, 64, -6, actv3);
   Activation *actv5 = new Activation(56*56*64, LEAKY);
 
   Convolution *conv6 = new Convolution(56, 56, 64, 3, 3, 128, 2, 1);
   conv6->xnor = false;
-  Batchnorm *bn6 = new Batchnorm(28*28*128);
+  Batchnorm *bn6 = new Batchnorm(28*28, 128);
   Activation *actv6 = new Activation(28*28*128, LEAKY);
 
   Convolution *conv7 = new Convolution(28, 28, 128, 3, 3, 128, 1, 1);
   conv7->xnor = false;
-  Batchnorm *bn7 = new Batchnorm(28*28*128);
+  Batchnorm *bn7 = new Batchnorm(28*28, 128);
   Shortcut *shortcut7 = new Shortcut(56, 56, 64, 28, 28, 128, -6, actv5);
   Activation *actv7 = new Activation(28*28*128, LEAKY);
 
   Convolution *conv8 = new Convolution(28, 28, 128, 3, 3, 128, 1, 1);
   conv8->xnor = false;
-  Batchnorm *bn8 = new Batchnorm(28*28*128);
+  Batchnorm *bn8 = new Batchnorm(28*28, 128);
   Activation *actv8 = new Activation(28*28*128, LEAKY);
 
   Convolution *conv9 = new Convolution(28, 28, 128, 3, 3, 128, 1, 1);
   conv9->xnor = false;
-  Batchnorm *bn9 = new Batchnorm(28*28*128);
+  Batchnorm *bn9 = new Batchnorm(28*28, 128);
   Shortcut *shortcut9 = new Shortcut(28, 28, 128, 28, 28, 128, -6, actv7);
   Activation *actv9 = new Activation(28*28*128, LEAKY);
 
   Convolution *conv10 = new Convolution(28, 28, 128, 3, 3, 256, 2, 1);
   conv10->xnor = false;
-  Batchnorm *bn10 = new Batchnorm(14*14*256);
+  Batchnorm *bn10 = new Batchnorm(14*14, 256);
   Activation *actv10 = new Activation(14*14*256, LEAKY);
 
   Convolution *conv11 = new Convolution(14, 14, 256, 3, 3, 256, 1, 1);
   conv11->xnor = false;
-  Batchnorm *bn11 = new Batchnorm(14*14*256);
+  Batchnorm *bn11 = new Batchnorm(14*14, 256);
   Shortcut *shortcut11 = new Shortcut(28, 28, 128, 14, 14, 256, -6, actv9);
   Activation *actv11 = new Activation(14*14*256, LEAKY);
 
   Convolution *conv12 = new Convolution(14, 14, 256, 3, 3, 256, 1, 1);
   conv12->xnor = false;
-  Batchnorm *bn12 = new Batchnorm(14*14*256);
+  Batchnorm *bn12 = new Batchnorm(14*14, 256);
   Activation *actv12 = new Activation(14*14*256, LEAKY);
 
   Convolution *conv13 = new Convolution(14, 14, 256, 3, 3, 256, 1, 1);
   conv13->xnor = false;
-  Batchnorm *bn13 = new Batchnorm(14*14*256);
+  Batchnorm *bn13 = new Batchnorm(14*14, 256);
   Shortcut *shortcut13 = new Shortcut(14, 14, 256, 14, 14, 256, -6, actv11);
   Activation *actv13 = new Activation(14*14*256, LEAKY);
 
 
   Convolution *conv14 = new Convolution(14, 14, 256, 3, 3, 512, 2, 1);
   conv14->xnor = false;
-  Batchnorm *bn14 = new Batchnorm(7*7*512);
+  Batchnorm *bn14 = new Batchnorm(7*7, 512);
   Activation *actv14 = new Activation(7*7*512, LEAKY);
 
   Convolution *conv15 = new Convolution(7, 7, 512, 3, 3, 512, 1, 1);
   conv15->xnor = false;
-  Batchnorm *bn15 = new Batchnorm(7*7*512);
+  Batchnorm *bn15 = new Batchnorm(7*7, 512);
   Shortcut *shortcut15 = new Shortcut(14, 14, 256, 7, 7,512, -6, actv13);
   Activation *actv15 = new Activation(7*7*512, LEAKY);
 
   Convolution *conv16 = new Convolution(7, 7, 512, 3, 3, 512, 1, 1);
   conv16->xnor = false;
-  Batchnorm *bn16 = new Batchnorm(7*7*512);
+  Batchnorm *bn16 = new Batchnorm(7*7, 512);
   Activation *actv16 = new Activation(7*7*512, LEAKY);
 
   Convolution *conv17 = new Convolution(7, 7, 512, 3, 3, 512, 1, 1);
   conv17->xnor = false;
-  Batchnorm *bn17 = new Batchnorm(7*7*512);
+  Batchnorm *bn17 = new Batchnorm(7*7, 512);
   Shortcut *shortcut17 = new Shortcut(7, 7, 512, 7, 7,512, -6, actv15);
   Activation *actv17 = new Activation(7*7*512, LEAKY);
 
