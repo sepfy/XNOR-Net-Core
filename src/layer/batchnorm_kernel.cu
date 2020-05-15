@@ -35,110 +35,82 @@ void Batchnorm::Init() {
   memset_gpu(gamma, 1.0, channel_);
 }
 
-/*
-__global__ void mean_gpu_kernel(float *input, float *mean, float batch, int n_) {
+// See https://github.com/pjreddie/darknet/blob/master/src/blas_kernels.cu
+__global__ void  fast_mean_kernel(float *x, int batch, int filters, int spatial, float *mean)
+{
+    const int threads = BLOCK;
+    __shared__ float local[threads];
 
-  int index = blockIdx.x*blockDim.x + threadIdx.x;
-  if(index >= n_)
-    return;
-  
-  mean[index] = 0.0;
-  int i;
-  for(i = 0; i < batch; i++)
-    mean[index] += input[i*n_ + index];
+    int id = threadIdx.x;
+    local[id] = 0;
 
-  mean[index] /= batch;
+    int filter = blockIdx.x;
 
+    int i, j;
+    for(j = 0; j < batch; ++j){
+        for(i = 0; i < spatial; i += threads){
+            int index = j*spatial*filters + (i + id)*filters + filter;
+            local[id] += (i+id < spatial) ? x[index] : 0;
+        }
+    }
+
+    __syncthreads();
+
+    if(id == 0){
+        mean[filter] = 0;
+        for(i = 0; i < threads; ++i){
+            mean[filter] += local[i];
+        }
+        mean[filter] /= spatial * batch;
+    }
 }
-*/
-__global__ void mean_gpu_kernel(float *input, float *mean, int batch, int spatial, int channel) {
-
-  int index = blockIdx.x*blockDim.x + threadIdx.x;
-  if(index >= channel)
-    return;
-
-  mean[index] = 0.0;
-
-  for(int i = 0; i < batch; ++i)
-    for(int j = 0; j < spatial; ++j)
-      mean[index] += input[(i*spatial + j)*channel + index];
-
-  mean[index] /= (float)(batch*spatial);
-
-}
-
 
 void Batchnorm::GetMean() {
 
-  mean_gpu_kernel<<<default_grid(channel_), BLOCK>>>(input, mean, batch, spatial_, channel_);
-  //mean_gpu_kernel<<<default_grid(n_), BLOCK>>>(input, mean, batch, n_);  
+  fast_mean_kernel<<<channel_, BLOCK>>>(input, batch, channel_, spatial_, mean);
   check_error(cudaGetLastError());
 
 }
 
-/*
-__global__ void calc_xc(float *input, float *mean, float *xc) {
+// See https://github.com/pjreddie/darknet/blob/master/src/blas_kernels.cu
+__global__ void  fast_variance_kernel(float *x, float *mean, int batch, int filters, int spatial, float *variance)
+{
+    const int threads = BLOCK;
+    __shared__ float local[threads];
 
-  int i = blockIdx.x*blockDim.x + threadIdx.x;
-  int j = blockIdx.x; 
+    int id = threadIdx.x;
+    local[id] = 0;
+
+    int filter = blockIdx.x;
+
+    int i, j;
+    for(j = 0; j < batch; ++j){
+        for(i = 0; i < spatial; i += threads){
+            int index = j*spatial*filters + (i + id)*filters + filter;
+
+            local[id] += (i+id < spatial) ? powf((x[index] - mean[filter]), 2) : 0;
+        }
+    }
+
+    __syncthreads();
+
+    if(id == 0){
+        variance[filter] = 0;
+        for(i = 0; i < threads; ++i){
+            variance[filter] += local[i];
+        }
+        variance[filter] /= (spatial * batch - 1);
+    }
 }
-*/
-/*
-__global__ void variance_gpu_kernel(float *input, float *mean, float *var, float batch, int n_) {
-
-  int index = blockIdx.x*blockDim.x + threadIdx.x;
-  if(index >= n_)
-    return;
-  
-  var[index] = 0.0;
-  int i;
-
-  //xc[i] = (pow(input[i] - mean[j], 2.0));
-  for(i = 0; i < batch; i++)
-    var[index] += pow(input[i*n_ + index] - mean[index], 2.0);
-
-  var[index] /= batch;
-
-
-}
-*/
-
-__global__ void variance_gpu_kernel(float *input, float *mean, float *var, int batch, int spatial, int channel) {
-
-  int index = blockIdx.x*blockDim.x + threadIdx.x;
-  if(index >= channel)
-    return;
-  
-  var[index] = 0.0;
-
-  for(int i = 0; i < batch; ++i)
-    for(int j = 0; j < spatial; ++j)
-      var[index] += pow(input[(i*spatial + j)*channel + index] - mean[index], 2.0);
-
-  var[index] /= (float)(batch*spatial);
-
-
-}
-
 
 
 
 void Batchnorm::GetVariance() {
-
-  variance_gpu_kernel<<<default_grid(channel_), BLOCK>>>(input, mean, var, batch, spatial_, channel_);  
-  //variance_gpu_kernel<<<default_grid(n_),BLOCK>>>(input, mean, var, batch, n_);  
+  fast_variance_kernel<<<channel_, BLOCK>>>(input, mean, batch, channel_, spatial_, var);
   check_error(cudaGetLastError());
 
 }
-/*
-__global__ void Normalize_gpu_kernel(float *normal, float *input, float *mean,  float *var, float epsilon) {
 
-  int j = blockIdx.x;
-  int index = gridDim.x*threadIdx.x + blockIdx.x;
-  normal[index] = (input[index] - mean[j])/pow(var[j] + epsilon, 0.5);
-
-}
-*/
 __global__ void get_running_variable(float momentum, float *running_x, float *x, int n) {
 
   int j = blockIdx.x*blockDim.x + threadIdx.x;
@@ -174,23 +146,8 @@ void Batchnorm::Normalize() {
     check_error(cudaGetLastError());
 
 
-	  /*
-    Normalize_gpu_kernel<<<n_, batch>>>(normal, input, mean, var, epsilon);
-    check_error(cudaGetLastError());
-
-    get_running_variable<<<default_grid(n_), BLOCK>>>(
-		    momentum, running_mean, mean, n_);
-    check_error(cudaGetLastError());
-
-    get_running_variable<<<default_grid(n_), BLOCK>>>(
-		    momentum, running_var, var, n_);
-    check_error(cudaGetLastError());
-    */
   }
   else {
-    //Normalize_gpu_kernel<<<n_, batch>>>(
-	//	    normal, input, running_mean, running_var, epsilon);
-    //check_error(cudaGetLastError());
     int n = batch*spatial_*channel_;
     normalize_gpu_kernel<<<default_grid(n), BLOCK>>>(normal, input, mean, var, epsilon, n, channel_);
     check_error(cudaGetLastError());

@@ -193,6 +193,22 @@ void Convolution::Forward() {
   bias_add_gpu();
 }
 
+
+
+__global__ void full_weight_mean_gpu_kernel(float *mean, float *weight, float *weight_binary, int n, int c) {
+
+  int i = blockDim.x*blockIdx.x + threadIdx.x;
+  if(i >= n) return;
+  mean[i] = 0.0;
+  for(int j = 0; j < c; j++)
+    mean[i] += fabs(weight[i*c+j]);
+  mean[i] /= (float)c;
+
+  for(int j = 0; j < c; j++)
+    weight_binary[i*c+j] = (weight[i*c+j] > 0 ) ? mean[i] : -mean[i];
+}
+
+
 void Convolution::Backward(float *delta) {
 
   for(int i = 0; i < batch; i++)
@@ -202,11 +218,13 @@ void Convolution::Backward(float *delta) {
   gemm_gpu(TRS_T, TRS_N,
            out_channel, FC, out_h*out_w*batch, 1.0,
            shared_, delta, grad_weight);
+
   row_sum_gpu(batch*out_w*out_h, FC, delta, grad_bias);
 
+  full_weight_mean_gpu_kernel<<<default_grid(FC), BLOCK>>>(mean, weight, binary_weight, FC, out_channel);
   gemm_gpu(TRS_N, TRS_T,
        batch*out_w*out_h, out_channel, FC, 1.0,
-       delta, weight, shared_);
+       delta, binary_weight, shared_);
 
   for(int i = 0; i < batch; i++) {
     col2im_gpu(W, H, C, FW, FH, FC, stride, pad,

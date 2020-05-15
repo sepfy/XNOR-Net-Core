@@ -1,10 +1,7 @@
 #include "layer/batchnorm.h"
 
 void Batchnorm::Print() {
-  float umem = (float)(15*n_ + 6*batch*n_)/(1024*1024);
-
-  printf("Bn_ \t %.2f\n", umem);
-
+  printf("Batchnorm\n");
 }
 
 #ifndef GPU

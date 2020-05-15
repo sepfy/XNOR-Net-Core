@@ -11,49 +11,115 @@
 using namespace std;
 
 #define LEARNING_RATE 1.0e-3
-#define BATCH 50
-#define MAX_ITER 10000
+#define BATCH 100
+#define MAX_ITER 5000
 
 void CifarXnorNet(Network *network) {
 
-  Convolution *conv1 = new Convolution(32, 32, 3, 5, 5, 20, 1, false);
+
+  Convolution *conv1 = new Convolution(32, 32, 3, 3, 3, 128, 1, 1);
   conv1->xnor = false;
-  Batchnorm *bn1 = new Batchnorm(28*28, 20);
-  Activation *actv1 = new Activation(28*28*20, LEAKY);
-  Maxpool *pool1 = new Maxpool(28, 28, 20, 2, 2, 20, 2, false);
+  Batchnorm *bn1 = new Batchnorm(32*32, 128);
+  Activation *actv1 = new Activation(32*32*128, LEAKY);
 
-  Convolution *conv2 = new Convolution(14, 14, 20, 5, 5, 50, 1, false);
-  conv2->xnor = false;
-  Batchnorm *bn2 = new Batchnorm(10*10, 50);
-  Activation *actv2 = new Activation(10*10*50, LEAKY);
-  Maxpool *pool2 = new Maxpool(10, 10, 50, 2, 2, 50, 2, false);
+  Batchnorm *bn2 = new Batchnorm(32*32, 128);
+  Convolution *conv2 = new Convolution(32, 32, 128, 3, 3, 128, 1, 1);
+  Activation *actv2 = new Activation(32*32*128, LEAKY);
 
-  Convolution *conv3 = new Convolution(5, 5, 50, 5, 5, 500, 1, false);
-  conv3->xnor = false;
-  Batchnorm *bn3 = new Batchnorm(1, 500);
-  Activation *actv3 = new Activation(500, LEAKY);
-  //Dropout *dropout3 = new Dropout(500, 0.5);
+  Batchnorm *bn3 = new Batchnorm(32*32, 128);
+  Convolution *conv3 = new Convolution(32, 32, 128, 3, 3, 128, 1, 1);
+  Activation *actv3 = new Activation(32*32*128, LEAKY);
 
-  Connected *conn4 = new Connected(32*32*3, 10);
+  Maxpool *pool1 = new Maxpool(32, 32, 128, 2, 2, 128, 2, false);
+  //Dropout *dropout1 = new Dropout(16*16*128, 0.5);
+
+  Batchnorm *bn4 = new Batchnorm(16*16, 128);
+  Convolution *conv4 = new Convolution(16, 16, 128, 3, 3, 256, 1, 1);
+  Activation *actv4 = new Activation(16*16*256, LEAKY);
+
+
+  Batchnorm *bn5 = new Batchnorm(16*16, 256);
+  Convolution *conv5 = new Convolution(16, 16, 256, 3, 3, 256, 1, 1);
+  Activation *actv5 = new Activation(16*16*256, LEAKY);
+
+
+  Batchnorm *bn6 = new Batchnorm(16*16, 256);
+  Convolution *conv6 = new Convolution(16, 16, 256, 3, 3, 256, 1, 1);
+  Activation *actv6 = new Activation(16*16*256, LEAKY);
+
+  Maxpool *pool2 = new Maxpool(16, 16, 256, 2, 2, 256, 2, false);
+
+  //Dropout *dropout2 = new Dropout(8*8*256, 0.5);
+
+
+  Batchnorm *bn7 = new Batchnorm(8*8, 256);
+  Convolution *conv7 = new Convolution(8, 8, 256, 3, 3, 512, 1, 1);
+  Activation *actv7 = new Activation(8*8*512, LEAKY);
+
+  Batchnorm *bn8 = new Batchnorm(8*8, 512);
+  Convolution *conv8 = new Convolution(8, 8, 512, 3, 3, 512, 1, 1);
+  Activation *actv8 = new Activation(8*8*512, LEAKY);
+
+  Batchnorm *bn9 = new Batchnorm(8*8, 512);
+  Convolution *conv9 = new Convolution(8, 8, 512, 3, 3, 512, 1, 1);
+  Activation *actv9 = new Activation(8*8*512, LEAKY);
+
+  //Dropout *dropout3 = new Dropout(8*8*512, 0.5);
+
+
+  Convolution *conv10 = new Convolution(8, 8, 512, 3, 3, 10, 1, 1);
+  conv10->xnor = false;
+  Batchnorm *bn10 = new Batchnorm(8*8, 10);
+  Activation *actv10 = new Activation(8*8*10, LEAKY);
+
+  Avgpool *avgpool = new Avgpool(8, 8, 10, 8, 8, 10, 1, false);
   SoftmaxWithCrossEntropy *softmax = new SoftmaxWithCrossEntropy(10);
 
-/*
   network->Add(conv1);
   network->Add(bn1);
   network->Add(actv1);
+
+  network->Add(bn2);
+  network->Add(conv2);
+  network->Add(actv2);
+
+  network->Add(bn3);
+  network->Add(conv3);
+  network->Add(actv3);
+
   network->Add(pool1);
 
-  network->Add(conv2);
-  network->Add(bn2);
-  network->Add(actv2);
+  network->Add(bn4);
+  network->Add(conv4);
+  network->Add(actv4);
+
+  network->Add(bn5);
+  network->Add(conv5);
+  network->Add(actv5);
+
+  network->Add(bn6);
+  network->Add(conv6);
+  network->Add(actv6);
+
   network->Add(pool2);
 
-  network->Add(conv3);
-  network->Add(bn3);
-  network->Add(actv3);
-*/
-  //network->Add(dropout3);
-  network->Add(conn4);
+  network->Add(bn7);
+  network->Add(conv7);
+  network->Add(actv7);
+
+  network->Add(bn8);
+  network->Add(conv8);
+  network->Add(actv8);
+
+  network->Add(bn9);
+  network->Add(conv9);
+  network->Add(actv9);
+
+  network->Add(conv10);
+  network->Add(bn10);
+  network->Add(actv10);
+  
+  network->Add(avgpool);
   network->Add(softmax);
 
 }
@@ -193,8 +259,8 @@ int main( int argc, char** argv ) {
 
   if(strcmp(argv[1], "train") == 0) {
 
-    //CifarXnorNet(&network);
-    CifarNet(&network);
+    CifarXnorNet(&network);
+    //CifarNet(&network);
 
     network.Init(BATCH, LEARNING_RATE, true);
     float *train_data, *train_label;

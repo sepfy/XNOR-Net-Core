@@ -1,10 +1,7 @@
 #include "layer/maxpool.h"
 
 void Maxpool::Print() {
-
-  float umem = (float)(batch*out_w*out_h*FC*3)/(1024*1024);
-  printf("Max \t %.2f \t %d x %d x %d \t %d x %d x %d \n",
-                  umem, H, W, C, out_h, out_w, FC);
+  printf("Maxpool \t %d x %d x %d \t\t %d x %d x %d \n", H, W, C, out_h, out_w, FC);
 }
 
 #ifndef GPU

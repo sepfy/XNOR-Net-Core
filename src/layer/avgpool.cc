@@ -15,16 +15,11 @@ Avgpool::Avgpool(int W, int H, int C,
 
 
 void Avgpool::Print() {
-
-  float umem = (float)(batch*C + batch*H*W*C)/(1024*1024);
-  printf("Avg \t %.2f \t %d x %d x %d \t\t %d x %d x %d \n",
-                  umem, H, W, C, 1, 1, FC);
-
-	  
+  printf("Avgpool \t %d x %d x %d \t\t %d x %d x %d \n", H, W, C, 1, 1, FC);
 }
 
 
-
+#ifndef GPU
 void Avgpool::Init() {
 
   output = new float[batch*C];
@@ -66,7 +61,7 @@ void Avgpool::Backward(float *delta) {
         }
 
 }
-
+#endif
 
 void Avgpool::Save(std::fstream *file) {
   char buf[64] = {0};

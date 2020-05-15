@@ -6,16 +6,10 @@
 
 void Convolution::Print() {
 
-  float umem = (float)(batch*out_w*out_h*FC
-	      + 4*out_channel*FC
-              + 4*FC
-	      + batch*W*H*C)/(1024*1024);
   if(xnor)
-    printf("ConvX \t %.2f \t %d x %d x %d \t\t %d x %d x %d \n",  
-		  umem, H, W, C, out_h, out_w, FC);
+    printf("ConvolutionX \t %d x %d x %d \t\t %d x %d x %d \n", H, W, C, out_h, out_w, FC);
   else 
-    printf("Conv \t %.2f \t %d x %d x %d \t\t %d x %d x %d \n",  
-		  umem, H, W, C, out_h, out_w, FC);
+    printf("Convolution \t %d x %d x %d \t\t %d x %d x %d \n", H, W, C, out_h, out_w, FC);
 
 }
 

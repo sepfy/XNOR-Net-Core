@@ -39,7 +39,7 @@ void Network::Inference(float *input) {
 
   layers_.front()->input = input;
   for(auto layer = layers_.begin(); layer != layers_.end(); ++layer) {
-    //ms_t start = getms();   
+    //ms_t start = getms();
     (*layer)->Forward();
     //cout << "layer: " << i << ", time = " << (getms()-start) << endl;
   }

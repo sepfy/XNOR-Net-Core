@@ -7,8 +7,7 @@ const char *kActivationName[] = {
 };
 
 void Activation::Print() {
-  float umem = (float)(3*batch*N)/(1024*1024);
-  printf("%s \t %.2f\n", kActivationName[activation_type_], umem);
+  printf("%s\n", kActivationName[activation_type_]);
 }
 
 void Activation::Save(std::fstream *file) {

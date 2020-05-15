@@ -1,9 +1,7 @@
 #include "softmax.h"
 
 void SoftmaxWithCrossEntropy::Print() {
-
-  float umem = (float)(2*batch*n_)/(1024*1024);
-  printf("Softmax\t %.2f\n", umem);
+  printf("Softmax\n");
 }
 
 #ifndef GPU
