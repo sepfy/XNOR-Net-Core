@@ -268,7 +268,7 @@ void Convolution::Save(std::fstream *file) {
   //cout << weight[0] << endl;
   //cout << bias[0] << endl;
   file->write(buf, sizeof(buf));
-
+/*
   if(xnor) {
 
 #ifdef GEMMBITSERIAL
@@ -324,7 +324,7 @@ void Convolution::Save(std::fstream *file) {
 #endif
   } 
   else {
-
+*/
 #ifdef GPU
     float *weight_tmp = new float[weight_size];
     gpu_pull_array(weight, weight_tmp, weight_size);
@@ -334,7 +334,7 @@ void Convolution::Save(std::fstream *file) {
     file->write((char*)weight, weight_size*sizeof(float));
 #endif
 
-  }
+//  }
 
 
 

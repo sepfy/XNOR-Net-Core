@@ -1,11 +1,7 @@
 #include "layer/connected.h"
 
 void Connected::Print() {
-
-  float umem = (float)(4*n_*m_ + 4*m_ + 2*batch*n_)/(1024*1024);
-
-  printf("Conn \t %.2f \t 1 x 1 x %d \t\t 1 x 1 x %d  \n", umem, n_, m_);
-
+  printf("Connected \t 1 x 1 x %d \t\t 1 x 1 x %d  \n", n_, m_);
 }
 
 #ifndef GPU
@@ -46,7 +42,7 @@ void Connected::bias_add() {
 
 void Connected::Forward() {  
 
-  gemm_cpu(TRS_n_, TRS_n_, batch, m_, n_, 1, input, weight, output);
+  gemm_cpu(TRS_N, TRS_N, batch, m_, n_, 1, input, weight, output);
   bias_add();
 }
 

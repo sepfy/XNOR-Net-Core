@@ -13,6 +13,7 @@
 #include "layer/dropout.h"
 #include "layer/shortcut.h"
 #include "layer/softmax.h"
+#include "layer/binary_conv.h"
 #include "gemm.h"
 #include "blas.h"
 #include <stdlib.h>

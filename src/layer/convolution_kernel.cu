@@ -51,7 +51,7 @@ void Convolution::Init() {
   input_size = batch*im_size;
 
 }
-
+/*
 __global__ void binarize_input_gpu_kernel(float *input, int size) {
 
   int i = blockDim.x*blockIdx.x + threadIdx.x;
@@ -91,7 +91,6 @@ __global__ void binarize_weight_gpu_kernel(float *binary_weight, float *weight, 
   binary_weight[i] = (weight[i] > 0) ? 1.0 : -1.0;
 
 }
-
 __global__ void weight_mean_gpu_kernel(float *mean, float *weight, int n, int c) {
 
   int i = blockDim.x*blockIdx.x + threadIdx.x;
@@ -154,6 +153,7 @@ void Convolution::forward_xnor_gpu() {
   swap_weight();
 }
 
+*/
 void Convolution::forward_full_gpu() {
 
   for(int i = 0; i < batch; i++)
@@ -164,7 +164,7 @@ void Convolution::forward_full_gpu() {
 
 }
 
-__global__ void bias_add_kernel(float *output, float *bias,
+__global__ void bias_add_kernel1(float *output, float *bias,
                          int out_h, int out_w, int FC, int size) {
 
     int index = blockIdx.x*blockDim.x + threadIdx.x;
@@ -182,19 +182,20 @@ __global__ void bias_add_kernel(float *output, float *bias,
 void Convolution::bias_add_gpu() {
 
   size_t size = out_w*out_h*batch*FC;
-  bias_add_kernel<<<default_grid(size), BLOCK>>>(output, bias, out_w, out_h, FC, size);
+  bias_add_kernel1<<<default_grid(size), BLOCK>>>(output, bias, out_w, out_h, FC, size);
   check_error(cudaGetLastError());
 }
 
 void Convolution::Forward() {
   
-  if(xnor) forward_xnor_gpu();
-  else forward_full_gpu();
+  //if(xnor) forward_xnor_gpu();
+  //else
+  forward_full_gpu();
   bias_add_gpu();
 }
 
 
-
+/*
 __global__ void full_weight_mean_gpu_kernel(float *mean, float *weight, float *weight_binary, int n, int c) {
 
   int i = blockDim.x*blockIdx.x + threadIdx.x;
@@ -208,7 +209,7 @@ __global__ void full_weight_mean_gpu_kernel(float *mean, float *weight, float *w
     weight_binary[i*c+j] = (weight[i*c+j] > 0 ) ? mean[i] : -mean[i];
 }
 
-
+*/
 void Convolution::Backward(float *delta) {
 
   for(int i = 0; i < batch; i++)
@@ -221,10 +222,10 @@ void Convolution::Backward(float *delta) {
 
   row_sum_gpu(batch*out_w*out_h, FC, delta, grad_bias);
 
-  full_weight_mean_gpu_kernel<<<default_grid(FC), BLOCK>>>(mean, weight, binary_weight, FC, out_channel);
+  //full_weight_mean_gpu_kernel<<<default_grid(FC), BLOCK>>>(mean, weight, binary_weight, FC, out_channel);
   gemm_gpu(TRS_N, TRS_T,
        batch*out_w*out_h, out_channel, FC, 1.0,
-       delta, binary_weight, shared_);
+       delta, weight, shared_);
 
   for(int i = 0; i < batch; i++) {
     col2im_gpu(W, H, C, FW, FH, FC, stride, pad,
