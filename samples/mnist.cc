@@ -2,33 +2,39 @@
 
 #define LEARNING_RATE 1.0e-3
 #define BATCH 100
-#define MAX_ITER 10000
+#define MAX_ITER 15000
 
 void MnistXnorNet(Network *network) {
 
   Convolution *conv1 = new Convolution(28, 28, 1, 5, 5, 32, 1, 0);
   conv1->xnor = false;
+  Batchnorm *bn1 = new Batchnorm(24*24, 32);
   Activation *relu1 = new Activation(24*24*32, RELU);
   Maxpool *pool1 = new Maxpool(24, 24, 32, 2, 2, 32, 2, false); 
 
-  Batchnorm *bn1 = new Batchnorm(12*12, 32);
+  Batchnorm *bn2 = new Batchnorm(12*12, 32);
   BinaryConv *bin_conv2 = new BinaryConv(12, 12,32, 5, 5, 64, 1, 0);
+  Activation *relu2 = new Activation(8*8*64, RELU);
   Maxpool *pool2 = new Maxpool(8, 8, 64, 2, 2, 64, 2, false);
 
-  Batchnorm *bn2 = new Batchnorm(4*4, 64);
+  Batchnorm *bn3 = new Batchnorm(4*4, 64);
   BinaryConv *bin_conv3 = new BinaryConv(4, 4, 64, 4, 4, 500, 1, 0);
+  Activation *relu3 = new Activation(500, RELU);
   
   Connected *conn1 = new Connected(500, 10);
   SoftmaxWithCrossEntropy *softmax = new SoftmaxWithCrossEntropy(10);
 
   network->Add(conv1);
+  network->Add(bn1);
   network->Add(relu1);
   network->Add(pool1);
-  network->Add(bn1);
-  network->Add(bin_conv2);
-  network->Add(pool2);
   network->Add(bn2);
+  network->Add(bin_conv2);
+  network->Add(relu2);
+  network->Add(pool2);
+  network->Add(bn3);
   network->Add(bin_conv3);
+  network->Add(relu3);
   network->Add(conn1);
   network->Add(softmax);
 
