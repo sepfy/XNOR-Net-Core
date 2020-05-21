@@ -6,20 +6,22 @@
 
 void MnistXnorNet(Network *network) {
 
-  Convolution *conv1 = new Convolution(28, 28, 1, 5, 5, 32, 1, 0);
+  Convolution *conv1 = new Convolution(28, 28, 1, 5, 5, 20, 1, 0);
   conv1->xnor = false;
-  Batchnorm *bn1 = new Batchnorm(24*24, 32);
-  Activation *relu1 = new Activation(24*24*32, RELU);
-  Maxpool *pool1 = new Maxpool(24, 24, 32, 2, 2, 32, 2, false); 
+  Batchnorm *bn1 = new Batchnorm(24*24, 20);
+  Activation *relu1 = new Activation(24*24*20, RELU);
+  Maxpool *pool1 = new Maxpool(24, 24, 20, 2, 2, 20, 2, false); 
 
-  Batchnorm *bn2 = new Batchnorm(12*12, 32);
-  BinaryConv *bin_conv2 = new BinaryConv(12, 12,32, 5, 5, 64, 1, 0);
-  Activation *relu2 = new Activation(8*8*64, RELU);
-  Maxpool *pool2 = new Maxpool(8, 8, 64, 2, 2, 64, 2, false);
 
-  Batchnorm *bn3 = new Batchnorm(4*4, 64);
-  BinaryConv *bin_conv3 = new BinaryConv(4, 4, 64, 4, 4, 500, 1, 0);
+  Batchnorm *bn2 = new Batchnorm(12*12, 20);
+  BinaryConv *bin_conv2 = new BinaryConv(12, 12, 20, 5, 5, 50, 1, 0);
+  Activation *relu2 = new Activation(8*8*50, RELU);
+  Maxpool *pool2 = new Maxpool(8, 8, 50, 2, 2, 50, 2, false);
+
+  Batchnorm *bn3 = new Batchnorm(4*4, 50);
+  BinaryConv *bin_conv3 = new BinaryConv(4, 4, 50, 4, 4, 500, 1, 0);
   Activation *relu3 = new Activation(500, RELU);
+  Dropout *dropout1 = new Dropout(500, 0.5);
   
   Connected *conn1 = new Connected(500, 10);
   SoftmaxWithCrossEntropy *softmax = new SoftmaxWithCrossEntropy(10);
@@ -35,6 +37,7 @@ void MnistXnorNet(Network *network) {
   network->Add(bn3);
   network->Add(bin_conv3);
   network->Add(relu3);
+  network->Add(dropout1);
   network->Add(conn1);
   network->Add(softmax);
 

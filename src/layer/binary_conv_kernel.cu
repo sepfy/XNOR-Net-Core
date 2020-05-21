@@ -3,7 +3,6 @@
 #include "utils.h"
 #include "blas.h"
 
-
 void BinaryConv::Init() {
 
   output = malloc_gpu(batch*out_w*out_h*filter_channel);
@@ -52,143 +51,59 @@ void BinaryConv::Init() {
 
 }
 
-__global__ void binarize_input_gpu_kernel(float *input, int size) {
-
-  int i = blockDim.x*blockIdx.x + threadIdx.x;
-  if(i >= size) return;
-  input[i] > 0 ? input[i] = 1 : input[i] = -1;
-    
-}
-
-__global__ void input_mean_gpu_kernel(float *avg_filter, float *input, int n, int c) {
+__global__ void fast_binarize_gpu_kernel(float *x, float *x_binary,
+		                         int n, int c, bool transpose) {
 
   int i = blockDim.x*blockIdx.x + threadIdx.x;
   if(i >= n) return;
 
-  avg_filter[i] = 0.0;
-  for(int k = 0; k < c; k++)
-     avg_filter[i] += fabs(input[i*c + k]);
-  avg_filter[i] /= (float)c;
-
-}
-
-
-__global__ void full_weight_mean_gpu_kernel(
-		float *weight, float *weight_binary, int n, int c, bool transpose) {
-
-  int i = blockDim.x*blockIdx.x + threadIdx.x;
-  if(i >= n) return;
   float mean = 0.0;
 
   if(transpose) {
+
     for(int j = 0; j < c; j++)
-      mean += fabs(weight[i*c+j]);
+      mean += fabs(x[j*n+i]);
     mean /= (float)c;
 
     for(int j = 0; j < c; j++)
-      weight_binary[i*c+j] = (weight[i*c+j] > 0 ) ? mean : -mean;
+      x_binary[j*n+i] = (x[j*n+i] > 0 ) ? mean : -mean;
   }
   else {
 
     for(int j = 0; j < c; j++)
-      mean += fabs(weight[j*n+i]);
+      mean += fabs(x[i*c+j]);
     mean /= (float)c;
 
     for(int j = 0; j < c; j++)
-      weight_binary[j*n+i] = (weight[j*n+i] > 0 ) ? mean : -mean;
+      x_binary[i*c+j] = (x[i*c+j] > 0 ) ? mean : -mean;
 
   }
+
 }
 
-
-
 void BinaryConv::BinarizeInput() {
-
-  full_weight_mean_gpu_kernel<<<default_grid(out_w*out_h), BLOCK>>>(
+  fast_binarize_gpu_kernel<<<default_grid(out_w*out_h), BLOCK>>>(
       shared_,
       shared_,
       out_w*out_h,
-      filter_col, false);
-
-
-	/*
-  int size = batch*height*width;
-  input_mean_gpu_kernel<<<default_grid(size), BLOCK>>>(
-      avg_filter,
-      input,
-      size,
-      channel);
+      filter_col,
+      false);
   check_error(cudaGetLastError());
-
-  size = batch*out_h*out_w*filter_col;
-  binarize_input_gpu_kernel<<<default_grid(size), BLOCK>>>(shared_, size);
-  check_error(cudaGetLastError());
-*/
 }
 
-__global__ void binarize_weight_gpu_kernel(float *binary_weight, float *weight, int size) {
-
-  int i = blockDim.x*blockIdx.x + threadIdx.x;
-  if(i >= size) return;
-  binary_weight[i] = (weight[i] > 0) ? 1.0 : -1.0;
-
-}
-
-__global__ void weight_mean_gpu_kernel(float *mean, float *weight, int n, int c) {
-
-  int i = blockDim.x*blockIdx.x + threadIdx.x;
-  if(i >= n) return;
-  mean[i] = 0.0;
-  for(int j = 0; j < c; j++)
-    mean[i] += fabs(weight[i*c+j]);
-  mean[i] /= (float)c;
-}
 
 void BinaryConv::BinarizeWeight() {
-
-  full_weight_mean_gpu_kernel<<<default_grid(filter_channel), BLOCK>>>(
+  fast_binarize_gpu_kernel<<<default_grid(filter_channel), BLOCK>>>(
       weight,
       binary_weight,
       filter_channel,
-      filter_col, true);
-
-
-	/*
-  weight_mean_gpu_kernel<<<default_grid(filter_channel), BLOCK>>>
-    (mean, weight, filter_channel, filter_col);
+      filter_col,
+      true);
   check_error(cudaGetLastError());
-
-  int size = filter_col*filter_channel;
-  binarize_weight_gpu_kernel<<<default_grid(size), BLOCK>>>
-    (binary_weight, weight, size);
-  check_error(cudaGetLastError());
-  */
-
-}
-
-
-__global__ void multi_mean_gpu_kernel(float *output, float *mean, float *k_output, int n, int FC) {
-
-  int i = blockDim.x*blockIdx.x + threadIdx.x;
-  if(i >= n) return;
-
-  int j = i/FC;
-  int k = i%FC;
-  output[i] *= (mean[k]*k_output[j]);
-
-}
-
-void BinaryConv::SwapWeight() {
-    float *swap = weight;
-    weight = binary_weight;
-    binary_weight = swap;
 }
 
 
 void BinaryConv::Forward() {
-
-  BinarizeWeight();
-  //SwapWeight();
 
   for(int i = 0; i < batch; i++) {
     im2col_gpu(
@@ -205,6 +120,7 @@ void BinaryConv::Forward() {
   }
 
   BinarizeInput();
+  BinarizeWeight();
 
   gemm_gpu(
       TRS_N,
@@ -217,63 +133,25 @@ void BinaryConv::Forward() {
       weight, 
       output);
 
-/*
-  // Do K = A (*) k
-  int avg_filter_size = width*height;
-  int avg_col_size = out_w*out_h*filter_width*filter_height;
-  for(int i = 0; i < batch; i++) {
-    im2col_gpu(
-        width,
-        height,
-        1,
-        filter_width,
-        filter_height,
-        1,
-        stride,
-        pad,
-        avg_filter + i*avg_filter_size,
-        avg_col + i*avg_col_size);
-  }
-
-  gemm_gpu(
-    TRS_N,
-    TRS_N,
-    batch*out_h*out_w,
-    1.0,
-    filter_width*filter_height,
-    1.0,
-    avg_col,
-    k_filter,
-    k_output);
-
-  int size = batch*out_w*out_h*filter_channel;
-  multi_mean_gpu_kernel<<<default_grid(size), BLOCK>>>(output, mean, k_output, size, filter_channel);
-
-  SwapWeight();
-  */
   BiasAdd();
 }
 
 
-__global__ void bias_add_kernel(float *output, float *bias,
-                         int out_h, int out_w, int FC, int size) {
+__global__ void bias_add_kernel(float *output, float *bias, int n, int c) {
 
-    int index = blockIdx.x*blockDim.x + threadIdx.x;
-    if(index > size) return;
+    int i = blockIdx.x*blockDim.x + threadIdx.x;
+    if(i >= n) return;
 
-    int b = index/(out_h*out_w*FC);
-    int i = index/(out_w*FC)%out_h ;
-    int j = index/FC%out_w;
-    int k = index%FC;
+    int k = i%c;
 
-    output[b*out_w*out_h*FC + i*out_w*FC + j*FC +k] += bias[k];
+    output[i] += bias[k];
 
 }
 
 void BinaryConv::BiasAdd() {
 
-  size_t size = out_w*out_h*batch*filter_channel;
-  bias_add_kernel<<<default_grid(size), BLOCK>>>(output, bias, out_w, out_h, filter_channel, size);
+  size_t n = batch*out_w*out_h*filter_channel;
+  bias_add_kernel<<<default_grid(n), BLOCK>>>(output, bias, n, filter_channel);
   check_error(cudaGetLastError());
 }
 
@@ -308,12 +186,6 @@ void BinaryConv::Backward(float *delta) {
       grad_weight);
 
   row_sum_gpu(batch*out_w*out_h, filter_channel, delta, grad_bias);
-
-  full_weight_mean_gpu_kernel<<<default_grid(filter_channel), BLOCK>>>(
-      weight,
-      binary_weight,
-      filter_channel,
-      filter_col, true);
 
   gemm_gpu(
       TRS_N,
