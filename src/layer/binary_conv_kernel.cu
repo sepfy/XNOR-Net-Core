@@ -51,54 +51,47 @@ void BinaryConv::Init() {
 
 }
 
-__global__ void fast_binarize_gpu_kernel(float *x, float *x_binary,
-		                         int n, int c, bool transpose) {
+
+__global__ void bin_active_gpu_kernel(float *input, int n) {
+
+  int i = blockDim.x*blockIdx.x + threadIdx.x;
+  if(i >= n) return;
+  input[i] = (input[i] > 0) ? 1.0 : -1.0;
+}
+
+void BinaryConv::BinActive() {
+
+  size_t n = batch*out_w*out_h*filter_col;
+  bin_active_gpu_kernel<<<default_grid(n), BLOCK>>>(shared_, n);
+  check_error(cudaGetLastError());
+
+}
+
+__global__ void binarize_weight_gpu_kernel(float *weight, float *binary_weight,
+		                           int n, int c) {
 
   int i = blockDim.x*blockIdx.x + threadIdx.x;
   if(i >= n) return;
 
   float mean = 0.0;
 
-  if(transpose) {
+  for(int j = 0; j < c; j++)
+    mean += fabs(weight[j*n+i]);
+  mean /= (float)c;
 
-    for(int j = 0; j < c; j++)
-      mean += fabs(x[j*n+i]);
-    mean /= (float)c;
+  for(int j = 0; j < c; j++)
+    binary_weight[j*n+i] = (weight[j*n+i] > 0 ) ? mean : -mean;
 
-    for(int j = 0; j < c; j++)
-      x_binary[j*n+i] = (x[j*n+i] > 0 ) ? mean : -mean;
-  }
-  else {
-
-    for(int j = 0; j < c; j++)
-      mean += fabs(x[i*c+j]);
-    mean /= (float)c;
-
-    for(int j = 0; j < c; j++)
-      x_binary[i*c+j] = (x[i*c+j] > 0 ) ? mean : -mean;
-
-  }
-
-}
-
-void BinaryConv::BinarizeInput() {
-  fast_binarize_gpu_kernel<<<default_grid(out_w*out_h), BLOCK>>>(
-      shared_,
-      shared_,
-      out_w*out_h,
-      filter_col,
-      false);
-  check_error(cudaGetLastError());
 }
 
 
 void BinaryConv::BinarizeWeight() {
-  fast_binarize_gpu_kernel<<<default_grid(filter_channel), BLOCK>>>(
+  binarize_weight_gpu_kernel<<<default_grid(filter_channel), BLOCK>>>(
       weight,
       binary_weight,
       filter_channel,
-      filter_col,
-      true);
+      filter_col);
+
   check_error(cudaGetLastError());
 }
 
@@ -119,7 +112,7 @@ void BinaryConv::Forward() {
         shared_ + i*col_size);
   }
 
-  BinarizeInput();
+  BinActive();
   BinarizeWeight();
 
   gemm_gpu(
@@ -130,7 +123,7 @@ void BinaryConv::Forward() {
       filter_col,
       1, 
       shared_,
-      weight, 
+      binary_weight, 
       output);
 
   BiasAdd();
@@ -156,6 +149,51 @@ void BinaryConv::BiasAdd() {
 }
 
 
+__global__ void bin_active_backward_gpu_kernel(float *delta, float *input, int n) {
+
+  int i = blockIdx.x*blockDim.x + threadIdx.x;
+  if(i >= n) return;
+  delta[i] = (fabs(input[i]) >= 1.0) ? 0 : delta[i];
+}
+
+
+
+void BinaryConv::BinActiveBackward() {
+
+  size_t n = batch*width*height*channel;
+  bin_active_backward_gpu_kernel<<<default_grid(n), BLOCK>>>(delta_, input, n);
+  check_error(cudaGetLastError());
+
+}
+
+
+__global__ void update_grad_weight_gpu_kernel(float *grad_weight, float *weight,
+    float *binary_weight, int n, int filter_col) {
+
+  int i = blockDim.x*blockIdx.x + threadIdx.x;
+  if(i >= n) return;
+
+  float tmp;
+  tmp = (fabs(weight[i]) >= 1.0) ? 0 : weight[i];
+  grad_weight[i] = grad_weight[i]*(1.0/(float)(filter_col) + tmp*fabs(binary_weight[i]));
+	  
+}
+
+
+
+void BinaryConv::UpdateGradientWeight() {
+
+  update_grad_weight_gpu_kernel<<<default_grid(filter_channel*filter_col), BLOCK>>>(
+      grad_weight,
+      weight,
+      binary_weight,
+      filter_channel*filter_col,
+      filter_col);
+  check_error(cudaGetLastError());
+
+
+}
+
 void BinaryConv::Backward(float *delta) {
 
   for(int i = 0; i < batch; i++) {
@@ -172,18 +210,20 @@ void BinaryConv::Backward(float *delta) {
         shared_ + i*col_size);
   }
 
-  BinarizeInput();
+  BinActive();
 
   gemm_gpu(
       TRS_T,
       TRS_N,
       filter_col,
       filter_channel,
-      out_w*out_h*batch,
+      batch*out_w*out_h,
       1.0,
       shared_,
       delta,
       grad_weight);
+
+  UpdateGradientWeight();
 
   row_sum_gpu(batch*out_w*out_h, filter_channel, delta, grad_bias);
 
@@ -211,6 +251,8 @@ void BinaryConv::Backward(float *delta) {
         delta_ + i*im_size,
         shared_  + i*col_size);
   }
+
+  BinActiveBackward();
 
 }
 

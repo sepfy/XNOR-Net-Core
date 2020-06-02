@@ -2,7 +2,7 @@
 
 #define LEARNING_RATE 1.0e-3
 #define BATCH 100
-#define MAX_ITER 15000
+#define MAX_ITER 20000
 
 void MnistXnorNet(Network *network) {
 
@@ -37,7 +37,7 @@ void MnistXnorNet(Network *network) {
   network->Add(bn3);
   network->Add(bin_conv3);
   network->Add(relu3);
-  network->Add(dropout1);
+//  network->Add(dropout1);
   network->Add(conn1);
   network->Add(softmax);
 
@@ -187,7 +187,8 @@ int main( int argc, char** argv ) {
 
   ms_t start = getms();
   for(int iter = 0; iter < batch_num; iter++) {
-
+    if(iter > 10000) network.update_args_.lr = 1.0e-4;
+    if(iter > 15000) network.update_args_.lr = 1.0e-5;
     int step = (iter*BATCH);
     float *batch_xs = test_data + step*IM_SIZE;
     float *batch_ys = test_label + step*CLASSES;

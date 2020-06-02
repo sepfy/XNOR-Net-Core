@@ -36,10 +36,10 @@ class Network {
   void Train(float *correct);
   void Inference(float *input);
   float* output() { return output_; }
+  UpdateArgs update_args_;
 
  private:
   vector<Layer*> layers_;
-  UpdateArgs update_args_;
   int8_t *quantized_shared_;
   float *shared_;
   float *output_;

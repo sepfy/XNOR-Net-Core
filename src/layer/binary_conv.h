@@ -59,7 +59,9 @@ class BinaryConv : public Layer {
 
   void SwapWeight();
   void BinarizeWeight();
-  void BinarizeInput();
+  void UpdateGradientWeight();
+  void BinActive();
+  void BinActiveBackward();
   void BiasAdd();
 
 

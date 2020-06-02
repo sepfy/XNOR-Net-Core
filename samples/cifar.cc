@@ -23,48 +23,48 @@ void CifarXnorNet(Network *network) {
   Activation *actv1 = new Activation(32*32*128, LEAKY);
 
   Batchnorm *bn2 = new Batchnorm(32*32, 128);
-  Convolution *conv2 = new Convolution(32, 32, 128, 3, 3, 128, 1, 1);
+  BinaryConv *bin_conv2 = new BinaryConv(32, 32, 128, 3, 3, 128, 1, 1);
   Activation *actv2 = new Activation(32*32*128, LEAKY);
 
   Batchnorm *bn3 = new Batchnorm(32*32, 128);
-  Convolution *conv3 = new Convolution(32, 32, 128, 3, 3, 128, 1, 1);
+  BinaryConv *bin_conv3 = new BinaryConv(32, 32, 128, 3, 3, 128, 1, 1);
   Activation *actv3 = new Activation(32*32*128, LEAKY);
 
   Maxpool *pool1 = new Maxpool(32, 32, 128, 2, 2, 128, 2, false);
-  //Dropout *dropout1 = new Dropout(16*16*128, 0.5);
+  Dropout *dropout1 = new Dropout(16*16*128, 0.5);
 
   Batchnorm *bn4 = new Batchnorm(16*16, 128);
-  Convolution *conv4 = new Convolution(16, 16, 128, 3, 3, 256, 1, 1);
+  BinaryConv *bin_conv4 = new BinaryConv(16, 16, 128, 3, 3, 256, 1, 1);
   Activation *actv4 = new Activation(16*16*256, LEAKY);
 
 
   Batchnorm *bn5 = new Batchnorm(16*16, 256);
-  Convolution *conv5 = new Convolution(16, 16, 256, 3, 3, 256, 1, 1);
+  BinaryConv *bin_conv5 = new BinaryConv(16, 16, 256, 3, 3, 256, 1, 1);
   Activation *actv5 = new Activation(16*16*256, LEAKY);
 
 
   Batchnorm *bn6 = new Batchnorm(16*16, 256);
-  Convolution *conv6 = new Convolution(16, 16, 256, 3, 3, 256, 1, 1);
+  BinaryConv *bin_conv6 = new BinaryConv(16, 16, 256, 3, 3, 256, 1, 1);
   Activation *actv6 = new Activation(16*16*256, LEAKY);
 
   Maxpool *pool2 = new Maxpool(16, 16, 256, 2, 2, 256, 2, false);
 
-  //Dropout *dropout2 = new Dropout(8*8*256, 0.5);
+  Dropout *dropout2 = new Dropout(8*8*256, 0.5);
 
 
   Batchnorm *bn7 = new Batchnorm(8*8, 256);
-  Convolution *conv7 = new Convolution(8, 8, 256, 3, 3, 512, 1, 1);
+  BinaryConv *bin_conv7 = new BinaryConv(8, 8, 256, 3, 3, 512, 1, 1);
   Activation *actv7 = new Activation(8*8*512, LEAKY);
 
   Batchnorm *bn8 = new Batchnorm(8*8, 512);
-  Convolution *conv8 = new Convolution(8, 8, 512, 3, 3, 512, 1, 1);
+  BinaryConv *bin_conv8 = new BinaryConv(8, 8, 512, 3, 3, 512, 1, 1);
   Activation *actv8 = new Activation(8*8*512, LEAKY);
 
   Batchnorm *bn9 = new Batchnorm(8*8, 512);
-  Convolution *conv9 = new Convolution(8, 8, 512, 3, 3, 512, 1, 1);
+  BinaryConv *bin_conv9 = new BinaryConv(8, 8, 512, 3, 3, 512, 1, 1);
   Activation *actv9 = new Activation(8*8*512, LEAKY);
 
-  //Dropout *dropout3 = new Dropout(8*8*512, 0.5);
+  Dropout *dropout3 = new Dropout(8*8*512, 0.5);
 
 
   Convolution *conv10 = new Convolution(8, 8, 512, 3, 3, 10, 1, 1);
@@ -80,39 +80,39 @@ void CifarXnorNet(Network *network) {
   network->Add(actv1);
 
   network->Add(bn2);
-  network->Add(conv2);
+  network->Add(bin_conv2);
   network->Add(actv2);
 
   network->Add(bn3);
-  network->Add(conv3);
+  network->Add(bin_conv3);
   network->Add(actv3);
 
   network->Add(pool1);
 
   network->Add(bn4);
-  network->Add(conv4);
+  network->Add(bin_conv4);
   network->Add(actv4);
 
   network->Add(bn5);
-  network->Add(conv5);
+  network->Add(bin_conv5);
   network->Add(actv5);
 
   network->Add(bn6);
-  network->Add(conv6);
+  network->Add(bin_conv6);
   network->Add(actv6);
 
   network->Add(pool2);
 
   network->Add(bn7);
-  network->Add(conv7);
+  network->Add(bin_conv7);
   network->Add(actv7);
 
   network->Add(bn8);
-  network->Add(conv8);
+  network->Add(bin_conv8);
   network->Add(actv8);
 
   network->Add(bn9);
-  network->Add(conv9);
+  network->Add(bin_conv9);
   network->Add(actv9);
 
   network->Add(conv10);
@@ -282,6 +282,9 @@ int main( int argc, char** argv ) {
 #endif
 
     for(int iter = 0; iter < MAX_ITER; iter++) {
+
+      if(iter > 2000) network.update_args_.lr = 1.0e-4;
+      if(iter > 3500) network.update_args_.lr = 1.0e-5;
 
       ms_t start = getms();
       int step = (iter*BATCH)%50000;
