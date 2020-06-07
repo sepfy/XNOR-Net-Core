@@ -13,7 +13,7 @@ class SoftmaxWithCrossEntropy : public Layer {
   void Backward(float *delta);
   void Save(std::fstream *file);
   static SoftmaxWithCrossEntropy* load(char *buf);
-
+  void LoadParams(std::fstream *file, int batch) override;
  private:
   int n_;
 

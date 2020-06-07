@@ -8,10 +8,9 @@ void Convolution::Print() {
       H, W, C, out_h, out_w, FC);
 
 }
-
 Convolution* Convolution::load(char *buf) {
 
-  int para[9] = {0};
+  int para[8] = {0};
   int idx = 0;
 
   char *token;
@@ -19,7 +18,7 @@ Convolution* Convolution::load(char *buf) {
     token = strtok(NULL, ",");
     para[idx] = atoi(token);
     idx++;
-    if(idx > 8)
+    if(idx > 7)
       break;
   }
 
@@ -112,6 +111,20 @@ void Convolution::Save(std::fstream *file) {
   file->write((char*)weight, weight_size*sizeof(float));
   file->write((char*)bias, bias_size*sizeof(float));
 }
+
+
+void Convolution::LoadParams(std::fstream *rfile, int batch) {
+
+  batch = batch;
+  train_flag_ = false;
+  runtime = true;
+  Init();
+  rfile->read((char*)weight, weight_size*sizeof(float));
+  rfile->read((char*)bias, bias_size*sizeof(float));
+
+}
+
+
 
 #endif
 

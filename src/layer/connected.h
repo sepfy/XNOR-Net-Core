@@ -16,6 +16,7 @@ class Connected : public Layer {
   void Update(UpdateArgs update_args) override;
   void Save(std::fstream *file) override;
   static Connected* load(char *buf);
+  void LoadParams(std::fstream *file, int batch) override;
 
   int n_;
   int m_;

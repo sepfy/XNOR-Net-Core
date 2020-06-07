@@ -60,6 +60,9 @@ void Connected::Update(UpdateArgs update_args) {
   adam_cpu(m_, bias, grad_bias, m_bias, v_bias, update_args);
 }
 
+
+void Connected::LoadParams(std::fstream *file, int batch) {}
+
 #endif
 void Connected::Save(std::fstream *file) {
 
@@ -99,5 +102,5 @@ Connected* Connected::load(char *buf) {
   Connected *conn = new Connected(para[0], para[1]);
   return conn;
 
-
 }
+

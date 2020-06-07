@@ -13,7 +13,7 @@ class Dropout : public Layer {
   void Backward(float *delta);
   void Save(std::fstream *file);
   static Dropout* load(char *buf);
-
+  void LoadParams(std::fstream *file, int batch) override;
  private:
   int n_;
   float ratio_;

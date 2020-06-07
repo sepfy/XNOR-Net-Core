@@ -200,27 +200,27 @@ void Batchnorm::Save(std::fstream *file) {
   file->write(buf, sizeof(buf));
 
 #ifdef GPU
-  float *mean_tmp = new float[n_];
-  float *var_tmp = new float[n_];
-  float *gamma_tmp = new float[n_];
-  float *beta_tmp = new float[n_];
-  gpu_pull_array(running_mean, mean_tmp, n_);
-  gpu_pull_array(running_var, var_tmp, n_);
-  gpu_pull_array(gamma, gamma_tmp, n_);
-  gpu_pull_array(beta, beta_tmp, n_);
-  file->write((char*)mean_tmp, n_*sizeof(float));
-  file->write((char*)var_tmp, n_*sizeof(float));
-  file->write((char*)gamma_tmp, n_*sizeof(float));
-  file->write((char*)beta_tmp, n_*sizeof(float));
+  float *mean_tmp = new float[channel_];
+  float *var_tmp = new float[channel_];
+  float *gamma_tmp = new float[channel_];
+  float *beta_tmp = new float[channel_];
+  gpu_pull_array(running_mean, mean_tmp, channel_);
+  gpu_pull_array(running_var, var_tmp, channel_);
+  gpu_pull_array(gamma, gamma_tmp, channel_);
+  gpu_pull_array(beta, beta_tmp, channel_);
+  file->write((char*)mean_tmp, channel_*sizeof(float));
+  file->write((char*)var_tmp, channel_*sizeof(float));
+  file->write((char*)gamma_tmp, channel_*sizeof(float));
+  file->write((char*)beta_tmp, channel_*sizeof(float));
   delete []mean_tmp;
   delete []var_tmp;
   delete []gamma_tmp;
   delete []beta_tmp;
 #else
-  file->write((char*)running_mean, n_*sizeof(float));
-  file->write((char*)running_var, n_*sizeof(float));
-  file->write((char*)gamma, n_*sizeof(float));
-  file->write((char*)beta, n_*sizeof(float));
+  file->write((char*)running_mean, channel_*sizeof(float));
+  file->write((char*)running_var, channel_*sizeof(float));
+  file->write((char*)gamma, channel_*sizeof(float));
+  file->write((char*)beta, channel_*sizeof(float));
 #endif
 }
 
@@ -234,7 +234,7 @@ Batchnorm* Batchnorm::load(char *buf) {
     token = strtok(NULL, ",");
     para[idx] = atoi(token);
     idx++;
-    if(idx > 2)
+    if(idx > 1)
       break;
   }
 
@@ -242,3 +242,7 @@ Batchnorm* Batchnorm::load(char *buf) {
   return bn;
 }
 
+void Batchnorm::LoadParams(std::fstream *file, int batch) {
+
+
+}

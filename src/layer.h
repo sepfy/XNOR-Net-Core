@@ -21,7 +21,7 @@ class Layer {
   virtual void Backward(float *delta) = 0;
   virtual void Save(std::fstream *file) = 0;
   virtual void Update(UpdateArgs update_args) {};
-
+  virtual void LoadParams(std::fstream *file, int batch);
   int batch;
   float *input;
   float *output;

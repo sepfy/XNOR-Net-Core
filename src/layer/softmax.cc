@@ -55,4 +55,4 @@ SoftmaxWithCrossEntropy* SoftmaxWithCrossEntropy::load(char *buf) {
 
 }
 
-
+void SoftmaxWithCrossEntropy::LoadParams(std::fstream *file, int batch) {}

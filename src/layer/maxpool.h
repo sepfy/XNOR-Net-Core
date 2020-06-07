@@ -30,7 +30,7 @@ class Maxpool : public Layer {
   void Backward(float *delta);
   void Save(std::fstream *file);
   static Maxpool* load(char *buf);
-
+  void LoadParams(std::fstream *file, int batch) override;
 
   float *col;
   int FW, FH, FC;

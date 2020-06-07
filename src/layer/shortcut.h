@@ -22,7 +22,7 @@ class Shortcut : public Layer {
     void Backward(float *delta);
     void Save(std::fstream *file);
     static Shortcut* load(char *buf);
-
+    void LoadParams(std::fstream *file, int batch) override;
 };
 
 #endif //  LAYER_SHORTCUT_H_

@@ -26,6 +26,7 @@ class Avgpool : public Layer {
     void Backward(float *delta);
     void Save(std::fstream *file);
     static Avgpool* load(char *buf);
+    void LoadParams(std::fstream *file, int batch) override;
 };
 
 #endif //  LAYER_AVGPOOL_H_

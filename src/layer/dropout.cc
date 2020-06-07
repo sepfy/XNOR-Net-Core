@@ -56,3 +56,5 @@ Dropout* Dropout::load(char *buf) {
   Dropout *dropout = new Dropout(para, 0);
   return dropout;
 }
+
+void Dropout::LoadParams(std::fstream *file, int batch) {}

@@ -129,4 +129,6 @@ void BinaryConv::Save(std::fstream *file) {
   // Do not support CPU training.
 }
 
+void BinaryConv::LoadParams(std::fstream *file, int batch) {}
+
 #endif

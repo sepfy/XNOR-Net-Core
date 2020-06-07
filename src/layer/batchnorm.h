@@ -15,6 +15,7 @@ class Batchnorm : public Layer {
   void Update(UpdateArgs a) override;
   void Save(std::fstream *file);
   static Batchnorm* load(char *buf);
+  void LoadParams(std::fstream *file, int batch) override;
 
   int n_;
   float *mean, *var, *std, *running_mean, *running_var;

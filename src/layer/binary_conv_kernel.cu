@@ -110,26 +110,12 @@ void BinaryConv::Forward() {
       binary_weight, 
       output);
 
-  BiasAdd();
-}
+  bias_add_gpu(
+      output,
+      bias,
+      batch*out_w*out_h*filter_channel,
+      filter_channel);
 
-
-__global__ void bias_add_kernel(float *output, float *bias, int n, int c) {
-
-    int i = blockIdx.x*blockDim.x + threadIdx.x;
-    if(i >= n) return;
-
-    int k = i%c;
-
-    output[i] += bias[k];
-
-}
-
-void BinaryConv::BiasAdd() {
-
-  size_t n = batch*out_w*out_h*filter_channel;
-  bias_add_kernel<<<default_grid(n), BLOCK>>>(output, bias, n, filter_channel);
-  check_error(cudaGetLastError());
 }
 
 
@@ -254,13 +240,13 @@ void BinaryConv::Update(UpdateArgs update_args) {
   }
 }
 
-void BinaryConv::Save() {
+void BinaryConv::Save(std::fstream *file) {
 
   char buf[64] = {0};
   sprintf(buf, "BinaryConv,%d,%d,%d,%d,%d,%d,%d,%d",
     width, height, channel, filter_width, filter_height, filter_channel, stride, pad);
   file->write(buf, sizeof(buf));
-
+ std::cout << buf<< std::endl;
   float *weight_tmp = new float[weight_size];
   gpu_pull_array(weight, weight_tmp, weight_size);
   file->write((char*)weight_tmp, weight_size*sizeof(float));
@@ -270,6 +256,7 @@ void BinaryConv::Save() {
   gpu_pull_array(bias, bias_tmp, bias_size);
   file->write((char*)bias_tmp, bias_size*sizeof(float));
   delete []bias_tmp;
-  file->write((char*)bias, bias_size*sizeof(float));
 
 }
+
+void BinaryConv::LoadParams(std::fstream *file, int batch) {}

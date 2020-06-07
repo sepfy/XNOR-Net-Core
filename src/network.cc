@@ -97,54 +97,37 @@ void Network::Load(char *filename, int batch) {
     rfile.read(buf, sizeof(buf));
     if(rfile.eof())
       break;
-    //cout << buf << endl;
     char* token = strtok(buf, ",");
     if(!strcmp(token, "Convolution")) {
-
       Convolution *conv = Convolution::load(token);
-      conv->batch = batch;
-      conv->train_flag_ = false;
-      conv->Init();
-      conv->runtime = true;
-      if(conv->xnor) {
+      conv->LoadParams(&rfile, batch);
+      this->Add(conv); 
+    }
+    if(!strcmp(token, "BinaryConv")) {
 
-#ifdef GEMMBITSERIAL
-        size_t size = conv->ctx.rhs.nbits*conv->ctx.rhs.wordsPerBitplane()*sizeof(uint64_t);
-	rfile.read((char*)conv->ctx.rhs.data, size);
-#else
-        for(int i = 0; i < conv->FC; i++) {
-          rfile.read((char*)conv->bitset_weight[i].bits, 
-                          conv->bitset_weight[i].N*sizeof(BIT_BLK));
-        }
-#endif
-        rfile.read((char*)conv->mean, conv->FC*sizeof(float));
-      }
-      else {
+      BinaryConv *bin_conv = BinaryConv::load(token);
+      bin_conv->batch = batch;
+      bin_conv->train_flag_ = false;
+      bin_conv->Init();
+      bin_conv->runtime = true;
 
 #ifdef GPU
-        float *weight_tmp = new float[conv->weight_size];
-        rfile.read((char*)weight_tmp, conv->weight_size*sizeof(float));
-	gpu_push_array(conv->weight, weight_tmp, conv->weight_size);
-	delete []weight_tmp;
-#else
-        rfile.read((char*)conv->weight, conv->weight_size*sizeof(float));
-#endif
-
-      }
-
-#ifdef GPU
-      float *bias_tmp = new float[conv->bias_size];
-      rfile.read((char*)bias_tmp, conv->bias_size*sizeof(float));
-      gpu_push_array(conv->bias, bias_tmp, conv->bias_size);
+      float *weight_tmp = new float[bin_conv->weight_size];
+      rfile.read((char*)weight_tmp, bin_conv->weight_size*sizeof(float));
+      gpu_push_array(bin_conv->weight, weight_tmp, bin_conv->weight_size);
+      delete []weight_tmp;
+      float *bias_tmp = new float[bin_conv->bias_size];
+      rfile.read((char*)bias_tmp, bin_conv->bias_size*sizeof(float));
+      gpu_push_array(bin_conv->bias, bias_tmp, bin_conv->bias_size);
       delete []bias_tmp;
 #else
-      rfile.read((char*)conv->bias, conv->bias_size*sizeof(float));
+      rfile.read((char*)conv->weight, conv->weight_size*sizeof(float));
+      rfile.read((char*)bin_conv->bias, bin_conv->bias_size*sizeof(float));
 #endif
 
-      this->Add(conv); 
-      //cout << conv->weight[0] << endl;
-      //cout << conv->bias[0] << endl;
+      this->Add(bin_conv); 
     }
+
     else if(!strcmp(token, "Connected")) {
       Connected *conn = Connected::load(token);
       conn->batch = batch;
@@ -204,28 +187,28 @@ void Network::Load(char *filename, int batch) {
       bn->train_flag_ = false;
       bn->Init();
 #ifdef GPU
-      float *mean_tmp = new float[bn->n_];
-      float *var_tmp = new float[bn->n_];
-      float *gamma_tmp = new float[bn->n_];
-      float *beta_tmp = new float[bn->n_];
-      rfile.read((char*)mean_tmp, bn->n_*sizeof(float));
-      rfile.read((char*)var_tmp, bn->n_*sizeof(float));
-      rfile.read((char*)gamma_tmp, bn->n_*sizeof(float));
-      rfile.read((char*)beta_tmp, bn->n_*sizeof(float));
-      gpu_push_array(bn->running_mean, mean_tmp, bn->n_);
-      gpu_push_array(bn->running_var, var_tmp, bn->n_);
-      gpu_push_array(bn->gamma, gamma_tmp, bn->n_);
-      gpu_push_array(bn->beta, beta_tmp, bn->n_);
-      delete []mean_tmp;
+      float *meachannel_tmp = new float[bn->channel_];
+      float *var_tmp = new float[bn->channel_];
+      float *gamma_tmp = new float[bn->channel_];
+      float *beta_tmp = new float[bn->channel_];
+      rfile.read((char*)meachannel_tmp, bn->channel_*sizeof(float));
+      rfile.read((char*)var_tmp, bn->channel_*sizeof(float));
+      rfile.read((char*)gamma_tmp, bn->channel_*sizeof(float));
+      rfile.read((char*)beta_tmp, bn->channel_*sizeof(float));
+      gpu_push_array(bn->running_mean, meachannel_tmp, bn->channel_);
+      gpu_push_array(bn->running_var, var_tmp, bn->channel_);
+      gpu_push_array(bn->gamma, gamma_tmp, bn->channel_);
+      gpu_push_array(bn->beta, beta_tmp, bn->channel_);
+      delete []meachannel_tmp;
       delete []var_tmp;
       delete []gamma_tmp;
       delete []beta_tmp;
 #else
-      rfile.read((char*)bn->running_mean, bn->n_*sizeof(float));
-      rfile.read((char*)bn->running_var, bn->n_*sizeof(float));
-      rfile.read((char*)bn->gamma, bn->n_*sizeof(float));
-      rfile.read((char*)bn->beta, bn->n_*sizeof(float));
-      for(int i = 0; i < bn->n_; i++)
+      rfile.read((char*)bn->running_mean, bn->channel_*sizeof(float));
+      rfile.read((char*)bn->running_var, bn->channel_*sizeof(float));
+      rfile.read((char*)bn->gamma, bn->channel_*sizeof(float));
+      rfile.read((char*)bn->beta, bn->channel_*sizeof(float));
+      for(int i = 0; i < bn->channel_; i++)
           bn->std[i] = pow(bn->running_var[i] + bn->epsilon, 0.5);
       bn->runtime = true;
 #endif

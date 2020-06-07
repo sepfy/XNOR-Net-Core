@@ -19,6 +19,8 @@ void Avgpool::Print() {
 }
 
 
+void Avgpool::LoadParams(std::fstream *rfile, int batch) {}
+
 #ifndef GPU
 void Avgpool::Init() {
 

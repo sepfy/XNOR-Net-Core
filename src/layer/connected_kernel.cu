@@ -24,7 +24,7 @@ void Connected::Init() {
 
 void Connected::Forward() {
   gemm_gpu(TRS_N, TRS_N, batch, m_, n_, 1, input, weight, output);
-  bias_add_gpu(output, bias, batch, 1, m_);
+  bias_add_gpu(output, bias, batch*m_, m_);
 }
 
 void Connected::Backward(float *delta) {
@@ -47,3 +47,5 @@ void Connected::Update(UpdateArgs update_args) {
     momentum_gpu(m_, bias, grad_bias, v_bias, update_args);
   }
 }
+
+void Connected::LoadParams(std::fstream *file, int batch) {}

@@ -141,4 +141,5 @@ Shortcut* Shortcut::load(char* buf) {
 
 }
 
+void Shortcut::LoadParams(std::fstream *file, int batch) {}
 

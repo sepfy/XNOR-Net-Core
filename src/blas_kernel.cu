@@ -114,20 +114,19 @@ void col_sum_gpu(int N, int M, float *A, float *B) {
 }
 */
 
-__global__ void bias_add_kernel1(float *output, float *bias,
-                         int batch, int size, int channel) {
+__global__ void bias_add_kernel(float *output, float *bias,
+                         int n, int c) {
 
-    int i = threadIdx.x;
-    int b = blockIdx.x;
-    for(int j = 0; j < channel; j++)
-      output[b*size*channel+i*channel+j] += bias[j];
+  int i = blockIdx.x*blockDim.x + threadIdx.x;
+  if(i >= n) return;
 
+  int k = i%c;
+  output[i] += bias[k];
 }
 
-// TODO: Integrate the bias add of convolution and connected.
-void bias_add_gpu(float *output, float *bias, int batch, int size, int c) {
+void bias_add_gpu(float *output, float *bias, int n, int c) {
 
-  bias_add_kernel1<<<batch, size>>>(output, bias, batch, size, c);
+  bias_add_kernel<<<default_grid(n), BLOCK>>>(output, bias, n, c);
   check_error(cudaGetLastError());
 }
 

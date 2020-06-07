@@ -94,3 +94,4 @@ void Activation::Backward(float *delta) {
   }
 }
 
+void Activation::LoadParams(std::fstream *rfile, int batch){}

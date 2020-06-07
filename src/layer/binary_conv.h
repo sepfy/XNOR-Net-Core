@@ -31,6 +31,7 @@ class BinaryConv : public Layer {
   void Update(UpdateArgs update_args) override;
   void Save(std::fstream *file) override;
   static BinaryConv* load(char *buf);
+  void LoadParams(std::fstream *file, int batch) override;
 
 // private:
   int width, height, channel;

@@ -116,4 +116,6 @@ void Activation::sigmoid_backward(float *delta) {
       delta_[i*N+j] = (cut[i*N+j] + delta[i*N+j])*(1.0 - output[i*N+j])*output[i*N+j];
 }
 
+void Activation::LoadParams(std::fstream *file, int batch) {}
+
 #endif

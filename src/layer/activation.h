@@ -23,7 +23,7 @@ class Activation : public Layer {
   void Backward(float *delta);
   void Save(std::fstream *file);
   static Activation* load(char *buf);
-
+  void LoadParams(std::fstream *file, int batch) override;
 
  private:
   void relu_activate();

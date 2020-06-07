@@ -91,4 +91,4 @@ Maxpool* Maxpool::load(char* buf) {
   return pool;
 }
 
-
+void Maxpool::LoadParams(std::fstream *file, int batch) {}

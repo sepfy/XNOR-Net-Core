@@ -13,7 +13,6 @@ class Convolution : public Layer {
     out_w = (W + 2*pad - FW)/stride + 1;
     out_h = (H + 2*pad - FH)/stride + 1;
     out_channel = FW*FH*C;
-    col_size = out_w*out_h*out_channel;
     im_size = H*W*C;
     weight_size = out_channel*FC;
     bias_size = FC;
@@ -27,7 +26,7 @@ class Convolution : public Layer {
   void Update(UpdateArgs update_args) override;
   void Save(std::fstream *file) override;
   static Convolution* load(char *buf);
-
+  void LoadParams(std::fstream *file, int batch) override;
 
   int FW, FH, FC;
   int stride, pad;
