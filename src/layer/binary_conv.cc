@@ -39,67 +39,6 @@ void BinaryConv::Print() {
       filter_channel);
 }
 
-
-void BinaryConv::Save(std::fstream *file) {
-
-  char buf[64] = {0};
-  sprintf(buf, "BinaryWeight,%d,%d,%d,%d,%d,%d,%d,%d",
-    width, height, channel, filter_width, filter_height, filter_channel, stride, pad);
-  file->write(buf, sizeof(buf));
-
-#ifdef GEMMBITSERIAL
-
-  int8_t *BB = new int8_t[filter_col*filter_channel];
-#ifdef GPU
-  float *weight_tmp = new float[weight_size];
-  gpu_pull_array(weight, weight_tmp, weight_size);
-  for(int i = 0; i < FC; i++)
-    for(int j = 0; j < out_channel; j++)
-      BB[i*filter_col+j] = (weight_tmp[j*filter_channel+i] > 0) ? 1 : -1;
-  delete []weight_tmp;
-#endif
-  ctx.rhs.importRegular(BB);
-  size_t size = ctx.rhs.nbits*ctx.rhs.wordsPerBitplane()*sizeof(uint64_t);
-  //cout << FC*out_channel << endl;
-  file->write((char*)ctx.rhs.data, size);
-
-#else
-    float *BB = new float[filter_channel*filter_col];
-#ifdef GPU
-    float *weight_tmp = new float[weight_size];
-    gpu_pull_array(weight, weight_tmp, weight_size);
-    for(int i = 0; i < filter_channel; i++)
-      for(int j = 0; j < filter_col; j++)
-        BB[i*filter_col+j] = weight_tmp[j*filter_channel+i];
-    delete []weight_tmp;
-#else
-    for(int i = 0; i < filter_channel; i++)
-      for(int j = 0; j < filter_col; j++)
-        BB[i*filter_col+j] = weight[j*filter_channel+i];
-#endif
-    for(int i = 0; i < filter_channel; i++) {
-      bitset_weight[i].set(BB+i*filter_col);
-    }
-    delete[] BB;
-
-    for(int i = 0; i < filter_channel; i++) {
-      file->write((char*)bitset_weight[i].bits,
-                         bitset_weight[i].N*sizeof(BIT_BLK));
-    }
-#endif
-
-#ifdef GPU
-    BinarizeWeight();
-    float *mean_tmp = new float[filter_channel];
-    gpu_pull_array(mean, mean_tmp, filter_channel);
-    file->write((char*)mean_tmp, filter_channel*sizeof(float));
-    delete []mean_tmp;
-#else
-    BinarizeWeight();
-    file->write((char*)mean, filter_channel*sizeof(float));
-#endif
-}
-
 BinaryConv* BinaryConv::load(char *buf) {
 
   int para[8] = {0};
@@ -119,3 +58,75 @@ BinaryConv* BinaryConv::load(char *buf) {
   return conv;
 }
 
+
+#ifndef GPU
+void BinaryConv::Init() {
+
+  output = new float[batch*out_w*out_h*filter_channel];
+  bias = new float[filter_channel];
+  mean = new float[filter_channel];
+
+#ifdef GEMMBITSERIAL
+  ctx = allocGEMMContext(batch*out_h*out_w, filter_col, filter_channel, 1, 1, 1, 1);
+#else
+  bitset_outcol = new Bitset[batch*out_h*out_w];
+  bitset_weight = new Bitset[filter_channel];
+
+  for(int i = 0; i < batch*out_h*out_w; i++)
+    bitset_outcol[i].Init(filter_col);
+
+  for(int i = 0; i < filter_channel; i++)
+    bitset_weight[i].Init(filter_col);
+#endif
+
+  shared_size_ = out_w*out_h*filter_col*batch;
+  input_size = batch*im_size;
+
+}
+
+void BinaryConv::BinActive() {
+
+  size_t n = batch*out_w*out_h*filter_col;
+  for(int i = 0; i < n; i++)
+    shared_[i] = (shared_[i] > 0) ? 1.0 : -1.0;
+
+}
+
+void BinaryConv::BiasAdd() {
+
+
+}
+
+void BinaryConv::Forward() {
+
+  for(int i = 0; i < batch; i++) {
+    im2col(
+        width,
+        height,
+        channel,
+        filter_width,
+        filter_height,
+        filter_channel,
+        stride,
+        pad,
+        input + i*im_size,
+        shared_ + i*col_size);
+  }
+      
+  BinActive();
+  bias_add(output, bias, batch*out_w*out_h, channel);
+}
+
+void BinaryConv::Backward(float *delta) {
+  // Do not support CPU training.
+}
+
+void BinaryConv::Update(UpdateArgs update_args) {
+  // Do not support CPU training.
+}
+
+void BinaryConv::Save(std::fstream *file) {
+  // Do not support CPU training.
+}
+
+#endif

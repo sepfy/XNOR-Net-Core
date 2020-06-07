@@ -57,13 +57,12 @@ class BinaryConv : public Layer {
   float *k_output;
   Bitset *bitset_outcol, *bitset_weight;
 
+  void BinActive();
+  void BiasAdd();
   void SwapWeight();
   void BinarizeWeight();
   void UpdateGradientWeight();
-  void BinActive();
   void BinActiveBackward();
-  void BiasAdd();
-
 
   float *weight, *bias;
   float *grad_weight, *grad_bias;

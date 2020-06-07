@@ -213,3 +213,11 @@ float accuracy(int batch, int N, float *A, float *B) {
   return sum;
 }
 #endif
+
+
+void bias_add(float *output, float *bias, int n, int c) {
+  for(int i = 0; i < n; i++)
+    for(int j = 0; j < c; j++)
+      output[i*c + j] += bias[j];
+}
+

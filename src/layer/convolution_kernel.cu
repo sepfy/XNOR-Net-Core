@@ -247,3 +247,23 @@ void Convolution::Update(UpdateArgs update_args) {
     momentum_gpu(FC, bias, grad_bias, v_bias, update_args);
   }
 }
+
+
+void Convolution::Save(std::fstream *file) {
+
+  char buf[64] = {0};
+  sprintf(buf, "Convolution,%d,%d,%d,%d,%d,%d,%d,%d,%d",
+    W, H, C, FW, FH, FC, stride, pad, xnor);
+  file->write(buf, sizeof(buf));
+
+  float *weight_tmp = new float[weight_size];
+  gpu_pull_array(weight, weight_tmp, weight_size);
+  file->write((char*)weight_tmp, weight_size*sizeof(float));
+  delete []weight_tmp;
+
+  float *bias_tmp = new float[bias_size];
+  gpu_pull_array(bias, bias_tmp, bias_size);
+  file->write((char*)bias_tmp, bias_size*sizeof(float));
+  delete []bias_tmp;
+
+}

@@ -18,7 +18,6 @@ void CifarXnorNet(Network *network) {
 
 
   Convolution *conv1 = new Convolution(32, 32, 3, 3, 3, 128, 1, 1);
-  conv1->xnor = false;
   Batchnorm *bn1 = new Batchnorm(32*32, 128);
   Activation *actv1 = new Activation(32*32*128, LEAKY);
 
@@ -68,7 +67,6 @@ void CifarXnorNet(Network *network) {
 
 
   Convolution *conv10 = new Convolution(8, 8, 512, 3, 3, 10, 1, 1);
-  conv10->xnor = false;
   Batchnorm *bn10 = new Batchnorm(8*8, 10);
   Activation *actv10 = new Activation(8*8*10, LEAKY);
 
@@ -128,17 +126,14 @@ void CifarXnorNet(Network *network) {
 void CifarNet(Network *network) {
 
   Convolution *conv1 = new Convolution(32, 32, 3, 3, 3, 128, 1, 1);
-  conv1->xnor = false;
   Batchnorm *bn1 = new Batchnorm(32*32, 128);
   Activation *actv1 = new Activation(32*32*128, LEAKY);
 
   Convolution *conv2 = new Convolution(32, 32, 128, 3, 3, 128, 1, 1);
-  conv2->xnor = false;
   Batchnorm *bn2 = new Batchnorm(32*32, 128);
   Activation *actv2 = new Activation(32*32*128, LEAKY);
 
   Convolution *conv3 = new Convolution(32, 32, 128, 3, 3, 128, 1, 1);
-  conv3->xnor = false;
   Batchnorm *bn3 = new Batchnorm(32*32, 128);
   Activation *actv3 = new Activation(32*32*128, LEAKY);
 
@@ -146,17 +141,14 @@ void CifarNet(Network *network) {
   Dropout *dropout1 = new Dropout(16*16*128, 0.5);
 
   Convolution *conv4 = new Convolution(16, 16, 128, 3, 3, 256, 1, 1);
-  conv4->xnor = false;
   Batchnorm *bn4 = new Batchnorm(16*16, 256);
   Activation *actv4 = new Activation(16*16*256, LEAKY);
 
   Convolution *conv5 = new Convolution(16, 16, 256, 3, 3, 256, 1, 1);
-  conv5->xnor = false;
   Batchnorm *bn5 = new Batchnorm(16*16, 256);
   Activation *actv5 = new Activation(16*16*256, LEAKY);
 
   Convolution *conv6 = new Convolution(16, 16, 256, 3, 3, 256, 1, 1);
-  conv6->xnor = false;
   Batchnorm *bn6 = new Batchnorm(16*16, 256);
   Activation *actv6 = new Activation(16*16*256, LEAKY);
 
@@ -165,24 +157,20 @@ void CifarNet(Network *network) {
   Dropout *dropout2 = new Dropout(8*8*256, 0.5);
 
   Convolution *conv7 = new Convolution(8, 8, 256, 3, 3, 512, 1, 1);
-  conv7->xnor = false;
   Batchnorm *bn7 = new Batchnorm(8*8, 512);
   Activation *actv7 = new Activation(8*8*512, LEAKY);
 
   Convolution *conv8 = new Convolution(8, 8, 512, 3, 3, 512, 1, 1);
-  conv8->xnor = false;
   Batchnorm *bn8 = new Batchnorm(8*8, 512);
   Activation *actv8 = new Activation(8*8*512, LEAKY);
 
   Convolution *conv9 = new Convolution(8, 8, 512, 3, 3, 512, 1, 1);
-  conv9->xnor = false;
   Batchnorm *bn9 = new Batchnorm(8*8, 512);
   Activation *actv9 = new Activation(8*8*512, LEAKY);
 
   Dropout *dropout3 = new Dropout(8*8*512, 0.5);
 
   Convolution *conv10 = new Convolution(8, 8, 512, 3, 3, 10, 1, 1);
-  conv10->xnor = false;
   Batchnorm *bn10 = new Batchnorm(8*8, 10);
   Activation *actv10 = new Activation(8*8*10, LEAKY);
 

@@ -33,22 +33,6 @@ void BinaryConv::Init() {
   shared_size_ = out_w*out_h*filter_col*batch;
   input_size = batch*im_size;
 
-#ifdef GEMMBITSERIAL
-  ctx = allocGEMMContext(batch*out_h*out_w, filter_col, filter_channel, 1, 1, 1, 1);
-#else
-  bitset_outcol = new Bitset[batch*out_h*out_w];
-  bitset_weight = new Bitset[filter_channel];
-
-  for(int i = 0; i < batch*out_h*out_w; i++)
-    bitset_outcol[i].Init(filter_col);
-
-  for(int i = 0; i < filter_channel; i++)
-    bitset_weight[i].Init(filter_col);
-#endif
-
-  shared_size_ = out_w*out_h*filter_col*batch;
-  input_size = batch*im_size;
-
 }
 
 
@@ -268,4 +252,24 @@ void BinaryConv::Update(UpdateArgs update_args) {
     momentum_gpu(filter_col*filter_channel, weight, grad_weight, v_weight, update_args);
     momentum_gpu(filter_channel, bias, grad_bias, v_bias, update_args);
   }
+}
+
+void BinaryConv::Save() {
+
+  char buf[64] = {0};
+  sprintf(buf, "BinaryConv,%d,%d,%d,%d,%d,%d,%d,%d",
+    width, height, channel, filter_width, filter_height, filter_channel, stride, pad);
+  file->write(buf, sizeof(buf));
+
+  float *weight_tmp = new float[weight_size];
+  gpu_pull_array(weight, weight_tmp, weight_size);
+  file->write((char*)weight_tmp, weight_size*sizeof(float));
+  delete []weight_tmp;
+
+  float *bias_tmp = new float[bias_size];
+  gpu_pull_array(bias, bias_tmp, bias_size);
+  file->write((char*)bias_tmp, bias_size*sizeof(float));
+  delete []bias_tmp;
+  file->write((char*)bias, bias_size*sizeof(float));
+
 }
