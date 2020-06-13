@@ -16,6 +16,7 @@ class Convolution : public Layer {
     im_size = H*W*C;
     weight_size = out_channel*FC;
     bias_size = FC;
+    col_size = out_w*out_h*out_channel;
 
   }
   ~Convolution();

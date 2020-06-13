@@ -24,8 +24,6 @@ void Convolution::Init() {
   shared_size_ = out_w*out_h*out_channel*batch;
   input_size = batch*im_size;
 
-  shared_size_ = out_w*out_h*out_channel*batch;
-  input_size = batch*im_size;
 
 }
 
@@ -34,9 +32,7 @@ void Convolution::Forward() {
   for(int i = 0; i < batch; i++)
     im2col_gpu(W, H, C, FW, FH, FC, stride, pad,
       input + i*im_size, shared_+i*col_size);
-
   gemm_gpu(TRS_N, TRS_N, batch*out_h*out_w, FC, out_channel, 1, shared_, weight, output);
-
   bias_add_gpu(
       output,
       bias,
@@ -103,7 +99,7 @@ void Convolution::Save(std::fstream *file) {
 
 void Convolution::LoadParams(std::fstream *rfile, int batch) {
 
-  batch = batch;
+  this->batch = batch;
   train_flag_ = false;
   runtime = true;
   Init();
