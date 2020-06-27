@@ -48,4 +48,33 @@ void Connected::Update(UpdateArgs update_args) {
   }
 }
 
-void Connected::LoadParams(std::fstream *file, int batch) {}
+void Connected::LoadParams(std::fstream *rfile, int batch) {
+
+  this->batch = batch;
+  Init();
+  float *weight_tmp = new float[n_*m_];
+  float *bias_tmp = new float[m_];
+  rfile->read((char*)weight_tmp, n_*m_*sizeof(float));
+  rfile->read((char*)bias_tmp, m_*sizeof(float));
+  gpu_push_array(weight, weight_tmp, n_*m_);
+  gpu_push_array(bias, bias_tmp, m_);
+  delete []weight_tmp;
+  delete []bias_tmp;
+
+}
+
+void Connected::Save(std::fstream *file) {
+
+  char buf[64] = {0};
+  sprintf(buf, "Connected,%d,%d", n_, m_);
+  file->write(buf, sizeof(buf));
+  //cout << buf << endl;
+  float *weight_tmp = new float[n_*m_];
+  float *bias_tmp = new float[m_];
+  gpu_pull_array(weight, weight_tmp, n_*m_);
+  gpu_pull_array(bias, bias_tmp, m_);
+  file->write((char*)weight_tmp, n_*m_*sizeof(float));
+  file->write((char*)bias_tmp, m_*sizeof(float));
+  delete []weight_tmp;
+  delete []bias_tmp;
+}

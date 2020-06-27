@@ -31,7 +31,7 @@ class BinaryConv : public Layer {
   void Update(UpdateArgs update_args) override;
   void Save(std::fstream *file) override;
   static BinaryConv* load(char *buf);
-  void LoadParams(std::fstream *file, int batch) override;
+  void LoadParams(std::fstream *rfile, int batch) override;
 
 // private:
   int width, height, channel;
@@ -73,6 +73,7 @@ class BinaryConv : public Layer {
   float *m_bias;
   float *v_bias;
 
+  bool binary = true;
    
 #ifdef GEMMBITSERIAL
   GEMMContext ctx;

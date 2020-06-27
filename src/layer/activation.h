@@ -11,19 +11,19 @@ enum ActivationType {
 
 class Activation : public Layer {
  public:
-  Activation(int N, ActivationType activation_type) : N(N), activation_type_(activation_type) {};
+  Activation(int n, ActivationType activation_type) : n_(n), activation_type_(activation_type) {};
   ~Activation();
 
+  int n_;
   ActivationType activation_type_;
-  int N;
   float *cut;
-  void Init();
-  void Forward();
-  void Print();
-  void Backward(float *delta);
-  void Save(std::fstream *file);
+  void Init() override;
+  void Forward() override;
+  void Print() override;
+  void Backward(float *delta) override;
+  void Save(std::fstream *file) override;
+  void LoadParams(std::fstream *rfile, int batch) override;
   static Activation* load(char *buf);
-  void LoadParams(std::fstream *file, int batch) override;
 
  private:
   void relu_activate();

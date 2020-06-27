@@ -12,7 +12,7 @@ void Activation::Print() {
 
 void Activation::Save(std::fstream *file) {
   char buf[64] = {0};
-  sprintf(buf, "Activation,%d,%d", N, activation_type_);
+  sprintf(buf, "Activation,%d,%d", n_, activation_type_);
   //cout << buf << endl;
   file->write(buf, sizeof(buf));
 }
@@ -37,11 +37,12 @@ Activation* Activation::load(char *buf) {
 #ifndef GPU
 void Activation::Init() {
 
-  output = new float[batch*N];
+  output = new float[batch*n_];
+
   if(train_flag_) {
-    delta_ = new float[batch*N];
-    cut = new float[batch*N];
-    memset(cut, 0, sizeof(float)*batch*N);
+    delta_ = new float[batch*n_];
+    cut = new float[batch*n_];
+    memset(cut, 0, sizeof(float)*batch*n_);
   }
 }
 
@@ -64,22 +65,22 @@ void Activation::Forward() {
 void Activation::relu_activate() {
 
   for(int i = 0; i < batch; i++)
-    for(int j = 0; j < N; j++)
-      output[i*N+j] = (input[i*N+j] >= 0 ? input[i*N+j] : 0);
+    for(int j = 0; j < n_; j++)
+      output[i*n_+j] = (input[i*n_+j] >= 0 ? input[i*n_+j] : 0);
 }
 
 void Activation::leaky_activate() {
 
   for(int i = 0; i < batch; i++)
-    for(int j = 0; j < N; j++)
-      output[i*N+j] = (input[i*N+j] >= 0 ? input[i*N+j] : 0.1*input[i*N+j]);
+    for(int j = 0; j < n_; j++)
+      output[i*n_+j] = (input[i*n_+j] >= 0 ? input[i*n_+j] : 0.1*input[i*n_+j]);
 }
 
 void Activation::sigmoid_activate() {
 
   for(int i = 0; i < batch; i++)
-    for(int j = 0; j < N; j++)
-      output[i*N+j] = 1.0/(1.0 + exp(-1.0*(input[i*N+j])));
+    for(int j = 0; j < n_; j++)
+      output[i*n_+j] = 1.0/(1.0 + exp(-1.0*(input[i*n_+j])));
 }
 
 void Activation::Backward(float *delta) {
@@ -100,22 +101,23 @@ void Activation::Backward(float *delta) {
 
 void Activation::relu_backward(float *delta) {
   for(int i = 0; i < batch; i++)
-    for(int j = 0; j < N; j++)
-      delta_[i*N+j] = (cut[i*N+j] + delta[i*N+j])*(input[i*N+j] >= 0);
+    for(int j = 0; j < n_; j++)
+      delta_[i*n_+j] = (cut[i*n_+j] + delta[i*n_+j])*(input[i*n_+j] >= 0);
 }
 
 void Activation::leaky_backward(float *delta) {
   for(int i = 0; i < batch; i++)
-    for(int j = 0; j < N; j++)
-      delta_[i*N+j] = (cut[i*N+j] + delta[i*N+j])*(input[i*N+j] >= 0 ? 1.0 : 0.1);
+    for(int j = 0; j < n_; j++)
+      delta_[i*n_+j] = (cut[i*n_+j] + delta[i*n_+j])*(input[i*n_+j] >= 0 ? 1.0 : 0.1);
 }
 
 void Activation::sigmoid_backward(float *delta) {
   for(int i = 0; i < batch; i++)
-    for(int j = 0; j < N; j++)
-      delta_[i*N+j] = (cut[i*N+j] + delta[i*N+j])*(1.0 - output[i*N+j])*output[i*N+j];
+    for(int j = 0; j < n_; j++)
+      delta_[i*n_+j] = (cut[i*n_+j] + delta[i*n_+j])*(1.0 - output[i*n_+j])*output[i*n_+j];
 }
 
-void Activation::LoadParams(std::fstream *file, int batch) {}
+void Activation::LoadParams(std::fstream *rfile, int batch) {
+}
 
 #endif

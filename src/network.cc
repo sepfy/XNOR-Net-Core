@@ -38,10 +38,12 @@ void Network::Init(int batch, float _lr, bool use_adam) {
 void Network::Inference(float *input) {
 
   layers_.front()->input = input;
+  int i = 0;
   for(auto layer = layers_.begin(); layer != layers_.end(); ++layer) {
-    //ms_t start = getms();
+    ms_t start = getms();
     (*layer)->Forward();
     //cout << "layer: " << i << ", time = " << (getms()-start) << endl;
+    i++;
   }
   output_ = layers_.back()->output;
 }
@@ -104,49 +106,14 @@ void Network::Load(char *filename, int batch) {
       this->Add(conv); 
     }
     if(!strcmp(token, "BinaryConv")) {
-
       BinaryConv *bin_conv = BinaryConv::load(token);
-      bin_conv->batch = batch;
-      bin_conv->train_flag_ = false;
-      bin_conv->Init();
-      bin_conv->runtime = true;
-
-#ifdef GPU
-      float *weight_tmp = new float[bin_conv->weight_size];
-      rfile.read((char*)weight_tmp, bin_conv->weight_size*sizeof(float));
-      gpu_push_array(bin_conv->weight, weight_tmp, bin_conv->weight_size);
-      delete []weight_tmp;
-      float *bias_tmp = new float[bin_conv->bias_size];
-      rfile.read((char*)bias_tmp, bin_conv->bias_size*sizeof(float));
-      gpu_push_array(bin_conv->bias, bias_tmp, bin_conv->bias_size);
-      delete []bias_tmp;
-#else
-      rfile.read((char*)conv->weight, conv->weight_size*sizeof(float));
-      rfile.read((char*)bin_conv->bias, bin_conv->bias_size*sizeof(float));
-#endif
-
+      bin_conv->LoadParams(&rfile, batch);
       this->Add(bin_conv); 
     }
 
     else if(!strcmp(token, "Connected")) {
       Connected *conn = Connected::load(token);
-      conn->batch = batch;
-      conn->Init();
-
-#ifdef GPU
-      float *weight_tmp = new float[conn->n_*conn->m_];
-      float *bias_tmp = new float[conn->m_];
-      rfile.read((char*)weight_tmp, conn->n_*conn->m_*sizeof(float));
-      rfile.read((char*)bias_tmp, conn->m_*sizeof(float));
-      gpu_push_array(conn->weight, weight_tmp, conn->n_*conn->m_);
-      gpu_push_array(conn->bias, bias_tmp, conn->m_);
-      delete []weight_tmp;
-      delete []bias_tmp;
-#else
-      rfile.read((char*)conn->weight, conn->n_*conn->m_*sizeof(float));
-      rfile.read((char*)conn->bias, conn->m_*sizeof(float));
-      //cout << conn->N << endl;
-#endif
+      conn->LoadParams(&rfile, batch);
       this->Add(conn); 
 
     }
@@ -183,35 +150,7 @@ void Network::Load(char *filename, int batch) {
     }
     else if(!strcmp(token, "Batchnorm")) {
       Batchnorm *bn = Batchnorm::load(token);
-      bn->batch = batch;
-      bn->train_flag_ = false;
-      bn->Init();
-#ifdef GPU
-      float *meachannel_tmp = new float[bn->channel_];
-      float *var_tmp = new float[bn->channel_];
-      float *gamma_tmp = new float[bn->channel_];
-      float *beta_tmp = new float[bn->channel_];
-      rfile.read((char*)meachannel_tmp, bn->channel_*sizeof(float));
-      rfile.read((char*)var_tmp, bn->channel_*sizeof(float));
-      rfile.read((char*)gamma_tmp, bn->channel_*sizeof(float));
-      rfile.read((char*)beta_tmp, bn->channel_*sizeof(float));
-      gpu_push_array(bn->running_mean, meachannel_tmp, bn->channel_);
-      gpu_push_array(bn->running_var, var_tmp, bn->channel_);
-      gpu_push_array(bn->gamma, gamma_tmp, bn->channel_);
-      gpu_push_array(bn->beta, beta_tmp, bn->channel_);
-      delete []meachannel_tmp;
-      delete []var_tmp;
-      delete []gamma_tmp;
-      delete []beta_tmp;
-#else
-      rfile.read((char*)bn->running_mean, bn->channel_*sizeof(float));
-      rfile.read((char*)bn->running_var, bn->channel_*sizeof(float));
-      rfile.read((char*)bn->gamma, bn->channel_*sizeof(float));
-      rfile.read((char*)bn->beta, bn->channel_*sizeof(float));
-      for(int i = 0; i < bn->channel_; i++)
-          bn->std[i] = pow(bn->running_var[i] + bn->epsilon, 0.5);
-      bn->runtime = true;
-#endif
+      bn->LoadParams(&rfile, batch);
       this->Add(bn);
       //cout << relu->N << endl;
     }

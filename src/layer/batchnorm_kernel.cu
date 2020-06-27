@@ -276,3 +276,50 @@ void Batchnorm::Update(UpdateArgs a) {
   }
 }
 
+
+void Batchnorm::Save(std::fstream *file) { 
+  char buf[64] = {0}; 
+  sprintf(buf, "Batchnorm,%d,%d", spatial_, channel_); 
+  file->write(buf, sizeof(buf)); 
+  float *mean_tmp = new float[channel_]; 
+  float *var_tmp = new float[channel_]; 
+  float *gamma_tmp = new float[channel_];
+  float *beta_tmp = new float[channel_];
+  gpu_pull_array(running_mean, mean_tmp, channel_);
+  gpu_pull_array(running_var, var_tmp, channel_);
+  gpu_pull_array(gamma, gamma_tmp, channel_);
+  gpu_pull_array(beta, beta_tmp, channel_);
+  file->write((char*)mean_tmp, channel_*sizeof(float));
+  file->write((char*)var_tmp, channel_*sizeof(float));
+  file->write((char*)gamma_tmp, channel_*sizeof(float));
+  file->write((char*)beta_tmp, channel_*sizeof(float));
+  delete []mean_tmp;
+  delete []var_tmp;
+  delete []gamma_tmp;
+  delete []beta_tmp;
+}
+
+
+void Batchnorm::LoadParams(std::fstream *rfile, int batch) {
+
+  this->batch = batch;
+  train_flag_ = false;
+  Init();
+  float *meachannel_tmp = new float[channel_];
+  float *var_tmp = new float[channel_];
+  float *gamma_tmp = new float[channel_];
+  float *beta_tmp = new float[channel_];
+  rfile->read((char*)meachannel_tmp, channel_*sizeof(float));
+  rfile->read((char*)var_tmp, channel_*sizeof(float));
+  rfile->read((char*)gamma_tmp, channel_*sizeof(float));
+  rfile->read((char*)beta_tmp, channel_*sizeof(float));
+  gpu_push_array(running_mean, meachannel_tmp, channel_);
+  gpu_push_array(running_var, var_tmp, channel_);
+  gpu_push_array(gamma, gamma_tmp, channel_);
+  gpu_push_array(beta, beta_tmp, channel_);
+  delete []meachannel_tmp;
+  delete []var_tmp;
+  delete []gamma_tmp;
+  delete []beta_tmp;
+
+}

@@ -115,7 +115,7 @@ void Convolution::Save(std::fstream *file) {
 
 void Convolution::LoadParams(std::fstream *rfile, int batch) {
 
-  batch = batch;
+  this->batch = batch;
   train_flag_ = false;
   runtime = true;
   Init();

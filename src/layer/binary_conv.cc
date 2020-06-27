@@ -66,6 +66,8 @@ void BinaryConv::Init() {
   bias = new float[filter_channel];
   mean = new float[filter_channel];
 
+  weight = new float[filter_channel*filter_col];
+
 #ifdef GEMMBITSERIAL
   ctx = allocGEMMContext(batch*out_h*out_w, filter_col, filter_channel, 1, 1, 1, 1);
 #else
@@ -114,7 +116,8 @@ void BinaryConv::Forward() {
   }
       
   BinActive();
-  bias_add(output, bias, batch*out_w*out_h, channel);
+  gemm_cpu(TRS_N, TRS_N, batch*out_w*out_h, filter_channel, filter_col, 1, shared_, weight, output);
+  bias_add(output, bias, batch*out_w*out_h, filter_channel);
 }
 
 void BinaryConv::Backward(float *delta) {
@@ -129,6 +132,15 @@ void BinaryConv::Save(std::fstream *file) {
   // Do not support CPU training.
 }
 
-void BinaryConv::LoadParams(std::fstream *file, int batch) {}
+void BinaryConv::LoadParams(std::fstream *rfile, int batch) {
+
+  this->batch = batch;
+  train_flag_ = false;
+  Init();
+  runtime = true;
+  rfile->read((char*)weight, weight_size*sizeof(float));
+  rfile->read((char*)bias, bias_size*sizeof(float));
+
+}
 
 #endif

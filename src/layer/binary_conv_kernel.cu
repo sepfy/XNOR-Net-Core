@@ -1,4 +1,5 @@
 #include "layer/binary_conv.h"
+#include "binary.h"
 #include "gemm.h"
 #include "utils.h"
 #include "blas.h"
@@ -10,6 +11,7 @@ void BinaryConv::Init() {
   grad_weight = malloc_gpu(filter_col*filter_channel);
   bias = malloc_gpu(filter_channel);
   grad_bias = malloc_gpu(filter_channel);
+  binary_weight = malloc_gpu(filter_col*filter_channel);
   delta_ = malloc_gpu(batch*width*width*channel);
 
   // Adam optimizer
@@ -18,14 +20,6 @@ void BinaryConv::Init() {
   m_bias = malloc_gpu(filter_channel);
   v_bias = malloc_gpu(filter_channel);
 
-  binary_weight = malloc_gpu(filter_col*filter_channel);
-  avg_filter = malloc_gpu(batch*im_size);
-  avg_col = malloc_gpu(out_w*out_h*filter_width*filter_channel*batch);
-  k_filter = malloc_gpu(filter_width*filter_height);
-  k_output = malloc_gpu(out_w*out_h*batch);
-
-  memset_gpu(k_filter, 1.0/(float)(filter_width*filter_height), filter_width*filter_height);
-  mean = malloc_gpu(filter_channel);
 
   random_normal_gpu(filter_col*filter_channel, weight);
   random_normal_gpu(filter_channel, bias);
@@ -82,7 +76,7 @@ void BinaryConv::BinarizeWeight() {
 
 void BinaryConv::Forward() {
 
-  for(int i = 0; i < batch; i++) {
+  for(int i = 0; i < batch; ++i) {
     im2col_gpu(
         width,
         height,
@@ -193,7 +187,7 @@ void BinaryConv::Backward(float *delta) {
       delta,
       grad_weight);
 
-  UpdateGradientWeight();
+  //UpdateGradientWeight();
 
   row_sum_gpu(batch*out_w*out_h, filter_channel, delta, grad_bias);
 
@@ -208,7 +202,7 @@ void BinaryConv::Backward(float *delta) {
       binary_weight,
       shared_);
 
-  for(int i = 0; i < batch; i++) {
+  for(int i = 0; i < batch; ++i) {
     col2im_gpu(
         width,
         height,
@@ -246,17 +240,34 @@ void BinaryConv::Save(std::fstream *file) {
   sprintf(buf, "BinaryConv,%d,%d,%d,%d,%d,%d,%d,%d",
     width, height, channel, filter_width, filter_height, filter_channel, stride, pad);
   file->write(buf, sizeof(buf));
- std::cout << buf<< std::endl;
-  float *weight_tmp = new float[weight_size];
-  gpu_pull_array(weight, weight_tmp, weight_size);
-  file->write((char*)weight_tmp, weight_size*sizeof(float));
-  delete []weight_tmp;
 
+  float *weight_tmp = new float[weight_size];
+  gpu_pull_array(binary_weight, weight_tmp, weight_size);
   float *bias_tmp = new float[bias_size];
   gpu_pull_array(bias, bias_tmp, bias_size);
+
+  file->write((char*)weight_tmp, weight_size*sizeof(float));
   file->write((char*)bias_tmp, bias_size*sizeof(float));
+
+  delete []weight_tmp;
   delete []bias_tmp;
 
 }
 
-void BinaryConv::LoadParams(std::fstream *file, int batch) {}
+void BinaryConv::LoadParams(std::fstream *rfile, int batch) {
+
+  this->batch = batch;
+  train_flag_ = false;
+  Init();
+  runtime = true;
+
+  float *weight_tmp = new float[weight_size];
+  rfile->read((char*)weight_tmp, weight_size*sizeof(float));
+  gpu_push_array(weight, weight_tmp, weight_size);
+  delete []weight_tmp;
+  float *bias_tmp = new float[bias_size];
+  rfile->read((char*)bias_tmp, bias_size*sizeof(float));
+  gpu_push_array(bias, bias_tmp, bias_size);
+  delete []bias_tmp;
+
+}

@@ -61,31 +61,28 @@ void Connected::Update(UpdateArgs update_args) {
 }
 
 
-void Connected::LoadParams(std::fstream *file, int batch) {}
+void Connected::LoadParams(std::fstream *rfile, int batch) {
 
-#endif
+  this->batch = batch;
+  Init();
+  rfile->read((char*)weight, n_*m_*sizeof(float));
+  rfile->read((char*)bias, m_*sizeof(float));
+
+}
+
+
+
 void Connected::Save(std::fstream *file) {
 
   char buf[64] = {0};
   sprintf(buf, "Connected,%d,%d", n_, m_);
   file->write(buf, sizeof(buf));
   //cout << buf << endl;
-#ifdef GPU
-  float *weight_tmp = new float[n_*m_];
-  float *bias_tmp = new float[m_];
-  gpu_pull_array(weight, weight_tmp, n_*m_);
-  gpu_pull_array(bias, bias_tmp, m_);
-  file->write((char*)weight_tmp, n_*m_*sizeof(float));
-  file->write((char*)bias_tmp, m_*sizeof(float));
-  delete []weight_tmp;
-  delete []bias_tmp;
-#else
   file->write((char*)weight, n_*m_*sizeof(float));
   file->write((char*)bias, m_*sizeof(float));
-#endif
-
 }
 
+#endif
 
 Connected* Connected::load(char *buf) {
 
